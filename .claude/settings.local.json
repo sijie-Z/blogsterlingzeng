@@ -46,7 +46,10 @@
       "Bash(HTTP_PROXY=http://127.0.0.1:33210 HTTPS_PROXY=http://127.0.0.1:33210 curl -s -X POST https://api.github.com/graphql -H \"Content-Type: application/json\" -d '{\"query\":\"query { repository\\(owner: \\\\\"sijie-Z\\\\\", name: \\\\\"blogsterlingzeng\\\\\"\\) { discussionCategories\\(first: 10\\) { nodes { id name } } } }\"}')",
       "Bash(HTTP_PROXY=http://127.0.0.1:33210 HTTPS_PROXY=http://127.0.0.1:33210 curl -s \"https://giscus.app/api/discussions/categories?repo=sijie-Z/blogsterlingzeng\")",
       "Bash(git commit -m ' *)",
-      "Bash(HTTP_PROXY=http://127.0.0.1:33210 HTTPS_PROXY=http://127.0.0.1:33210 git push origin main)"
+      "Bash(HTTP_PROXY=http://127.0.0.1:33210 HTTPS_PROXY=http://127.0.0.1:33210 git push origin main)",
+      "Bash(HTTP_PROXY=http://127.0.0.1:33210 HTTPS_PROXY=http://127.0.0.1:33210 curl -sL --max-time 15 \"https://blog.ericterminal.com/\")",
+      "Bash(HTTP_PROXY=http://127.0.0.1:33210 HTTPS_PROXY=http://127.0.0.1:33210 curl -sL --max-time 15 \"https://blog.ericterminal.com/_astro/Base.CpvDHlf9.css\")",
+      "Bash(HTTP_PROXY=http://127.0.0.1:33210 HTTPS_PROXY=http://127.0.0.1:33210 curl *)"
     ]
   }
 }

@@ -143,9 +143,6 @@ navbar:
     home: 1200px
     pages: 1000px
   links:
-    首页:
-      path: /
-      icon: fa-regular fa-house
     归档:
       path: /archives
       icon: fa-regular fa-archive
@@ -155,6 +152,9 @@ navbar:
     友链:
       path: /friends
       icon: fa-regular fa-users
+    书签:
+      path: /bookmarks
+      icon: fa-regular fa-bookmark
   search:
     enable: true
     preload: true
@@ -325,9 +325,13 @@ plugins:
   feed:
     enable: true
   aplayer:
-    enable: false
+    enable: true
     type: fixed
-    audios: []
+    audios:
+      - name: 123
+        artist: Unknown
+        url: /music/123.mp3
+        cover: /images/avatar.jpg
   mermaid:
     enable: false
     version: "11.4.1"
