@@ -1,0 +1,6 @@
+- category: "日常"
+  list:
+    - img: /images/banner-light.jpg
+      caption: 博客首页背景
+    - img: /images/banner-dark.jpg
+      caption: 暗色模式背景

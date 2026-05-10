@@ -1,0 +1,31 @@
+- links_category: "技术博客"
+  has_thumbnail: false
+  list:
+    - name: 阮一峰的网络日志
+      link: https://www.ruanyifeng.com/blog/
+      avatar: https://www.ruanyifeng.com/blog/images/person2_sml.jpg
+      description: 每周科技周刊是我必读的内容，帮我了解行业动态
+    - name: 张鑫旭的博客
+      link: https://www.zhangxinxu.com/
+      avatar: https://www.zhangxinxu.com/zb_users/theme/stargazer/include/stargazer/images/about/zxx.jpg
+      description: CSS 领域最深入的中文博客，每篇都值得反复读
+    - name: Eric Terminal
+      link: https://blog.ericterminal.com/
+      avatar: https://assets.ericterminal.com/logo-transparent.png
+      description: 高中生开发者，技术深度和独立思考让人敬佩
+
+- links_category: "工具与社区"
+  has_thumbnail: false
+  list:
+    - name: GitHub
+      link: https://github.com
+      avatar: https://github.githubassets.com/favicons/favicon.svg
+      description: 不只是代码托管，更是学习资源库
+    - name: Stack Overflow
+      link: https://stackoverflow.com/
+      avatar: https://cdn.sstatic.net/Sites/stackoverflow/Img/apple-touch-icon.png
+      description: 无数个 bug 是在这里找到答案的
+    - name: MDN Web Docs
+      link: https://developer.mozilla.org/
+      avatar: https://developer.mozilla.org/favicon.ico
+      description: Web 开发的权威文档，遇到不确定的 API 先查这里

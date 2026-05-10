@@ -1,0 +1,361 @@
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start
+# HEXO THEME REDEFINE - STERLING ZENG'S BLOG CONFIGURATION
+# Docs: https://redefine-docs.ohevan.com
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
+
+
+# BASIC INFORMATION >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start
+info:
+  title: Sterling Zeng
+  subtitle: "Keep Rolling, Keep Coding"
+  author: Sterling Zeng
+  url: https://sterlingzeng.cn
+# BASIC INFORMATION <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
+
+
+# IMAGE CONFIGURATION >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start
+defaults:
+  favicon: /images/redefine-favicon.svg
+  logo:
+  avatar: /images/avatar.jpg
+# IMAGE CONFIGURATION <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
+
+
+# COLORS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start
+colors:
+  primary: "#2563eb"
+  secondary: "#3b82f6"
+  default_mode: auto
+# COLORS <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
+
+
+# SITE CUSTOMIZATION >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start
+global:
+  fonts:
+    chinese:
+      enable: true
+      family: "Noto Sans SC, PingFang SC, Microsoft YaHei, sans-serif"
+      url: https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap
+    english:
+      enable: true
+      family: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+      url: https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap
+    title:
+      enable: true
+      family: "Playfair Display, Georgia, serif"
+      url: https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap
+  content_max_width: 1000px
+  sidebar_width: 220px
+  hover:
+    shadow: true
+    scale: false
+  glass:
+    enable: true
+  scroll_progress:
+    bar: true
+    percentage: true
+  website_counter:
+    url: https://cn.vercount.one/js
+    enable: true
+    site_pv: true
+    site_uv: true
+    post_pv: true
+  single_page: true
+  preloader:
+    enable: true
+    custom_message: "Sterling's Space Loading..."
+  side_tools:
+    gear_rotation: true
+    auto_expand: false
+  open_graph:
+    enable: true
+    image: /images/og-banner.jpg
+    description: "Sterling Zeng 的个人技术博客 - 记录编程、技术探索与成长"
+  google_analytics:
+    enable: false
+    id:
+# SITE CUSTOMIZATION <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
+
+
+# FONTAWESOME >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start
+fontawesome:
+  thin: false
+  light: false
+  duotone: false
+  sharp_solid: false
+# FONTAWESOME <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
+
+
+# HOME BANNER >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start
+home_banner:
+  enable: true
+  style: fixed
+  image:
+    light: /images/banner-light.jpg
+    dark: /images/banner-dark.jpg
+  title: Sterling's Space
+  subtitle:
+    text:
+      - "用代码构建世界，用文字记录成长"
+      - "在这里，技术和思考相遇"
+      - "Keep Rolling, Keep Coding"
+    hitokoto:
+      enable: true
+      show_author: true
+      api: https://v1.hitokoto.cn
+    typing_speed: 80
+    backing_speed: 60
+    starting_delay: 800
+    backing_delay: 2000
+    loop: true
+    smart_backspace: true
+  text_color:
+    light: "#ffffff"
+    dark: "#d1d1b6"
+  text_style:
+    title_size: 3.0rem
+    subtitle_size: 1.5rem
+    line_height: 1.3
+  custom_font:
+    enable: false
+    family:
+    url:
+  social_links:
+    enable: true
+    style: default
+    links:
+      - icon: fa-brands fa-github
+        url: https://github.com/sijie-Z
+      - icon: fa-regular fa-envelope
+        url: mailto:sterlingzeng@163.com
+    qrs: []
+# HOME BANNER <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
+
+
+# NAVIGATION BAR >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start
+navbar:
+  auto_hide: true
+  color:
+    left: "#2563eb"
+    right: "#3b82f6"
+    transparency: 40
+  width:
+    home: 1200px
+    pages: 1000px
+  links:
+    首页:
+      path: /
+      icon: fa-regular fa-house
+    归档:
+      path: /archives
+      icon: fa-regular fa-archive
+    关于:
+      path: /about
+      icon: fa-regular fa-user
+    友链:
+      path: /friends
+      icon: fa-regular fa-users
+  search:
+    enable: true
+    preload: true
+# NAVIGATION BAR <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
+
+
+# HOME PAGE ARTICLE SETTINGS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start
+home:
+  sidebar:
+    enable: true
+    position: left
+    first_item: info
+    announcement: "写给自己的技术笔记，也写给每一个在路上的开发者。"
+    show_on_mobile: true
+    links:
+      归档:
+        path: /archives
+        icon: fa-regular fa-archive
+      标签:
+        path: /tags
+        icon: fa-regular fa-tags
+      友链:
+        path: /friends
+        icon: fa-regular fa-users
+  article_date_format: auto
+  excerpt_length: 200
+  categories:
+    enable: true
+    limit: 3
+  tags:
+    enable: true
+    limit: 3
+# HOME PAGE ARTICLE SETTINGS <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
+
+
+# ARTICLE >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start
+articles:
+  style:
+    font_size: 16px
+    line_height: 1.8
+    image_border_radius: 12px
+    image_alignment: center
+    image_caption: true
+    link_icon: true
+    delete_mask: true
+    title_alignment: left
+    headings_top_spacing:
+      h1: 3.5rem
+      h2: 2.8rem
+      h3: 2.2rem
+      h4: 1.8rem
+      h5: 1.5rem
+      h6: 1.3rem
+  word_count:
+    enable: true
+    count: true
+    min2read: true
+  author_label:
+    enable: true
+    auto: true
+    list: []
+  code_block:
+    copy: true
+    style: mac
+    highlight_theme:
+      light: github
+      dark: vs2015
+    font:
+      enable: true
+      family: "JetBrains Mono, Fira Code, Consolas, monospace"
+      url: https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap
+  toc:
+    enable: true
+    max_depth: 4
+    number: true
+    expand: true
+    init_open: true
+  copyright:
+    enable: true
+    default: cc_by_nc_sa
+  lazyload: true
+  pangu_js: true
+  recommendation:
+    enable: false
+    title: 推荐阅读
+    limit: 3
+    mobile_limit: 2
+    placeholder: /images/cover-tech.jpg
+    skip_dirs: []
+# ARTICLE <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
+
+
+# COMMENT >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start
+comment:
+  enable: true
+  system: giscus
+  config:
+    waline:
+      serverUrl:
+      lang: zh-CN
+      emoji: []
+      reaction: false
+    gitalk:
+      clientID:
+      clientSecret:
+      repo:
+      owner:
+      proxy:
+    twikoo:
+      version: 1.6.10
+      server_url:
+      region:
+    giscus:
+      repo: sijie-Z/blogsterlingzeng
+      repo_id: 填入你的repo_id
+      category: Announcements
+      category_id: 填入你的category_id
+      mapping: pathname
+      strict: 0
+      reactions_enabled: 1
+      emit_metadata: 0
+      lang: zh-CN
+      input_position: bottom
+      loading: lazy
+    artalk:
+      server:
+      site:
+    utterances:
+      repo:
+      issue_term: pathname
+      issue_number:
+      label:
+      theme_light: github-light
+      theme_dark: github-dark
+# COMMENT <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
+
+
+# FOOTER >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start
+footer:
+  runtime: true
+  icon: '<i class="fa-solid fa-heart fa-beat" style="--fa-animation-duration: 0.8s; color: #f54545"></i>'
+  start: 2026/04/11 16:36:59
+  statistics: true
+  customize: "用代码构建世界，用文字记录成长"
+  icp:
+    enable: false
+    number:
+    url: https://beian.miit.gov.cn/
+  powered: false
+  theme_info: false
+# FOOTER <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
+
+
+# INJECT >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start
+inject:
+  enable: true
+  head:
+    - <link rel="stylesheet" href="/css/custom.css">
+    - <link rel="preconnect" href="https://fonts.googleapis.com">
+    - <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  footer:
+    - <script src="/js/custom.js" data-swup-reload-script></script>
+# INJECT <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
+
+
+# PLUGINS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start
+plugins:
+  feed:
+    enable: true
+  aplayer:
+    enable: false
+    type: fixed
+    audios: []
+  mermaid:
+    enable: false
+    version: "11.4.1"
+    theme:
+      light: "default"
+      dark: "dark"
+# PLUGINS <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
+
+
+# PAGE TEMPLATES >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start
+page_templates:
+  friends_column: 2
+  tags_style: blur
+  masonry:
+    batch_size: 12
+    initial_batch_size: 24
+# PAGE TEMPLATES <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
+
+
+# CDN >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start
+cdn:
+  enable: true
+  provider: jsdelivr
+  custom_url:
+# CDN <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
+
+
+# DEVELOPER MODE >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start
+developer:
+  enable: false
+# DEVELOPER MODE <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end

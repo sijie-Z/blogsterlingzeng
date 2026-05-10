@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "WebSearch",
+      "WebFetch(domain:redefine-docs.ohevan.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(gh repo *)",
+      "Bash(gh api *)",
+      "Bash(python3 -c \"import sys,json,base64; data=json.load\\(sys.stdin\\); print\\(base64.b64decode\\(data['content']\\).decode\\('utf-8'\\)\\)\")",
+      "Bash(curl -s \"https://raw.githubusercontent.com/EvanNotFound/hexo-theme-redefine/main/_config.yml\")",
+      "Bash(curl -s \"https://api.github.com/repos/EvanNotFound/hexo-theme-redefine\")",
+      "Bash(curl -s \"https://api.github.com/repos/EvanNotFound/hexo-theme-redefine/contents/layout\")",
+      "Bash(python3 -c \"import sys,json; [print\\(x['name']\\) for x in json.load\\(sys.stdin\\)]\")",
+      "Bash(curl -s \"https://api.github.com/repos/EvanNotFound/hexo-theme-redefine/contents/layout/page\")",
+      "Bash(curl -s \"https://api.github.com/repos/EvanNotFound/hexo-theme-redefine/git/trees/main?recursive=1\")",
+      "Bash(python3 -c ' *)",
+      "Bash(curl -s \"https://api.github.com/repos/EvanNotFound/hexo-theme-redefine/contents/docs\")",
+      "Bash(python -c ' *)",
+      "Bash(curl *)",
+      "Bash(xargs wc -l)",
+      "Bash(npm run *)",
+      "Bash(npx hexo *)",
+      "WebFetch(domain:sterlingzeng.cn)",
+      "WebFetch(domain:blog.ericterminal.com)",
+      "Bash(curl -sL --max-time 15 \"https://blog.ericterminal.com/\")",
+      "Read(//tmp/**)",
+      "Bash(bash *)",
+      "Bash(python -c \"import sys,json; repos=json.load\\(sys.stdin\\); [print\\(f\\\\\"{r['name']} | {r.get\\('description','无描述'\\)} | {r.get\\('language','N/A'\\)} | stars:{r['stargazers_count']} | forks:{r['forks_count']}\\\\\"\\) for r in repos]\")",
+      "Bash(python -c \"import sys,json; r=json.load\\(sys.stdin\\); print\\(f\\\\\"Name: {r['name']}\\\\nDesc: {r.get\\('description',''\\)}\\\\nLang: {r.get\\('language',''\\)}\\\\nTopics: {r.get\\('topics',[]\\)}\\\\nCreated: {r['created_at']}\\\\nUpdated: {r['updated_at']}\\\\nSize: {r['size']}KB\\\\\"\\)\")",
+      "Bash(python -c \"import sys,json,base64; data=json.load\\(sys.stdin\\); print\\(base64.b64decode\\(data['content']\\).decode\\('utf-8'\\)\\)\")",
+      "Bash(python -c \"import sys,json; u=json.load\\(sys.stdin\\); print\\(f\\\\\"login: {u['login']}\\\\nname: {u.get\\('name',''\\)}\\\\nbio: {u.get\\('bio',''\\)}\\\\npublic_repos: {u['public_repos']}\\\\\"\\)\")",
+      "Bash(git init *)",
+      "Bash(git add *)"
+    ]
+  }
+}

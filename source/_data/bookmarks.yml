@@ -1,0 +1,55 @@
+- category: "每天都在用"
+  icon: fa-solid fa-heart
+  items:
+    - name: VS Code
+      link: https://code.visualstudio.com/
+      image: https://code.visualstudio.com/favicon.ico
+      description: 用过很多编辑器，最后还是回到它。插件生态太强了。
+    - name: GitHub
+      link: https://github.com
+      image: https://github.githubassets.com/favicons/favicon.svg
+      description: 看别人的项目是最好的学习方式。
+    - name: Chrome DevTools
+      link: https://developer.chrome.com/docs/devtools/
+      image: https://developer.chrome.com/favicon.ico
+      description: 前端调试的瑞士军刀。Performance 面板帮我解决过很多性能问题。
+    - name: iTerm2
+      link: https://iterm2.com/
+      image: https://iterm2.com/favicon.ico
+      description: macOS 终端。分屏、搜索、自动补全——用了就回不去了。
+
+- category: "学习资源"
+  icon: fa-solid fa-book
+  items:
+    - name: MDN Web Docs
+      link: https://developer.mozilla.org/
+      image: https://developer.mozilla.org/favicon.ico
+      description: Web 开发的"字典"。遇到不确定的 API，先查 MDN。
+    - name: LeetCode
+      link: https://leetcode.cn/
+      image: https://leetcode.cn/favicon.ico
+      description: 算法练习。不为面试，为的是训练解决问题的思维方式。
+    - name: 掘金
+      link: https://juejin.cn/
+      image: https://lf-web-assets.juejin.cn/obj/juejin-web/xitu_juejin_web/static/favicons/favicon-32x32.png
+      description: 中文技术社区里质量最高的。
+
+- category: "效率工具"
+  icon: fa-solid fa-rocket
+  items:
+    - name: Notion
+      link: https://www.notion.so/
+      image: https://www.notion.so/images/favicon.ico
+      description: 笔记、文档、项目管理全能选手。我的第二大脑。
+    - name: Figma
+      link: https://www.figma.com/
+      image: https://static.figma.com/app/icon/1/favicon.png
+      description: 即使是开发者，也应该懂一点设计。
+    - name: Vercel
+      link: https://vercel.com/
+      image: https://assets.vercel.com/image/upload/front/favicon/vercel/favicon.ico
+      description: push 代码就自动部署，零配置。
+    - name: Cloudflare
+      link: https://www.cloudflare.com/
+      image: https://www.cloudflare.com/favicon.ico
+      description: CDN、DNS、安全防护。免费套餐已经够个人项目用了。
