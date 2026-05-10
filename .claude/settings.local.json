@@ -32,7 +32,21 @@
       "Bash(python -c \"import sys,json,base64; data=json.load\\(sys.stdin\\); print\\(base64.b64decode\\(data['content']\\).decode\\('utf-8'\\)\\)\")",
       "Bash(python -c \"import sys,json; u=json.load\\(sys.stdin\\); print\\(f\\\\\"login: {u['login']}\\\\nname: {u.get\\('name',''\\)}\\\\nbio: {u.get\\('bio',''\\)}\\\\npublic_repos: {u['public_repos']}\\\\\"\\)\")",
       "Bash(git init *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git rebase *)",
+      "Bash(git stash *)",
+      "Bash(HTTP_PROXY=http://127.0.0.1:33210 HTTPS_PROXY=http://127.0.0.1:33210 git push -u origin main --force)",
+      "Bash(HTTP_PROXY=http://127.0.0.1:33210 HTTPS_PROXY=http://127.0.0.1:33210 curl -s -X PATCH https://api.github.com/repos/sijie-Z/blogsterlingzeng -H \"Accept: application/vnd.github+json\" -d '{\"has_discussions\": true}')",
+      "Bash(python -c \"import sys,json,io; sys.stdout=io.TextIOWrapper\\(sys.stdout.buffer,encoding='utf-8'\\); d=json.load\\(sys.stdin\\); print\\(d.get\\('has_discussions','error'\\)\\)\")",
+      "Bash(HTTP_PROXY=http://127.0.0.1:33210 HTTPS_PROXY=http://127.0.0.1:33210 curl -s https://api.github.com/repos/sijie-Z/blogsterlingzeng)",
+      "Bash(python -c \"import sys,json,io; sys.stdout=io.TextIOWrapper\\(sys.stdout.buffer,encoding='utf-8'\\); d=json.load\\(sys.stdin\\); print\\('discussions:', d.get\\('has_discussions'\\)\\)\")",
+      "Bash(HTTP_PROXY=http://127.0.0.1:33210 HTTPS_PROXY=http://127.0.0.1:33210 curl -s -X POST https://api.github.com/graphql -H \"Content-Type: application/json\" -d '{\"query\":\"query { repository\\(owner: \\\\\"sijie-Z\\\\\", name: \\\\\"blogsterlingzeng\\\\\"\\) { id discussionCategories\\(first: 5\\) { nodes { id name } } } }\"}')",
+      "Bash(python -c \"import sys,json,io; sys.stdout=io.TextIOWrapper\\(sys.stdout.buffer,encoding='utf-8'\\); print\\(json.dumps\\(json.load\\(sys.stdin\\), indent=2\\)\\)\")",
+      "Bash(python -c \"import sys,json,io; sys.stdout=io.TextIOWrapper\\(sys.stdout.buffer,encoding='utf-8'\\); d=json.load\\(sys.stdin\\); print\\('discussions:', d.get\\('has_discussions'\\), 'id:', d.get\\('id'\\)\\)\")",
+      "Bash(HTTP_PROXY=http://127.0.0.1:33210 HTTPS_PROXY=http://127.0.0.1:33210 curl -s -X POST https://api.github.com/graphql -H \"Content-Type: application/json\" -d '{\"query\":\"query { repository\\(owner: \\\\\"sijie-Z\\\\\", name: \\\\\"blogsterlingzeng\\\\\"\\) { discussionCategories\\(first: 10\\) { nodes { id name } } } }\"}')",
+      "Bash(HTTP_PROXY=http://127.0.0.1:33210 HTTPS_PROXY=http://127.0.0.1:33210 curl -s \"https://giscus.app/api/discussions/categories?repo=sijie-Z/blogsterlingzeng\")",
+      "Bash(git commit -m ' *)",
+      "Bash(HTTP_PROXY=http://127.0.0.1:33210 HTTPS_PROXY=http://127.0.0.1:33210 git push origin main)"
     ]
   }
 }

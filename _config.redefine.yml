@@ -269,9 +269,9 @@ comment:
       region:
     giscus:
       repo: sijie-Z/blogsterlingzeng
-      repo_id: 填入你的repo_id
+      repo_id: R_kgDOSZUc-A
       category: Announcements
-      category_id: 填入你的category_id
+      category_id: DIC_kwDOSZUc-M4C8tbR
       mapping: pathname
       strict: 0
       reactions_enabled: 1
