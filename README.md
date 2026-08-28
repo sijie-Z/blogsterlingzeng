@@ -315,6 +315,7 @@ inject:
 | 文章 | 文件 | 分类 | 核心观点 |
 |------|------|------|----------|
 | 把 API Key 关进网关 | `miqro-gate-virtual-key-design.md` | 项目实战 | 凭证虚拟化：把真实 Key 变成可轮换、吊销、计量的 Virtual Key |
+| 同一个信号,0.45 和 -0.27 | `quant-reversal-execution-gap.md` | 项目实战 | 信号存在不等于策略可投资：执行吃掉了 Alpha |
 | 我的 CI 从来没有跑过 | `nft-launchpad-release-sprint.md` | 项目实战 | 发布前用 15 个 issue 还工程债，把"我不知道"变成"我知道" |
 | 用四 GB 显存训练语言模型 | `nlp-training-lab.md` | 学习笔记 | 从 BERT 到 LoRA，4GB 显卡也能玩大模型 |
 | 五个假设,否了四个 | `docmind-agent-causal-study.md` | 项目实战 | 规划粒度决定 Agent 性能（69%→93.1%），执行架构没那么重要 |
