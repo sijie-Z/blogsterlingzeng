@@ -29,9 +29,9 @@
 
 这是一个完整的技术博客项目，不是简单的 Hexo 模板。包含：
 
-- **7 篇原创技术文章** — 每篇从个人经历出发，不是教科书式教程
+- **16 篇原创技术文章** — 每篇从个人经历出发，不是教科书式教程
 - **自定义 UI 设计** — 蓝色主题、磨砂导航栏、卡片浮动效果、阅读进度条
-- **多个自定义页面** — 关于、友链、书签、说说、照片墙
+- **多个自定义页面** — 关于、友链、书签、说说、照片墙、项目
 - **完整的部署方案** — 宝塔面板 scp 上传 / GitHub Actions
 
 ---
@@ -49,13 +49,18 @@
 | 字数统计 | 显示字数和预估阅读时间 | `hexo-wordcount` |
 | SPA 导航 | 页面无刷新切换，体验流畅 | `swup.js` |
 | 阅读进度 | 顶部渐变进度条 | `source/js/custom.js` |
-| RSS 订阅 | Atom 格式 | `hexo-generator-feed` |
+| RSS 订阅 | Atom 格式 + 页脚订阅图标 | `hexo-generator-feed` |
+| 相关阅读 | 标签相似度推荐（前端渲染，无原生依赖） | `scripts/related-posts.js` |
+| 文章置顶 | `sticky: 1` 字段置顶 | `hexo-generator-index` |
+| Sitemap | `sitemap.xml` + `robots.txt` | `hexo-generator-sitemap` |
+| 复制链接 | 文章页工具条复制当前链接 | `source/js/custom.js` |
 
 ### 自定义页面
 
 | 页面 | 路径 | 数据文件 | 说明 |
 |------|------|----------|------|
 | 关于 | `/about/` | `source/about/index.md` | 个人介绍、编程观、技术栈 |
+| 项目 | `/projects/` | GitHub API 实时拉取 | 主要仓库展示，带 1 小时本地缓存 |
 | 友链 | `/friends/` | `source/_data/links.yml` | 博客友链，分"技术博客"和"工具社区" |
 | 书签 | `/bookmarks/` | `source/_data/bookmarks.yml` | 常用工具和资源收藏 |
 | 说说 | `/shuoshuo/` | `source/_data/essays.yml` | 碎片化想法和日常感悟 |
@@ -161,14 +166,16 @@ blogsterlingzeng/
 │   │   └── masonry.yml              # 照片墙数据
 │   │
 │   ├── about/index.md               # 关于页面
+│   ├── projects/index.md            # 项目页面（GitHub API 展示）
 │   ├── friends/index.md             # 友链页面
 │   ├── bookmarks/index.md           # 书签页面
 │   ├── shuoshuo/index.md            # 说说页面
 │   ├── photos/index.md              # 照片墙页面
 │   ├── categories/index.md          # 分类页面
 │   ├── tags/index.md                # 标签页面
+│   ├── robots.txt                   # 爬虫规则
 │   │
-│   ├── css/custom.css               # 自定义样式 (750+ 行)
+│   ├── css/custom.css               # 自定义样式 (1200+ 行)
 │   ├── js/custom.js                 # 自定义脚本
 │   └── images/                      # 图片资源
 │       ├── avatar.jpg               # 头像 (75KB)
@@ -307,13 +314,22 @@ inject:
 
 | 文章 | 文件 | 分类 | 核心观点 |
 |------|------|------|----------|
-| 我为什么选择 Hexo 搭博客 | `hexo-blog-setup-guide.md` | 开发工具 | 选型不是选最好的，是最适合的 |
+| 把 API Key 关进网关 | `miqro-gate-virtual-key-design.md` | 项目实战 | 凭证虚拟化：把真实 Key 变成可轮换、吊销、计量的 Virtual Key |
+| 我的 CI 从来没有跑过 | `nft-launchpad-release-sprint.md` | 项目实战 | 发布前用 15 个 issue 还工程债，把"我不知道"变成"我知道" |
+| 用四 GB 显存训练语言模型 | `nlp-training-lab.md` | 学习笔记 | 从 BERT 到 LoRA，4GB 显卡也能玩大模型 |
+| 五个假设,否了四个 | `docmind-agent-causal-study.md` | 项目实战 | 规划粒度决定 Agent 性能（69%→93.1%），执行架构没那么重要 |
+| 我为什么选择 Hexo 搭博客 | `hexo-blog-setup-guide.md` | 技术思考 | 选型不是选最好的，是最适合的 |
 | 我终于理解了闭包 | `javascript-closure-deep-dive.md` | 前端开发 | 闭包是函数式编程的自然结果 |
 | React Hooks 的思维转变 | `react-hooks-guide.md` | 前端开发 | 组件是函数，不是对象 |
 | Git 工作流的教训 | `git-workflow-best-practices.md` | 开发工具 | Git 的核心是协作 |
 | Docker 改变了我对环境的理解 | `docker-getting-started.md` | 技术思考 | 环境是代码的一部分 |
 | CSS 布局的三次革命 | `css-modern-layout.md` | 前端开发 | 从修补思维到设计思维 |
 | 二分查找教会我的思维方式 | `algorithm-binary-search.md` | 算法与数据结构 | 排除一半，分治思考 |
+| 我做了一个 RAG 知识库系统 | `docmind-rag-knowledge-base.md` | 项目实战 | RAG 的核心不是大模型，是检索 |
+| MindPilot 多 Agent 协作 | `mindpilot-multi-agent-rag.md` | 项目实战 | 把大任务拆成小任务，交给专门 Agent |
+| 空间数据安全分发与溯源 | `geodata-security-traceability.md` | 项目实战 | 矢量数据分发后的溯源定责 |
+| 从零搭建 NFT 发行平台 | `nft-launchpad-kit-web3.md` | 项目实战 | 6 种铸造模式的全链路实践 |
+| A 股量化研究平台 | `quant-platform-a-share-research.md` | 项目实战 | 从因子到回测的完整流水线 |
 
 ### 文章 Front Matter 格式
 
@@ -526,8 +542,7 @@ comment:
 
 | 问题 | 原因 | 解决方案 |
 |------|------|----------|
-| 推荐系统不工作 | 依赖 `nodejieba`，Windows 编译失败 | 已禁用；Linux 服务器上可启用 |
-| 评论系统未配置 | 需要额外部署评论服务 | 参见"启用评论系统"章节 |
+| ~~推荐系统不工作~~ | ~~依赖 `nodejieba`，Windows 编译失败~~ | 已用 `scripts/related-posts.js` 生成数据 + 前端渲染替代 |
 | 分析统计未配置 | Google Analytics 已禁用 | 参见"启用分析统计"章节 |
 
 ---

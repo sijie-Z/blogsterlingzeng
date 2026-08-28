@@ -53,7 +53,7 @@ date: 2026-05-08 12:00:00
 
 ## 联系方式
 
-- **GitHub**: [github.com/sterlingzeng](https://github.com/sterlingzeng)
-- **Email**: sterlingzeng@example.com
+- **GitHub**: [github.com/sijie-Z](https://github.com/sijie-Z)
+- **Email**: sterlingzeng@163.com
 
 如果你对我的文章有想法，或者只是想聊聊天，随时联系。我不高冷，只是社恐。

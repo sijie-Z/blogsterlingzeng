@@ -101,6 +101,14 @@ search:
   content: true
   format: html
 
+# Sitemap
+sitemap:
+  path: sitemap.xml
+  tag: false
+  category: false
+  template:
+  rel: true
+
 # Feed
 feed:
   enable: true

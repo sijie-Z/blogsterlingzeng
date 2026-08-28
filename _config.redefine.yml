@@ -143,6 +143,9 @@ navbar:
     home: 1200px
     pages: 1000px
   links:
+    项目:
+      path: /projects
+      icon: fa-brands fa-github
     归档:
       path: /archives
       icon: fa-regular fa-archive
@@ -170,6 +173,9 @@ home:
     announcement: "写给自己的技术笔记，也写给每一个在路上的开发者。"
     show_on_mobile: true
     links:
+      项目:
+        path: /projects
+        icon: fa-brands fa-github
       归档:
         path: /archives
         icon: fa-regular fa-archive
@@ -316,6 +322,11 @@ inject:
     - <link rel="preconnect" href="https://fonts.googleapis.com">
     - <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   footer:
+    - <div class="footer-extra-icons">
+        <a href="/atom.xml" title="RSS 订阅" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-rss"></i></a>
+        <a href="https://github.com/sijie-Z" title="GitHub" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-github"></i></a>
+        <a href="mailto:sterlingzeng@163.com" title="邮件联系"><i class="fa-regular fa-envelope"></i></a>
+      </div>
     - <script src="/js/custom.js" data-swup-reload-script></script>
 # INJECT <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
 

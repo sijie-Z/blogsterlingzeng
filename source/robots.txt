@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /page/
+Disallow: /archives/page/
+
+Sitemap: https://sterlingzeng.cn/sitemap.xml
