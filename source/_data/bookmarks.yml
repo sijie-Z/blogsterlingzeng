@@ -13,10 +13,10 @@
       link: https://developer.chrome.com/docs/devtools/
       image: https://developer.chrome.com/favicon.ico
       description: 前端调试的瑞士军刀。Performance 面板帮我解决过很多性能问题。
-    - name: iTerm2
-      link: https://iterm2.com/
-      image: https://iterm2.com/favicon.ico
-      description: macOS 终端。分屏、搜索、自动补全——用了就回不去了。
+    - name: Windows Terminal
+      link: https://github.com/microsoft/terminal
+      image: https://raw.githubusercontent.com/microsoft/terminal/main/res/terminal.ico
+      description: Windows 下的终端。分屏、主题、自动补全——用了就回不去了。
 
 - category: "学习资源"
   icon: fa-solid fa-book
@@ -53,3 +53,23 @@
       link: https://www.cloudflare.com/
       image: https://www.cloudflare.com/favicon.ico
       description: CDN、DNS、安全防护。免费套餐已经够个人项目用了。
+
+- category: "AI 与数据"
+  icon: fa-solid fa-brain
+  items:
+    - name: Hugging Face
+      link: https://huggingface.co/
+      image: https://huggingface.co/front/assets/huggingface_logo-noborder.svg
+      description: 模型、数据集、LoRA adapter 都在这里找。4GB 显存也能跑微调。
+    - name: Langfuse
+      link: https://langfuse.com/
+      image: https://langfuse.com/favicon.ico
+      description: LLM 应用的可观测性。Agent 项目排查问题离不开它。
+    - name: Milvus
+      link: https://milvus.io/
+      image: https://milvus.io/favicon.ico
+      description: 向量数据库。RAG 应用的检索底座。
+    - name: Docker Hub
+      link: https://hub.docker.com/
+      image: https://www.docker.com/wp-content/uploads/2022/03/Moby-logo.png
+      description: 一键拉起整套服务。环境是代码的一部分。
