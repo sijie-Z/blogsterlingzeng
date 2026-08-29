@@ -33,7 +33,7 @@
   --card-sheen-rgb: 10, 132, 255;
 }
 
-.dark-mode {
+html.dark {
   --text-primary: #e2e8f0;
   --text-secondary: #94a3b8;
   --text-tertiary: #64748b;
@@ -83,7 +83,7 @@ body {
   border-bottom: 1px solid rgba(148, 163, 184, 0.08);
 }
 
-.dark-mode .navbar-container:not(.scrolled) {
+html.dark .navbar-container:not(.scrolled) {
   background: rgba(10, 14, 26, 0.75) !important;
 }
 
@@ -107,14 +107,14 @@ body {
   transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.dark-mode .navbar-container.scrolled .navbar-content {
+html.dark .navbar-container.scrolled .navbar-content {
   background: rgba(15, 23, 42, 0.85) !important;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(71, 85, 105, 0.12);
 }
 
 /* 收起时隐藏链接,保留 logo + 控件 */
-.navbar-container.scrolled .navbar-content .navbar-links,
-.navbar-container.scrolled .navbar-content .sidebar-tools {
+.navbar-container.scrolled .navbar-content .navbar-list,
+.navbar-container.scrolled REMOVED_SELECTOR {
   opacity: 0;
   width: 0;
   overflow: hidden;
@@ -410,30 +410,18 @@ body {
   overflow: hidden;
 }
 
-.sidebar-links .link-item {
+.sidebar-links .links {
   transition: all var(--transition-fast);
 }
 
-.sidebar-links .link-item:hover {
+.sidebar-links .links:hover {
   background: rgba(var(--card-sheen-rgb), 0.05);
 }
 
-.sidebar-links .link-item i {
+.sidebar-links .links i {
   color: var(--primary-color);
 }
 
-/* Sidebar section titles */
-.sidebar-links .sidebar-title,
-.sidebar-content .sidebar-title {
-  font-weight: 700;
-  font-size: 0.82rem;
-  color: var(--text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-bottom: 0.8rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border-color);
-}
 
 /* ========================================
    POST CONTENT — Typography
@@ -494,9 +482,9 @@ body {
   border: 1px solid rgba(var(--card-sheen-rgb), 0.1);
 }
 
-.dark-mode .article-content p code,
-.dark-mode .article-content li code,
-.dark-mode .article-content td code {
+html.dark .article-content p code,
+html.dark .article-content li code,
+html.dark .article-content td code {
   background: rgba(59, 130, 246, 0.12);
   color: #93c5fd;
   border-color: rgba(59, 130, 246, 0.15);
@@ -525,7 +513,7 @@ body {
   color: var(--text-secondary);
 }
 
-.dark-mode .article-content blockquote {
+html.dark .article-content blockquote {
   background: linear-gradient(135deg, rgba(var(--card-sheen-rgb), 0.08), rgba(99, 102, 241, 0.04));
 }
 
@@ -654,7 +642,7 @@ body {
   letter-spacing: 0.02em;
 }
 
-.dark-mode .home-article-item .home-article-meta-info .article-category {
+html.dark .home-article-item .home-article-meta-info .article-category {
   background: rgba(59, 130, 246, 0.15);
   color: #93c5fd;
 }
@@ -679,7 +667,7 @@ body {
 /* ========================================
    BACK TO TOP
    ======================================== */
-.back-to-top {
+.tool-scroll-to-top {
   background: var(--bg-card) !important;
   backdrop-filter: blur(16px) saturate(150%);
   -webkit-backdrop-filter: blur(16px) saturate(150%);
@@ -690,7 +678,7 @@ body {
   color: var(--primary-color) !important;
 }
 
-.back-to-top:hover {
+.tool-scroll-to-top:hover {
   transform: translateY(-4px) !important;
   box-shadow: var(--shadow-lg) !important;
   border-color: var(--primary-color);
@@ -750,7 +738,7 @@ a.page-number.current {
 /* ========================================
    SEARCH MODAL
    ======================================== */
-.search-modal {
+.search-popup {
   border-radius: var(--radius-xl) !important;
   backdrop-filter: blur(24px) saturate(150%);
   -webkit-backdrop-filter: blur(24px) saturate(150%);
@@ -799,7 +787,7 @@ footer.footer .info-container {
   flex-wrap: nowrap;
 }
 
-.dark-mode footer.footer .info-container {
+html.dark footer.footer .info-container {
   background: rgba(15, 23, 42, 0.75) !important;
   border-color: rgba(71, 85, 105, 0.15);
   box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.3);
@@ -817,7 +805,7 @@ footer.footer.at-bottom .info-container {
   box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
 }
 
-.dark-mode footer.footer.at-bottom .info-container {
+html.dark footer.footer.at-bottom .info-container {
   border-top-color: rgba(71, 85, 105, 0.12);
   box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.35);
 }
@@ -868,38 +856,33 @@ footer.footer .info-container {
 /* ========================================
    ARCHIVE PAGE
    ======================================== */
-.archive-content .archive-year {
+.archive-container .archive-year {
   font-size: 2rem;
   font-weight: 800;
   color: var(--text-primary);
   letter-spacing: -0.03em;
 }
 
-.archive-content .archive-item {
+.archive-container .archive-item {
   transition: all var(--transition-fast);
   padding: 0.5rem 0;
   border-bottom: 1px solid transparent;
 }
 
-.archive-content .archive-item:hover {
+.archive-container .archive-item:hover {
   border-bottom-color: rgba(var(--card-sheen-rgb), 0.2);
   padding-left: 6px;
 }
 
-.archive-content .archive-item .archive-date {
-  color: var(--text-tertiary);
-  font-size: 0.85rem;
-  font-variant-numeric: tabular-nums;
-}
 
 /* ========================================
    TAG CLOUD
    ======================================== */
-.tag-cloud a {
+.tagcloud-content a {
   transition: all var(--transition-fast);
 }
 
-.tag-cloud a:hover {
+.tagcloud-content a:hover {
   color: var(--primary-color) !important;
   transform: scale(1.08);
 }
@@ -907,7 +890,7 @@ footer.footer .info-container {
 /* ========================================
    FRIENDS PAGE
    ======================================== */
-.links-page .link-item {
+.friends-link-container .group {
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-color);
   background: var(--bg-card);
@@ -916,66 +899,21 @@ footer.footer .info-container {
   transition: all var(--transition-main);
 }
 
-.links-page .link-item:hover {
+.friends-link-container .group:hover {
   border-color: rgba(var(--card-sheen-rgb), 0.3);
   box-shadow: var(--shadow-lg);
   transform: translateY(-4px);
 }
 
-.links-page .link-item img {
+.friends-link-container .group img {
   border-radius: 50%;
   border: 2px solid var(--border-color);
   transition: border-color var(--transition-fast), transform var(--transition-main);
 }
 
-.links-page .link-item:hover img {
+.friends-link-container .group:hover img {
   border-color: var(--primary-color);
   transform: scale(1.05);
-}
-
-/* ========================================
-   BOOKMARKS PAGE
-   ======================================== */
-.bookmark-card {
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-color);
-  transition: all var(--transition-main);
-  background: var(--bg-card);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-.bookmark-card:hover {
-  border-color: rgba(var(--card-sheen-rgb), 0.3);
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-3px);
-}
-
-/* ========================================
-   ESSAYS / SHUOSHUO
-   ======================================== */
-.essay-item {
-  border-left: 3px solid var(--primary-color);
-  padding-left: 1.2rem;
-  margin-bottom: 1.6rem;
-  transition: border-color var(--transition-fast), padding-left var(--transition-fast);
-}
-
-.essay-item:hover {
-  border-left-color: var(--accent-color);
-  padding-left: 1.4rem;
-}
-
-.essay-item .essay-date {
-  font-size: 0.82rem;
-  color: var(--text-tertiary);
-  font-variant-numeric: tabular-nums;
-}
-
-.essay-item .essay-content {
-  color: var(--text-secondary);
-  line-height: 1.85;
-  margin-top: 0.3rem;
 }
 
 /* ========================================
@@ -1052,7 +990,7 @@ textarea:focus-visible {
 /* ========================================
    DARK MODE EXTRAS
    ======================================== */
-.dark-mode ::selection {
+html.dark ::selection {
   background-color: #3b82f6;
   color: #fff;
 }
@@ -1083,7 +1021,7 @@ textarea:focus-visible {
    PRINT
    ======================================== */
 @media print {
-  .navbar-container, .sidebar, .back-to-top, .scroll-progress-bar,
+  .navbar-container, .sidebar, .tool-scroll-to-top, .scroll-progress-bar,
   .post-tools, .post-nav, footer.footer { display: none !important; }
   .article-content { font-size: 11pt; line-height: 1.7; max-width: 100%; }
   .article-content a { color: #000; text-decoration: underline; background: none; }
@@ -1293,7 +1231,7 @@ textarea:focus-visible {
   flex-shrink: 0;
 }
 
-.dark-mode .project-card-lang {
+html.dark .project-card-lang {
   background: rgba(59, 130, 246, 0.15);
   color: #93c5fd;
 }
@@ -1609,7 +1547,7 @@ html[data-season="winter"] {
 }
 
 /* 暗色模式:深底 + 季节主色(亮化保证对比度)
-   (.dark 加在 <html> 上,由 Redefine 切换;.dark-mode 则在 <body> 上) */
+   (.dark 加在 <html> 上,由 Redefine 切换;html.dark 则在 <body> 上) */
 html.dark[data-season="spring"] {
   --primary-color: #4ade80;
   --primary-color-light: #86efac;
@@ -1827,8 +1765,8 @@ footer.footer .info-container > div:has(a[href="https://github.com/EvanNotFound/
   color: var(--text-secondary);
 }
 
-.dark-mode .nb-theme-btn,
-.dark-mode .nb-timer-btn {
+html.dark .nb-theme-btn,
+html.dark .nb-timer-btn {
   background: rgba(30, 41, 59, 0.5);
   border-color: var(--border-color);
   color: var(--text-secondary);
@@ -1839,8 +1777,8 @@ footer.footer .info-container > div:has(a[href="https://github.com/EvanNotFound/
   background: rgba(255, 255, 255, 0.7);
 }
 
-.dark-mode .nb-theme-btn:hover,
-.dark-mode .nb-timer-btn:hover {
+html.dark .nb-theme-btn:hover,
+html.dark .nb-timer-btn:hover {
   background: rgba(30, 41, 59, 0.8);
 }
 
@@ -1942,7 +1880,7 @@ footer.footer .info-container > div:has(a[href="https://github.com/EvanNotFound/
   transition: all 0.2s ease;
 }
 
-.dark-mode .nb-timer-btns button {
+html.dark .nb-timer-btns button {
   background: rgba(30, 41, 59, 0.5);
   color: var(--text-secondary);
 }
@@ -2146,7 +2084,7 @@ footer.footer.at-bottom + .footer-mascot {
 /* ========================================
    友链页 — 弹入动画 + 头像漂浮(移植自旧版)
    ======================================== */
-.links-page .link-item {
+.friends-link-container .group {
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-color);
   background: var(--bg-card);
@@ -2156,12 +2094,12 @@ footer.footer.at-bottom + .footer-mascot {
   animation: linkBounceIn 0.4s ease both;
 }
 
-.links-page .link-item:nth-child(1) { animation-delay: 0s; }
-.links-page .link-item:nth-child(2) { animation-delay: 0.08s; }
-.links-page .link-item:nth-child(3) { animation-delay: 0.16s; }
-.links-page .link-item:nth-child(4) { animation-delay: 0.24s; }
-.links-page .link-item:nth-child(5) { animation-delay: 0.32s; }
-.links-page .link-item:nth-child(6) { animation-delay: 0.40s; }
+.friends-link-container .group:nth-child(1) { animation-delay: 0s; }
+.friends-link-container .group:nth-child(2) { animation-delay: 0.08s; }
+.friends-link-container .group:nth-child(3) { animation-delay: 0.16s; }
+.friends-link-container .group:nth-child(4) { animation-delay: 0.24s; }
+.friends-link-container .group:nth-child(5) { animation-delay: 0.32s; }
+.friends-link-container .group:nth-child(6) { animation-delay: 0.40s; }
 
 @keyframes linkBounceIn {
   0% {
@@ -2177,23 +2115,23 @@ footer.footer.at-bottom + .footer-mascot {
   }
 }
 
-.links-page .link-item:hover {
+.friends-link-container .group:hover {
   border-color: rgba(var(--card-sheen-rgb), 0.3);
   box-shadow: var(--shadow-xl);
   transform: translateY(-8px) scale(1.02);
 }
 
-.links-page .link-item:active {
+.friends-link-container .group:active {
   transform: translateY(-2px) scale(0.98);
 }
 
-.links-page .link-item img {
+.friends-link-container .group img {
   border-radius: 50%;
   border: 2px solid var(--border-color);
   transition: border-color var(--transition-fast), transform var(--transition-main);
 }
 
-.links-page .link-item:hover img {
+.friends-link-container .group:hover img {
   border-color: var(--primary-color);
   transform: scale(1.1) rotate(5deg);
   animation: avatarFloat 2s ease-in-out infinite;
