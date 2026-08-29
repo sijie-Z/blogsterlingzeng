@@ -1329,11 +1329,12 @@ html[data-season="winter"] {
   --card-sheen-rgb: 96, 165, 250;
 }
 
-/* 深色模式下保证 primary 亮度和对比度 */
-html[data-season="spring"].dark-mode { --primary-color: #4ade80; --primary-color-dark: #22c55e; }
-html[data-season="summer"].dark-mode  { --primary-color: #38bdf8; --primary-color-dark: #0ea5e9; }
-html[data-season="autumn"].dark-mode  { --primary-color: #fb923c; --primary-color-dark: #f97316; }
-html[data-season="winter"].dark-mode  { --primary-color: #93c5fd; --primary-color-dark: #60a5fa; }
+/* 深色模式下保证 primary 亮度和对比度
+   (.dark 加在 <html> 上,由 Redefine 切换;.dark-mode 则在 <body> 上) */
+html.dark[data-season="spring"] { --primary-color: #4ade80; --primary-color-dark: #22c55e; }
+html.dark[data-season="summer"]  { --primary-color: #38bdf8; --primary-color-dark: #0ea5e9; }
+html.dark[data-season="autumn"]  { --primary-color: #fb923c; --primary-color-dark: #f97316; }
+html.dark[data-season="winter"]  { --primary-color: #93c5fd; --primary-color-dark: #60a5fa; }
 
 /* 首页横幅:叠一层季节色调,让图片氛围随季节走 */
 .home-banner-container::after {

@@ -12,6 +12,16 @@
             .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
+  // swup 单页模式下 init() 会重复执行:文档级/全局监听只需注册一次
+  function once(fn) {
+    let done = false;
+    return function() {
+      if (done) return;
+      done = true;
+      return fn.apply(this, arguments);
+    };
+  }
+
   // ============================
   // Smooth scroll for anchor links
   // ============================
@@ -107,13 +117,16 @@
   // Reading progress bar
   // ============================
   function initReadingProgress() {
-    const progressBar = document.querySelector('.reading-progress-bar');
-    if (!progressBar) return;
-
     let ticking = false;
     window.addEventListener('scroll', () => {
       if (!ticking) {
         requestAnimationFrame(() => {
+          // swup 换页后进度条元素会被替换,每次取最新的
+          const progressBar = document.querySelector('.reading-progress-bar');
+          if (!progressBar) {
+            ticking = false;
+            return;
+          }
           const scrollTop = window.scrollY;
           const docHeight = document.documentElement.scrollHeight - window.innerHeight;
           const progress = (scrollTop / docHeight) * 100;
@@ -344,12 +357,16 @@
   // ============================
   // Initialize all features
   // ============================
+  // swup 页面切换会重新执行 init(),以下监听只需注册一次
+  const initKeyboardShortcutsOnce = once(initKeyboardShortcuts);
+  const initReadingProgressOnce = once(initReadingProgress);
+
   function init() {
     initSmoothScroll();
     initTocHighlight();
-    initKeyboardShortcuts();
+    initKeyboardShortcutsOnce();
     initExternalLinks();
-    initReadingProgress();
+    initReadingProgressOnce();
     initGithubProjects();
     initCopyLink();
     initRelatedPosts();
