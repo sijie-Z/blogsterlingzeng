@@ -23,4 +23,4 @@
 
 ## 注意
 
-- 壁纸源视频(约 483MB)仍在本机 `source/videos/`,未入库(GitHub 单文件上限 100MB,且已加入 .gitignore)
+- 壁纸源视频(约 483MB)仍在本机 `videos-backup/`(仓库根目录,不在 `source/` 下,不会被 Hexo 拷贝),未入库(GitHub 单文件上限 100MB,且已加入 .gitignore)
