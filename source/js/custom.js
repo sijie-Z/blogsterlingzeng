@@ -227,9 +227,10 @@
   }
 
   function applySeason(season) {
-    // 自动模式:主题色用独立的浅色系(html 标 auto),banner 跟随当月季节
-    const resolved = season === 'auto' ? autoSeason() : season;
-    document.documentElement.dataset.season = season;
+    // 自动 = 旧版 light 明亮主题:浅色主题 + 太空城市 banner(配置默认)
+    // 手动选季节 = 季节完整主题 + 对应季节图
+    const isAuto = season === 'auto';
+    document.documentElement.dataset.season = isAuto ? 'auto' : season;
 
     // 主题切换平滑过渡(旧版 theme-transitioning)
     const body = document.body;
@@ -237,16 +238,27 @@
     clearTimeout(applySeason._t);
     applySeason._t = setTimeout(() => body.classList.remove('theme-transitioning'), 600);
 
-    // 季节横幅:换 img src + 容器背景图(覆盖 fixed 模式的两种渲染)
-    const url = SEASON_BANNERS[resolved];
-    if (url) {
+    if (!isAuto) {
+      // 季节 banner:换 img src + 容器背景图(亮暗都显示季节图,旧版行为)
+      const url = SEASON_BANNERS[season];
+      if (url) {
+        document.querySelectorAll('.home-banner-background img').forEach(img => {
+          img.src = url;
+          img.classList.remove('hidden', 'dark:hidden', 'dark:block');
+          img.style.display = '';
+        });
+        document.querySelectorAll('.home-banner-background').forEach(div => {
+          div.style.backgroundImage = 'url(' + url + ')';
+        });
+      }
+    } else {
+      // 自动模式:还原配置默认 banner(亮色=太空城市,暗色=赛博雨夜)
       document.querySelectorAll('.home-banner-background img').forEach(img => {
-        img.src = url;
-        img.classList.remove('hidden', 'dark:hidden', 'dark:block');
-        img.style.display = '';
+        const isDarkImg = img.classList.contains('dark:block');
+        img.src = isDarkImg ? '/images/banner-dark.jpg' : '/images/banner-light.jpg';
       });
       document.querySelectorAll('.home-banner-background').forEach(div => {
-        div.style.backgroundImage = 'url(' + url + ')';
+        div.style.backgroundImage = '';
       });
     }
 
@@ -288,7 +300,7 @@
     controls.innerHTML = `
       <button class="nb-theme-btn" title="切换季节主题">${current === 'auto' ? '🍀' : SEASON_ICONS[current]}</button>
       <div class="nb-dropdown">
-        <button class="nb-opt${current === 'auto' ? ' active' : ''}" data-season="auto"><span>🍀</span><span>自动(跟随季节)</span></button>
+        <button class="nb-opt${current === 'auto' ? ' active' : ''}" data-season="auto"><span>🍀</span><span>自动(浅色)</span></button>
         ${Object.keys(SEASON_ICONS).map(s =>
           `<button class="nb-opt${current === s ? ' active' : ''}" data-season="${s}"><span>${SEASON_ICONS[s]}</span><span>${SEASON_NAMES[s]}</span></button>`
         ).join('')}

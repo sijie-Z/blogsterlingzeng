@@ -39,6 +39,7 @@ skip_render:
   - "images/**"
   - "data/**"
   - "music/**"
+  - "*.svg"
 
 # Writing
 new_post_name: :title.md
