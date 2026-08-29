@@ -8,7 +8,8 @@
     "clean": "hexo clean",
     "deploy": "bash deploy.sh",
     "server": "hexo server",
-    "publish": "hexo publish"
+    "publish": "hexo publish",
+    "postinstall": "node scripts/theme-patch.js"
   },
   "hexo": {
     "version": "7.3.0"

@@ -300,7 +300,7 @@ comment:
 
 # FOOTER >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start
 footer:
-  runtime: false
+  runtime: true
   icon: '<i class="fa-solid fa-heart fa-beat" style="--fa-animation-duration: 0.8s; color: #f54545"></i>'
   start: 2026/04/11 16:36:59
   statistics: false
