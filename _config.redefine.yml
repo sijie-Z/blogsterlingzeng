@@ -56,10 +56,10 @@ global:
     percentage: true
   website_counter:
     url: https://cn.vercount.one/js
-    enable: true
-    site_pv: true
-    site_uv: true
-    post_pv: true
+    enable: false
+    site_pv: false
+    site_uv: false
+    post_pv: false
   single_page: true
   preloader:
     enable: true
@@ -300,10 +300,10 @@ comment:
 
 # FOOTER >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start
 footer:
-  runtime: true
+  runtime: false
   icon: '<i class="fa-solid fa-heart fa-beat" style="--fa-animation-duration: 0.8s; color: #f54545"></i>'
   start: 2026/04/11 16:36:59
-  statistics: true
+  statistics: false
   customize: "用代码构建世界，用文字记录成长"
   icp:
     enable: false

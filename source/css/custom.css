@@ -1284,6 +1284,95 @@ textarea:focus-visible {
 }
 
 /* ========================================
+   SEASONAL THEME — 春夏秋冬四套配色
+   html[data-season] 由 custom.js 按月份设置:
+   春 3-5 月 · 夏 6-8 月 · 秋 9-11 月 · 冬 12-2 月
+   ======================================== */
+
+/* 春 — 嫩绿 + 樱粉 */
+html[data-season="spring"] {
+  --primary-color: #16a34a;
+  --primary-color-light: #4ade80;
+  --primary-color-dark: #15803d;
+  --accent-color: #f472b6;
+  --accent-secondary: #a78bfa;
+  --card-sheen-rgb: 22, 163, 74;
+}
+
+/* 夏 — 天蓝 + 青绿 */
+html[data-season="summer"] {
+  --primary-color: #0ea5e9;
+  --primary-color-light: #38bdf8;
+  --primary-color-dark: #0284c7;
+  --accent-color: #14b8a6;
+  --accent-secondary: #06b6d4;
+  --card-sheen-rgb: 14, 165, 233;
+}
+
+/* 秋 — 枫橙 + 金黄 */
+html[data-season="autumn"] {
+  --primary-color: #f97316;
+  --primary-color-light: #fb923c;
+  --primary-color-dark: #ea580c;
+  --accent-color: #eab308;
+  --accent-secondary: #f59e0b;
+  --card-sheen-rgb: 249, 115, 22;
+}
+
+/* 冬 — 冰蓝 + 紫蓝 */
+html[data-season="winter"] {
+  --primary-color: #60a5fa;
+  --primary-color-light: #93c5fd;
+  --primary-color-dark: #3b82f6;
+  --accent-color: #818cf8;
+  --accent-secondary: #a5b4fc;
+  --card-sheen-rgb: 96, 165, 250;
+}
+
+/* 深色模式下保证 primary 亮度和对比度 */
+html[data-season="spring"].dark-mode { --primary-color: #4ade80; --primary-color-dark: #22c55e; }
+html[data-season="summer"].dark-mode  { --primary-color: #38bdf8; --primary-color-dark: #0ea5e9; }
+html[data-season="autumn"].dark-mode  { --primary-color: #fb923c; --primary-color-dark: #f97316; }
+html[data-season="winter"].dark-mode  { --primary-color: #93c5fd; --primary-color-dark: #60a5fa; }
+
+/* 首页横幅:叠一层季节色调,让图片氛围随季节走 */
+.home-banner-container::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg,
+    rgba(var(--card-sheen-rgb), 0.12) 0%,
+    rgba(var(--card-sheen-rgb), 0.02) 45%,
+    rgba(10, 14, 26, 0.35) 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+html[data-season="autumn"] .home-banner-container::after {
+  background: linear-gradient(180deg,
+    rgba(249, 115, 22, 0.16) 0%,
+    rgba(234, 88, 12, 0.04) 45%,
+    rgba(10, 14, 26, 0.35) 100%);
+}
+
+html[data-season="spring"] .home-banner-container::after {
+  background: linear-gradient(180deg,
+    rgba(22, 163, 74, 0.14) 0%,
+    rgba(74, 222, 128, 0.03) 45%,
+    rgba(10, 14, 26, 0.35) 100%);
+}
+
+/* ========================================
+   FOOTER — 隐藏引擎/主题信息
+   Redefine 模板强制渲染 powered by / theme,
+   用 :has() 定位并隐藏整块
+   ======================================== */
+footer.footer .info-container > div:has(a[href="https://hexo.io"]),
+footer.footer .info-container > div:has(a[href="https://github.com/EvanNotFound/hexo-theme-redefine"]) {
+  display: none !important;
+}
+
+/* ========================================
    FOOTER EXTRA ICONS — RSS / GitHub / Email
    ======================================== */
 .footer-extra-icons {

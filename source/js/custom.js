@@ -174,6 +174,19 @@
   }
 
   // ============================
+  // Seasonal theme — 春夏秋冬四套配色
+  // 给 <html> 加 data-season,由 CSS 变量驱动换色
+  // ============================
+  function initSeason() {
+    const month = new Date().getMonth() + 1;
+    let season = 'winter';
+    if (month >= 3 && month <= 5) season = 'spring';
+    else if (month >= 6 && month <= 8) season = 'summer';
+    else if (month >= 9 && month <= 11) season = 'autumn';
+    document.documentElement.dataset.season = season;
+  }
+
+  // ============================
   // Related posts (frontend render)
   // 数据源:构建时生成的 /related-data.json
   // ============================
@@ -340,6 +353,7 @@
     initGithubProjects();
     initCopyLink();
     initRelatedPosts();
+    initSeason();
   }
 
   // Run on DOM ready
