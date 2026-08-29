@@ -188,15 +188,317 @@
 
   // ============================
   // Seasonal theme — 春夏秋冬四套配色
-  // 给 <html> 加 data-season,由 CSS 变量驱动换色
+  // 默认按月份自动换季;导航栏可手动覆盖(localStorage 'blog-season')
   // ============================
-  function initSeason() {
+  const SEASON_ICONS = { spring: '🌸', summer: '🌻', autumn: '🍂', winter: '❄️' };
+  const SEASON_NAMES = { spring: '春季', summer: '夏季', autumn: '秋季', winter: '冬季' };
+  const SEASON_BANNERS = {
+    spring: '/images/banner-spring.jpg',
+    summer: '/images/banner-summer.jpg',
+    autumn: '/images/banner-autumn.jpg',
+    winter: '/images/banner-winter.jpg',
+  };
+
+  function autoSeason() {
     const month = new Date().getMonth() + 1;
-    let season = 'winter';
-    if (month >= 3 && month <= 5) season = 'spring';
-    else if (month >= 6 && month <= 8) season = 'summer';
-    else if (month >= 9 && month <= 11) season = 'autumn';
-    document.documentElement.dataset.season = season;
+    if (month >= 3 && month <= 5) return 'spring';
+    if (month >= 6 && month <= 8) return 'summer';
+    if (month >= 9 && month <= 11) return 'autumn';
+    return 'winter';
+  }
+
+  function effectiveSeason() {
+    const saved = localStorage.getItem('blog-season');
+    return SEASON_NAMES[saved] ? saved : 'auto';
+  }
+
+  function applySeason(season) {
+    const current = season === 'auto' ? autoSeason() : season;
+    document.documentElement.dataset.season = current;
+
+    // 季节横幅:固定模式的两张 img(亮/暗)都换成季节图
+    if (SEASON_BANNERS[current]) {
+      document.querySelectorAll('.home-banner-background img').forEach(img => {
+        img.src = SEASON_BANNERS[current];
+      });
+    }
+
+    // 同步导航栏按钮状态
+    document.querySelectorAll('.nb-opt[data-season]').forEach(el => {
+      el.classList.toggle('active', el.dataset.season === season);
+    });
+    const btn = document.querySelector('.nb-theme-btn');
+    if (btn) btn.textContent = season === 'auto' ? '🍀' : SEASON_ICONS[current];
+  }
+
+  function initSeason() {
+    applySeason(effectiveSeason());
+  }
+
+  // ============================
+  // Theme switcher — 导航栏季节下拉 + 手电筒 + 秒表(移植自旧版)
+  // ============================
+  function initThemeSwitcher() {
+    const navbar = document.querySelector('.navbar-content');
+    if (!navbar || navbar.querySelector('.nb-controls')) return;
+
+    const current = effectiveSeason();
+    const controls = document.createElement('div');
+    controls.className = 'nb-controls';
+    controls.innerHTML = `
+      <button class="nb-theme-btn" title="切换季节主题">${current === 'auto' ? '🍀' : SEASON_ICONS[current]}</button>
+      <div class="nb-dropdown">
+        <button class="nb-opt${current === 'auto' ? ' active' : ''}" data-season="auto"><span>🍀</span><span>自动(跟随季节)</span></button>
+        ${Object.keys(SEASON_ICONS).map(s =>
+          `<button class="nb-opt${current === s ? ' active' : ''}" data-season="${s}"><span>${SEASON_ICONS[s]}</span><span>${SEASON_NAMES[s]}</span></button>`
+        ).join('')}
+        <div class="nb-div"></div>
+        <button class="nb-opt flashlight-opt"><span>🔦</span><span>管中窥豹</span></button>
+      </div>
+      <button class="nb-timer-btn" title="计时器">⏱</button>
+      <div class="nb-timer-panel">
+        <div class="nb-timer-time" id="nbTimerTime">00:00:00</div>
+        <div class="nb-timer-btns">
+          <button id="nbStart">开始</button>
+          <button id="nbPause" style="display:none">暂停</button>
+          <button id="nbReset">重置</button>
+        </div>
+      </div>`;
+    navbar.appendChild(controls);
+
+    // 主题下拉
+    const dropdown = controls.querySelector('.nb-dropdown');
+    controls.querySelector('.nb-theme-btn').addEventListener('click', e => {
+      e.stopPropagation();
+      dropdown.classList.toggle('show');
+    });
+    controls.querySelectorAll('.nb-opt').forEach(opt => {
+      opt.addEventListener('click', e => {
+        e.stopPropagation();
+        if (opt.classList.contains('flashlight-opt')) {
+          toggleFlashlight();
+          dropdown.classList.remove('show');
+          return;
+        }
+        localStorage.setItem('blog-season', opt.dataset.season);
+        applySeason(opt.dataset.season);
+        dropdown.classList.remove('show');
+      });
+    });
+    document.addEventListener('click', () => dropdown.classList.remove('show'));
+
+    // 秒表
+    const timerPanel = controls.querySelector('.nb-timer-panel');
+    const timerTime = controls.querySelector('#nbTimerTime');
+    const startBtn = controls.querySelector('#nbStart');
+    const pauseBtn = controls.querySelector('#nbPause');
+    const resetBtn = controls.querySelector('#nbReset');
+    let seconds = 0, interval = null;
+
+    function fmt(s) {
+      return String(Math.floor(s / 3600)).padStart(2, '0') + ':' +
+             String(Math.floor((s % 3600) / 60)).padStart(2, '0') + ':' +
+             String(s % 60).padStart(2, '0');
+    }
+    controls.querySelector('.nb-timer-btn').addEventListener('click', e => {
+      e.stopPropagation();
+      timerPanel.classList.toggle('show');
+    });
+    startBtn.addEventListener('click', () => {
+      interval = setInterval(() => { seconds++; timerTime.textContent = fmt(seconds); }, 1000);
+      startBtn.style.display = 'none'; pauseBtn.style.display = '';
+    });
+    pauseBtn.addEventListener('click', () => {
+      clearInterval(interval);
+      startBtn.style.display = ''; pauseBtn.style.display = 'none';
+    });
+    resetBtn.addEventListener('click', () => {
+      clearInterval(interval); seconds = 0;
+      timerTime.textContent = '00:00:00';
+      startBtn.style.display = ''; pauseBtn.style.display = 'none';
+    });
+    document.addEventListener('click', e => {
+      if (!timerPanel.contains(e.target) && !e.target.closest('.nb-timer-btn')) timerPanel.classList.remove('show');
+    });
+  }
+
+  // ============================
+  // Flashlight — 管中窥豹
+  // ============================
+  function toggleFlashlight() {
+    const body = document.body;
+    if (body.classList.contains('flashlight-mode')) {
+      body.classList.remove('flashlight-mode');
+      const el = document.querySelector('.flashlight-overlay');
+      if (el) el.remove();
+      localStorage.setItem('blog-flashlight', 'false');
+    } else {
+      body.classList.add('flashlight-mode');
+      const el = document.createElement('div');
+      el.className = 'flashlight-overlay';
+      document.body.appendChild(el);
+      document.addEventListener('mousemove', function handler(e) {
+        el.style.setProperty('--fx', e.clientX + 'px');
+        el.style.setProperty('--fy', e.clientY + 'px');
+      });
+      localStorage.setItem('blog-flashlight', 'true');
+    }
+    document.querySelectorAll('.flashlight-opt').forEach(el => {
+      el.classList.toggle('active', body.classList.contains('flashlight-mode'));
+    });
+  }
+
+  // ============================
+  // Footer mascot — 猫吉祥物
+  // ============================
+  function initFooterMascot() {
+    if (document.querySelector('.footer-mascot')) return;
+    const mascot = document.createElement('div');
+    mascot.className = 'footer-mascot';
+    mascot.innerHTML = '🐱';
+    mascot.title = '喵~';
+    mascot.addEventListener('click', () => {
+      const phrases = ['喵~ 🐱', 'Meow! ✨', 'にゃん~ 🌟', '喵呜~ 💫', 'Meow~ 🎵', 'にゃ〜 🌸'];
+      const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+      mascot.innerHTML = phrase;
+      setTimeout(() => { mascot.innerHTML = '🐱'; }, 1500);
+    });
+    document.body.appendChild(mascot);
+
+    const footer = document.querySelector('footer.footer');
+    if (footer) {
+      const observer = new MutationObserver(() => {
+        mascot.style.bottom = footer.classList.contains('at-bottom') ? '42px' : '10px';
+      });
+      observer.observe(footer, { attributes: true, attributeFilter: ['class'] });
+    }
+  }
+
+  // ============================
+  // Mouse follower — 发光跟随点
+  // ============================
+  function initMouseFollower() {
+    if ('ontouchstart' in window) return;
+    if (document.querySelector('.mouse-follower')) return;
+    const follower = document.createElement('div');
+    follower.className = 'mouse-follower';
+    document.body.appendChild(follower);
+
+    let mouseX = window.innerWidth / 2, mouseY = window.innerHeight / 2;
+    let followerX = mouseX, followerY = mouseY;
+    let lastX = mouseX;
+
+    document.addEventListener('mousemove', e => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    });
+
+    (function animate() {
+      followerX += (mouseX - followerX) * 0.06;
+      followerY += (mouseY - followerY) * 0.06;
+      const scaleX = (mouseX > lastX + 2) ? -1 : 1;
+      lastX = mouseX;
+      follower.style.transform = 'translate(' + (followerX - 16) + 'px, ' + (followerY - 16) + 'px) scaleX(' + scaleX + ')';
+      requestAnimationFrame(animate);
+    })();
+  }
+
+  // ============================
+  // Article stats — 阅读数 + 点赞(本地存储)
+  // ============================
+  function initArticleStats() {
+    document.querySelectorAll('.home-article-item').forEach(card => {
+      const titleEl = card.querySelector('.home-article-title a');
+      if (!titleEl || card.querySelector('.article-stats')) return;
+      const href = titleEl.getAttribute('href');
+      if (!href) return;
+
+      const viewKey = 'views_' + href;
+      const views = parseInt(localStorage.getItem(viewKey) || '0');
+      const likeKey = 'likes_' + href;
+      const likes = parseInt(localStorage.getItem(likeKey) || '0');
+      const isLiked = localStorage.getItem('liked_' + href) === 'true';
+
+      const statsDiv = document.createElement('div');
+      statsDiv.className = 'article-stats';
+      statsDiv.innerHTML =
+        '<span class="stat-item"><i class="fa-regular fa-eye"></i> ' + views + '</span>' +
+        '<button class="like-btn ' + (isLiked ? 'liked' : '') + '" data-href="' + href + '">' +
+        '<i class="fa-' + (isLiked ? 'solid' : 'regular') + ' fa-heart"></i> ' + likes + '</button>';
+
+      const metaContainer = card.querySelector('.home-article-meta-info-container');
+      if (metaContainer) metaContainer.appendChild(statsDiv);
+    });
+
+    document.querySelectorAll('.like-btn').forEach(btn => {
+      if (btn.dataset.bound) return;
+      btn.dataset.bound = '1';
+      btn.addEventListener('click', () => {
+        const href = btn.dataset.href;
+        const likeKey = 'likes_' + href;
+        let likes = parseInt(localStorage.getItem(likeKey) || '0');
+        const isLiked = localStorage.getItem('liked_' + href) === 'true';
+        if (isLiked) {
+          likes = Math.max(0, likes - 1);
+          localStorage.setItem('liked_' + href, 'false');
+          btn.classList.remove('liked');
+          btn.innerHTML = '<i class="fa-regular fa-heart"></i> ' + likes;
+        } else {
+          likes++;
+          localStorage.setItem('liked_' + href, 'true');
+          btn.classList.add('liked');
+          btn.innerHTML = '<i class="fa-solid fa-heart"></i> ' + likes;
+        }
+        localStorage.setItem(likeKey, String(likes));
+      });
+    });
+  }
+
+  function initPostStats() {
+    const postTitle = document.querySelector('.article-title');
+    if (!postTitle || document.querySelector('.post-page-stats')) return;
+    const path = window.location.pathname;
+
+    const viewKey = 'views_' + path;
+    const views = parseInt(localStorage.getItem(viewKey) || '0') + 1;
+    localStorage.setItem(viewKey, views);
+
+    const likeKey = 'likes_' + path;
+    const likes = parseInt(localStorage.getItem(likeKey) || '0');
+    const isLiked = localStorage.getItem('liked_' + path) === 'true';
+
+    const statsDiv = document.createElement('div');
+    statsDiv.className = 'article-stats post-page-stats';
+    statsDiv.innerHTML =
+      '<span class="stat-item"><i class="fa-regular fa-eye"></i> ' + views + ' 次阅读</span>' +
+      '<button class="like-btn ' + (isLiked ? 'liked' : '') + '" data-href="' + path + '">' +
+      '<i class="fa-' + (isLiked ? 'solid' : 'regular') + ' fa-heart"></i> ' + likes + ' 个赞</button>';
+
+    const metaInfo = document.querySelector('.article-header .meta-info') || document.querySelector('.article-header-meta-info .meta-info');
+    if (metaInfo) {
+      metaInfo.parentNode.insertBefore(statsDiv, metaInfo.nextSibling);
+    } else {
+      postTitle.parentNode.insertBefore(statsDiv, postTitle.nextSibling);
+    }
+
+    const btn = statsDiv.querySelector('.like-btn');
+    btn.addEventListener('click', () => {
+      const likeKey = 'likes_' + path;
+      let n = parseInt(localStorage.getItem(likeKey) || '0');
+      const isLiked = localStorage.getItem('liked_' + path) === 'true';
+      if (isLiked) {
+        n = Math.max(0, n - 1);
+        localStorage.setItem('liked_' + path, 'false');
+        btn.classList.remove('liked');
+        btn.innerHTML = '<i class="fa-regular fa-heart"></i> ' + n + ' 个赞';
+      } else {
+        n++;
+        localStorage.setItem('liked_' + path, 'true');
+        btn.classList.add('liked');
+        btn.innerHTML = '<i class="fa-solid fa-heart"></i> ' + n + ' 个赞';
+      }
+      localStorage.setItem(likeKey, String(n));
+    });
   }
 
   // ============================
@@ -371,6 +673,11 @@
     initCopyLink();
     initRelatedPosts();
     initSeason();
+    initThemeSwitcher();
+    initFooterMascot();
+    initMouseFollower();
+    initArticleStats();
+    initPostStats();
   }
 
   // Run on DOM ready
