@@ -186,17 +186,18 @@ body {
   font-weight: 800;
   font-size: 2.8rem;
   letter-spacing: -0.04em;
-  text-shadow: 0 2px 30px rgba(0, 0, 0, 0.35);
   line-height: 1.15;
+  color: #fff;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.6), 0 0 40px rgba(0, 0, 0, 0.3);
 }
 
 .home-banner-container .description p {
   font-weight: 400;
   font-size: 1.15rem;
-  opacity: 0.85;
   margin-top: 0.6rem;
-  text-shadow: 0 1px 15px rgba(0, 0, 0, 0.2);
   letter-spacing: 0.01em;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 /* ========================================
@@ -1448,6 +1449,17 @@ html[data-season="auto"] {
   --bg-card-solid: #ffffff;
   --border-color: rgba(148, 163, 184, 0.18);
   --border-color-strong: rgba(148, 163, 184, 0.3);
+  /* 覆盖 Redefine 编译变量(完整换色) */
+  --background-color: #ffffff;
+  --second-background-color: #f8fafc;
+  --third-background-color: #f1f5f9;
+  --default-text-color: #0f172a;
+  --first-text-color: #0f172a;
+  --second-text-color: #475569;
+  --third-text-color: #94a3b8;
+  --border-color-r: rgba(148, 163, 184, 0.15); /* shared var --border-color above */
+  --shadow-color-1: rgba(0, 0, 0, 0.02);
+  --shadow-color-2: rgba(0, 0, 0, 0.04);
 }
 
 /* 自动模式暗色变体:深底 + 品牌蓝 */
@@ -1467,6 +1479,17 @@ html.dark[data-season="auto"] {
   --bg-card-solid: #1e293b;
   --border-color: rgba(71, 85, 105, 0.25);
   --border-color-strong: rgba(71, 85, 105, 0.4);
+  /* 覆盖 Redefine 编译变量 */
+  --background-color: #0a0e1a;
+  --second-background-color: #111827;
+  --third-background-color: #16203a;
+  --default-text-color: #e2e8f0;
+  --first-text-color: #e2e8f0;
+  --second-text-color: #94a3b8;
+  --third-text-color: #64748b;
+  --border-color-r: rgba(71, 85, 105, 0.25);
+  --shadow-color-1: rgba(0, 0, 0, 0.2);
+  --shadow-color-2: rgba(0, 0, 0, 0.3);
 }
 
 /* 春 — 嫩绿:浅绿底 + 深绿字 */
@@ -1486,6 +1509,16 @@ html[data-season="spring"] {
   --bg-card-solid: #ffffff;
   --border-color: rgba(22, 163, 74, 0.14);
   --border-color-strong: rgba(22, 163, 74, 0.28);
+  /* 覆盖 Redefine 编译变量(完整换色) */
+  --background-color: #f2fdf5;
+  --second-background-color: #e6f7eb;
+  --third-background-color: #d1f0da;
+  --default-text-color: #0d3b1e;
+  --first-text-color: #0d3b1e;
+  --second-text-color: #2d6a3f;
+  --third-text-color: #6ba07a;
+  --shadow-color-1: rgba(0, 0, 0, 0.02);
+  --shadow-color-2: rgba(0, 0, 0, 0.04);
 }
 
 /* 夏 — 阳光橙:暖橙底 + 深橙棕字 */
@@ -1505,6 +1538,16 @@ html[data-season="summer"] {
   --bg-card-solid: #ffffff;
   --border-color: rgba(234, 88, 12, 0.14);
   --border-color-strong: rgba(234, 88, 12, 0.28);
+  /* 覆盖 Redefine 编译变量(完整换色) */
+  --background-color: #fff9f2;
+  --second-background-color: #fff7ed;
+  --third-background-color: #ffedd5;
+  --default-text-color: #7c2d12;
+  --first-text-color: #7c2d12;
+  --second-text-color: #b8451a;
+  --third-text-color: #d4957a;
+  --shadow-color-1: rgba(0, 0, 0, 0.02);
+  --shadow-color-2: rgba(0, 0, 0, 0.04);
 }
 
 /* 秋 — 枫叶红:红棕底 + 深红棕字 */
@@ -1524,6 +1567,16 @@ html[data-season="autumn"] {
   --bg-card-solid: #ffffff;
   --border-color: rgba(194, 65, 12, 0.14);
   --border-color-strong: rgba(194, 65, 12, 0.28);
+  /* 覆盖 Redefine 编译变量(完整换色) */
+  --background-color: #fff8f0;
+  --second-background-color: #fef3e7;
+  --third-background-color: #fde8d5;
+  --default-text-color: #5c1a07;
+  --first-text-color: #5c1a07;
+  --second-text-color: #9a3412;
+  --third-text-color: #c2785a;
+  --shadow-color-1: rgba(0, 0, 0, 0.02);
+  --shadow-color-2: rgba(0, 0, 0, 0.04);
 }
 
 /* 冬 — 清冷蓝:冷灰蓝底 + 深蓝灰字 */
@@ -1543,6 +1596,16 @@ html[data-season="winter"] {
   --bg-card-solid: #ffffff;
   --border-color: rgba(14, 165, 233, 0.14);
   --border-color-strong: rgba(14, 165, 233, 0.28);
+  /* 覆盖 Redefine 编译变量(完整换色) */
+  --background-color: #f0f4f8;
+  --second-background-color: #e8eef4;
+  --third-background-color: #dce3ed;
+  --default-text-color: #1a2a3e;
+  --first-text-color: #1a2a3e;
+  --second-text-color: #445a74;
+  --third-text-color: #8899b4;
+  --shadow-color-1: rgba(0, 0, 0, 0.03);
+  --shadow-color-2: rgba(0, 0, 0, 0.06);
 }
 
 /* 暗色模式:深底 + 季节主色(亮化保证对比度)
@@ -1563,6 +1626,16 @@ html.dark[data-season="spring"] {
   --bg-card-solid: #12291a;
   --border-color: rgba(74, 222, 128, 0.16);
   --border-color-strong: rgba(74, 222, 128, 0.3);
+  /* 覆盖 Redefine 编译变量 */
+  --background-color: #08130b;
+  --second-background-color: #0d1f12;
+  --third-background-color: #12301c;
+  --default-text-color: #d1fae5;
+  --first-text-color: #d1fae5;
+  --second-text-color: #86efac;
+  --third-text-color: #6ee7b7;
+  --shadow-color-1: rgba(0, 0, 0, 0.2);
+  --shadow-color-2: rgba(0, 0, 0, 0.3);
 }
 
 html.dark[data-season="summer"] {
@@ -1581,6 +1654,16 @@ html.dark[data-season="summer"] {
   --bg-card-solid: #38220d;
   --border-color: rgba(251, 146, 60, 0.16);
   --border-color-strong: rgba(251, 146, 60, 0.3);
+  /* 覆盖 Redefine 编译变量 */
+  --background-color: #1a0e05;
+  --second-background-color: #2a1608;
+  --third-background-color: #3a200c;
+  --default-text-color: #ffedd5;
+  --first-text-color: #ffedd5;
+  --second-text-color: #fdba74;
+  --third-text-color: #fb923c;
+  --shadow-color-1: rgba(0, 0, 0, 0.2);
+  --shadow-color-2: rgba(0, 0, 0, 0.3);
 }
 
 html.dark[data-season="autumn"] {
@@ -1599,6 +1682,16 @@ html.dark[data-season="autumn"] {
   --bg-card-solid: #341a0c;
   --border-color: rgba(234, 88, 12, 0.16);
   --border-color-strong: rgba(234, 88, 12, 0.3);
+  /* 覆盖 Redefine 编译变量 */
+  --background-color: #160a04;
+  --second-background-color: #24100a;
+  --third-background-color: #33180d;
+  --default-text-color: #fef2e9;
+  --first-text-color: #fef2e9;
+  --second-text-color: #fca5a5;
+  --third-text-color: #f87171;
+  --shadow-color-1: rgba(0, 0, 0, 0.2);
+  --shadow-color-2: rgba(0, 0, 0, 0.3);
 }
 
 html.dark[data-season="winter"] {
@@ -1617,6 +1710,16 @@ html.dark[data-season="winter"] {
   --bg-card-solid: #0f2130;
   --border-color: rgba(56, 189, 248, 0.16);
   --border-color-strong: rgba(56, 189, 248, 0.3);
+  /* 覆盖 Redefine 编译变量 */
+  --background-color: #060d14;
+  --second-background-color: #0b1824;
+  --third-background-color: #122436;
+  --default-text-color: #e0f2fe;
+  --first-text-color: #e0f2fe;
+  --second-text-color: #7dd3fc;
+  --third-text-color: #38bdf8;
+  --shadow-color-1: rgba(0, 0, 0, 0.2);
+  --shadow-color-2: rgba(0, 0, 0, 0.3);
 }
 
 /* 主题切换平滑过渡(移植自旧版 theme-transitioning) */

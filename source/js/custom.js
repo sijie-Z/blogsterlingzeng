@@ -239,12 +239,12 @@
     applySeason._t = setTimeout(() => body.classList.remove('theme-transitioning'), 600);
 
     if (!isAuto) {
-      // 季节 banner:换 img src + 容器背景图(亮暗都显示季节图,旧版行为)
+      // 季节 banner:换 img src(保留 hidden/dark 类,亮暗各显示自己的 img,
+      // 内容都是季节图;类保留以便切回自动时能正确还原)
       const url = SEASON_BANNERS[season];
       if (url) {
         document.querySelectorAll('.home-banner-background img').forEach(img => {
           img.src = url;
-          img.classList.remove('hidden', 'dark:hidden', 'dark:block');
           img.style.display = '';
         });
         document.querySelectorAll('.home-banner-background').forEach(div => {
@@ -714,6 +714,7 @@
   // swup 页面切换会重新执行 init(),以下监听只需注册一次
   const initKeyboardShortcutsOnce = once(initKeyboardShortcuts);
   const initReadingProgressOnce = once(initReadingProgress);
+  const initLikeHandlerOnce = once(initLikeHandler);
 
   function init() {
     initSmoothScroll();
@@ -730,7 +731,7 @@
     initMouseFollower();
     initArticleStats();
     initPostStats();
-    initLikeHandler();
+    initLikeHandlerOnce();
   }
 
   // Run on DOM ready
