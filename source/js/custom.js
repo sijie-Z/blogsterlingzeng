@@ -47,7 +47,7 @@
   // Table of Contents active state
   // ============================
   function initTocHighlight() {
-    const tocLinks = document.querySelectorAll('.toc-link');
+    const tocLinks = document.querySelectorAll('.post-toc .nav-link');
     if (tocLinks.length === 0) return;
 
     const headings = [];
@@ -89,7 +89,7 @@
       // Ctrl/Cmd + K: Open search
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
-        const searchBtn = document.querySelector('.search-btn');
+        const searchBtn = document.querySelector('.search-popup-trigger');
         if (searchBtn) searchBtn.click();
       }
 
@@ -122,7 +122,7 @@
       if (!ticking) {
         requestAnimationFrame(() => {
           // swup 换页后进度条元素会被替换,每次取最新的
-          const progressBar = document.querySelector('.reading-progress-bar');
+          const progressBar = document.querySelector('.scroll-progress-bar');
           if (!progressBar) {
             ticking = false;
             return;
@@ -570,7 +570,7 @@
   const RELATED_PLACEHOLDER = '/images/cover-tech.jpg';
 
   function initRelatedPosts() {
-    const content = document.querySelector('.post-content');
+    const content = document.querySelector('.article-content');
     if (!content) return;
     // swup 页面切换后可能重复执行,已渲染则跳过
     if (content.parentElement.querySelector('.related-posts')) return;

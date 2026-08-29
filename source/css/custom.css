@@ -438,23 +438,23 @@ body {
 /* ========================================
    POST CONTENT — Typography
    ======================================== */
-.post-content {
+.article-content {
   font-size: 1.02rem;
   line-height: 1.88;
   color: var(--text-primary);
 }
 
-.post-content p {
+.article-content p {
   margin-bottom: 1.4em;
 }
 
-.post-content li {
+.article-content li {
   margin-bottom: 0.5em;
   line-height: 1.82;
 }
 
 /* Headings */
-.post-content h2 {
+.article-content h2 {
   position: relative;
   padding-left: 18px;
   margin-top: 3em;
@@ -464,7 +464,7 @@ body {
   color: var(--text-primary);
 }
 
-.post-content h2::before {
+.article-content h2::before {
   content: "";
   position: absolute;
   left: 0;
@@ -475,16 +475,16 @@ body {
   border-radius: 2px;
 }
 
-.post-content h3 {
+.article-content h3 {
   margin-top: 2.2em;
   font-weight: 700;
   color: var(--text-primary);
 }
 
 /* Inline code */
-.post-content p code,
-.post-content li code,
-.post-content td code {
+.article-content p code,
+.article-content li code,
+.article-content td code {
   background: rgba(var(--card-sheen-rgb), 0.06);
   color: var(--primary-color-dark);
   padding: 2px 8px;
@@ -494,29 +494,29 @@ body {
   border: 1px solid rgba(var(--card-sheen-rgb), 0.1);
 }
 
-.dark-mode .post-content p code,
-.dark-mode .post-content li code,
-.dark-mode .post-content td code {
+.dark-mode .article-content p code,
+.dark-mode .article-content li code,
+.dark-mode .article-content td code {
   background: rgba(59, 130, 246, 0.12);
   color: #93c5fd;
   border-color: rgba(59, 130, 246, 0.15);
 }
 
 /* Code blocks */
-.post-content pre {
+.article-content pre {
   border-radius: var(--radius-md) !important;
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-sm);
 }
 
-.post-content code {
+.article-content code {
   font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", "Consolas", monospace;
   font-size: 0.87em;
   line-height: 1.72;
 }
 
 /* Blockquotes */
-.post-content blockquote {
+.article-content blockquote {
   border-left: 4px solid var(--primary-color);
   background: linear-gradient(135deg, rgba(var(--card-sheen-rgb), 0.04), rgba(99, 102, 241, 0.02));
   border-radius: 0 var(--radius-md) var(--radius-md) 0;
@@ -525,64 +525,64 @@ body {
   color: var(--text-secondary);
 }
 
-.dark-mode .post-content blockquote {
+.dark-mode .article-content blockquote {
   background: linear-gradient(135deg, rgba(var(--card-sheen-rgb), 0.08), rgba(99, 102, 241, 0.04));
 }
 
-.post-content blockquote p {
+.article-content blockquote p {
   margin-bottom: 0;
 }
 
 /* Tables */
-.post-content table {
+.article-content table {
   border-radius: var(--radius-md);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-color);
 }
 
-.post-content table thead {
+.article-content table thead {
   background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
 }
 
-.post-content table thead th {
+.article-content table thead th {
   color: #fff;
   font-weight: 600;
   padding: 12px 16px;
   border: none;
 }
 
-.post-content table td {
+.article-content table td {
   padding: 10px 16px;
   border-color: var(--border-color);
 }
 
-.post-content table tbody tr {
+.article-content table tbody tr {
   transition: background var(--transition-fast);
 }
 
-.post-content table tbody tr:nth-child(even) {
+.article-content table tbody tr:nth-child(even) {
   background: rgba(var(--card-sheen-rgb), 0.02);
 }
 
-.post-content table tbody tr:hover {
+.article-content table tbody tr:hover {
   background: rgba(var(--card-sheen-rgb), 0.05);
 }
 
 /* Images */
-.post-content img {
+.article-content img {
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
   transition: transform var(--transition-main), box-shadow var(--transition-main);
 }
 
-.post-content img:hover {
+.article-content img:hover {
   transform: translateY(-4px) scale(1.01);
   box-shadow: var(--shadow-xl);
 }
 
 /* Links */
-.post-content a {
+.article-content a {
   color: var(--primary-color);
   text-decoration: none;
   background-image: linear-gradient(var(--primary-color), var(--primary-color));
@@ -592,19 +592,19 @@ body {
   transition: background-size var(--transition-main), color var(--transition-fast);
 }
 
-.post-content a:hover {
+.article-content a:hover {
   background-size: 100% 1.5px;
   color: var(--primary-color-dark);
 }
 
 /* Strong */
-.post-content strong {
+.article-content strong {
   font-weight: 700;
   color: var(--text-primary);
 }
 
 /* HR */
-.post-content hr {
+.article-content hr {
   border: none;
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--border-color-strong), transparent);
@@ -662,7 +662,7 @@ body {
 /* ========================================
    TOC
    ======================================== */
-.toc-link.active {
+.post-toc .nav-link.active {
   color: var(--primary-color) !important;
   font-weight: 600;
 }
@@ -670,7 +670,7 @@ body {
 /* ========================================
    READING PROGRESS BAR
    ======================================== */
-.reading-progress-bar {
+.scroll-progress-bar {
   background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
   height: 3px;
   box-shadow: 0 0 8px rgba(var(--card-sheen-rgb), 0.3);
@@ -1064,9 +1064,9 @@ textarea:focus-visible {
   .home-banner-container .description { font-size: 1.9rem; }
   .home-banner-container { min-height: 38vh; }
   .home-article-item .home-article-title a { font-size: 1.12rem; }
-  .post-content h2 { padding-left: 13px; }
-  .post-content h2::before { width: 3px; }
-  .post-content pre { border-radius: 8px !important; }
+  .article-content h2 { padding-left: 13px; }
+  .article-content h2::before { width: 3px; }
+  .article-content pre { border-radius: 8px !important; }
 
   .sidebar-content,
   .sidebar-links {
@@ -1083,11 +1083,11 @@ textarea:focus-visible {
    PRINT
    ======================================== */
 @media print {
-  .navbar-container, .sidebar, .back-to-top, .reading-progress-bar,
+  .navbar-container, .sidebar, .back-to-top, .scroll-progress-bar,
   .post-tools, .post-nav, footer.footer { display: none !important; }
-  .post-content { font-size: 11pt; line-height: 1.7; max-width: 100%; }
-  .post-content a { color: #000; text-decoration: underline; background: none; }
-  .post-content img { max-width: 100%; height: auto; }
+  .article-content { font-size: 11pt; line-height: 1.7; max-width: 100%; }
+  .article-content a { color: #000; text-decoration: underline; background: none; }
+  .article-content img { max-width: 100%; height: auto; }
 }
 
 /* ========================================
@@ -2207,13 +2207,13 @@ footer.footer.at-bottom + .footer-mascot {
 /* ========================================
    ABOUT PAGE — Skill Bars + 链接图标前缀(移植自旧版)
    ======================================== */
-.post-content table td:last-child {
+.article-content table td:last-child {
   font-family: "JetBrains Mono", monospace;
   font-size: 0.85em;
   letter-spacing: -0.02em;
 }
 
-.post-content table td:last-child {
+.article-content table td:last-child {
   background: linear-gradient(
     90deg,
     rgba(var(--card-sheen-rgb), 0.12) 0%,
@@ -2223,11 +2223,11 @@ footer.footer.at-bottom + .footer-mascot {
   border-radius: 4px;
 }
 
-.post-content a[href*="github.com"]::before {
+.article-content a[href*="github.com"]::before {
   content: "🔗 ";
 }
 
-.post-content a[href*="/2026/"]::before {
+.article-content a[href*="/2026/"]::before {
   content: "📝 ";
 }
 
