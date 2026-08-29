@@ -325,23 +325,32 @@
   // ============================
   // Flashlight — 管中窥豹
   // ============================
+  let flashlightHandler = null;
+
   function toggleFlashlight() {
     const body = document.body;
     if (body.classList.contains('flashlight-mode')) {
       body.classList.remove('flashlight-mode');
       const el = document.querySelector('.flashlight-overlay');
       if (el) el.remove();
+      // 移除监听,避免 swup/反复开关后 handler 累积
+      if (flashlightHandler) {
+        document.removeEventListener('mousemove', flashlightHandler);
+        flashlightHandler = null;
+      }
       localStorage.setItem('blog-flashlight', 'false');
     } else {
       body.classList.add('flashlight-mode');
       const el = document.createElement('div');
       el.className = 'flashlight-overlay';
       document.body.appendChild(el);
-      document.addEventListener('mousemove', function handler(e) {
+      flashlightHandler = function(e) {
         el.style.setProperty('--fx', e.clientX + 'px');
         el.style.setProperty('--fy', e.clientY + 'px');
-      });
+      };
+      document.addEventListener('mousemove', flashlightHandler);
       localStorage.setItem('blog-flashlight', 'true');
+      showToast('管中窥豹已开启 — 再点 🍀 按钮退出');
     }
     document.querySelectorAll('.flashlight-opt').forEach(el => {
       el.classList.toggle('active', body.classList.contains('flashlight-mode'));
