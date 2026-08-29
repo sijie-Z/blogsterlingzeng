@@ -574,7 +574,8 @@ comment:
 | 问题 | 原因 | 解决方案 |
 |------|------|----------|
 | ~~推荐系统不工作~~ | ~~依赖 `nodejieba`，Windows 编译失败~~ | 已用 `scripts/related-posts.js` 生成数据 + 前端渲染替代 |
-| 分析统计未配置 | Google Analytics 已禁用 | 参见"启用分析统计"章节 |
+| ~~页脚统计信息~~ | ~~vercount / 主题模板强制渲染~~ | 已关闭统计；"Powered by Hexo / Theme" 已通过 postinstall patch 从模板删除 |
+| HTTPS 证书签发慢 | GitHub Pages 自定义域名证书排队 | 无需操作，DNS 已正确，等待签发（HTTP 始终可用） |
 
 ---
 

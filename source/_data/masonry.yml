@@ -1,6 +1,18 @@
-- category: "日常"
-  list:
-    - img: /images/banner-light.jpg
-      caption: 博客首页背景
-    - img: /images/banner-dark.jpg
-      caption: 暗色模式背景
+- image: /images/banner-light.jpg
+  title: 太空城市
+  description: 自动模式的默认横幅
+- image: /images/banner-dark.jpg
+  title: 赛博雨夜
+  description: 暗色模式的默认横幅
+- image: /images/banner-spring.jpg
+  title: 春日 LoFi
+  description: 春季主题横幅
+- image: /images/banner-summer.jpg
+  title: 孤独的猫
+  description: 夏季主题横幅
+- image: /images/banner-autumn.jpg
+  title: 秋日石桥
+  description: 秋季主题横幅
+- image: /images/banner-winter.jpg
+  title: 雪夜 LoFi
+  description: 冬季主题横幅
