@@ -10,7 +10,7 @@ type: links
 
 ### 申请友链
 
-想交换友链的话，欢迎通过 [邮件](mailto:sterlingzeng@163.com) 或 [GitHub](https://github.com/sijie-Z) 联系我。
+想交换友链的话，欢迎通过 [邮件](mailto:1683039482@qq.com) 或 [GitHub](https://github.com/sijie-Z) 联系我。
 
 ```yaml
 name: 你的名字

@@ -127,7 +127,7 @@ home_banner:
       - icon: fa-brands fa-github
         url: https://github.com/sijie-Z
       - icon: fa-regular fa-envelope
-        url: mailto:sterlingzeng@163.com
+        url: mailto:1683039482@qq.com
     qrs: []
 # HOME BANNER <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
 
@@ -325,7 +325,7 @@ inject:
     - <div class="footer-extra-icons">
         <a href="/atom.xml" title="RSS 订阅" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-rss"></i></a>
         <a href="https://github.com/sijie-Z" title="GitHub" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-github"></i></a>
-        <a href="mailto:sterlingzeng@163.com" title="邮件联系"><i class="fa-regular fa-envelope"></i></a>
+        <a href="mailto:1683039482@qq.com" title="邮件联系"><i class="fa-regular fa-envelope"></i></a>
       </div>
     - <script src="/js/custom.js" data-swup-reload-script></script>
 # INJECT <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end

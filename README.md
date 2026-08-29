@@ -587,5 +587,6 @@ comment:
 ## 联系方式
 
 - **GitHub**: [github.com/sterlingzeng](https://github.com/sterlingzeng)
-- **Email**: sterlingzeng@163.com
+- **Email**: 1683039482@qq.com（优先）/ 19150649985@163.com（备用）
+- **QQ**: 1683039482
 - **Blog**: [sterlingzeng.cn](https://sterlingzeng.cn)

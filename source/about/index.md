@@ -57,7 +57,8 @@ date: 2026-05-08 12:00:00
 
 ## 联系方式
 
+- **Email**: [1683039482@qq.com](mailto:1683039482@qq.com)(优先) / 19150649985@163.com(备用)
+- **QQ**: 1683039482
 - **GitHub**: [github.com/sijie-Z](https://github.com/sijie-Z)
-- **Email**: sterlingzeng@163.com
 
 如果你对我的文章有想法，或者只是想聊聊天，随时联系。我不高冷，只是社恐。
