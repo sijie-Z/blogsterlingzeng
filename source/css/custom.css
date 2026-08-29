@@ -68,21 +68,63 @@ body {
 }
 
 /* ========================================
-   NAVBAR — Frosted Glass
+   NAVBAR — Dynamic Island(移植自旧版)
+   滚动 >60px 时收缩成居中胶囊,隐藏链接只留 logo + 控件
    ======================================== */
 .navbar-container {
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  background: rgba(255, 255, 255, 0.72) !important;
-  border-bottom: 1px solid var(--border-color);
-  transition: background var(--transition-main),
-              box-shadow var(--transition-main);
-  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.dark-mode .navbar-container {
-  background: rgba(10, 14, 26, 0.82) !important;
-  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.2);
+/* 顶部常态 — 全宽玻璃 */
+.navbar-container:not(.scrolled) {
+  background: rgba(255, 255, 255, 0.65) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+}
+
+.dark-mode .navbar-container:not(.scrolled) {
+  background: rgba(10, 14, 26, 0.75) !important;
+}
+
+/* 滚动后 — Dynamic Island 胶囊 */
+.navbar-container.scrolled {
+  padding: 0 !important;
+  border-bottom: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.navbar-container.scrolled .navbar-content {
+  max-width: 540px;
+  margin: 8px auto;
+  padding: 8px 20px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.82) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(148, 163, 184, 0.08);
+  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dark-mode .navbar-container.scrolled .navbar-content {
+  background: rgba(15, 23, 42, 0.85) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(71, 85, 105, 0.12);
+}
+
+/* 收起时隐藏链接,保留 logo + 控件 */
+.navbar-container.scrolled .navbar-content .navbar-links,
+.navbar-container.scrolled .navbar-content .sidebar-tools {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+.navbar-container.scrolled .navbar-content .left .logo-title h1 {
+  font-size: 0.9rem;
 }
 
 .navbar-content .left .logo-title h1 {
@@ -93,6 +135,10 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+.navbar-content .left {
+  margin-right: 24px;
 }
 
 .navbar-list .navbar-item a {
@@ -131,6 +177,9 @@ body {
    ======================================== */
 .home-banner-container {
   min-height: 50vh;
+  overflow: hidden;
+  background-size: cover !important;
+  background-position: center !important;
 }
 
 .home-banner-container .description {
@@ -709,13 +758,105 @@ a.page-number.current {
 }
 
 /* ========================================
-   FOOTER
+   FOOTER — Dynamic Island(移植自旧版)
+   底部悬浮居中胶囊,滚到页面底部时展开全宽
    ======================================== */
 footer.footer {
-  border-top: 1px solid var(--border-color) !important;
-  background: var(--bg-card) !important;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  position: relative;
+  border-top: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  margin-top: 3rem !important;
+  z-index: 100;
+}
+
+footer.footer .info-container {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: auto;
+  max-width: 92vw;
+  padding: 8px 24px !important;
+  border-radius: 18px 18px 0 0;
+  background: rgba(255, 255, 255, 0.7) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  border-bottom: none;
+  box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.06);
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+  text-align: center;
+  line-height: 1.3;
+  white-space: nowrap;
+  transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  flex-wrap: nowrap;
+}
+
+.dark-mode footer.footer .info-container {
+  background: rgba(15, 23, 42, 0.75) !important;
+  border-color: rgba(71, 85, 105, 0.15);
+  box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* 滚到页面底部 — 展开全宽 */
+footer.footer.at-bottom .info-container {
+  left: 0;
+  right: 0;
+  max-width: 100vw;
+  transform: none;
+  border-radius: 0;
+  padding: 12px 24px !important;
+  border-top: 1px solid rgba(148, 163, 184, 0.1);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.dark-mode footer.footer.at-bottom .info-container {
+  border-top-color: rgba(71, 85, 105, 0.12);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.35);
+}
+
+footer.footer .info-container .customize-info {
+  font-size: 0.8rem;
+  margin: 0 !important;
+  opacity: 0.75;
+  white-space: nowrap;
+}
+
+footer.footer .info-container .text-center {
+  font-size: 0.8rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+footer.footer .info-container .post-count {
+  display: inline;
+  margin: 0;
+  white-space: nowrap;
+}
+
+footer.footer .info-container .icp-info {
+  display: inline;
+  white-space: nowrap;
+}
+
+footer.footer .info-container .icp-info a {
+  color: var(--text-tertiary);
+  text-decoration: none;
+}
+
+footer.footer .info-container div:not(.customize-info):not(.text-center):not(.icp-info):not(.post-count) {
+  display: inline;
+  white-space: nowrap;
 }
 
 footer.footer .info-container {
@@ -1284,57 +1425,166 @@ textarea:focus-visible {
 }
 
 /* ========================================
-   SEASONAL THEME — 春夏秋冬四套配色
-   html[data-season] 由 custom.js 按月份设置:
-   春 3-5 月 · 夏 6-8 月 · 秋 9-11 月 · 冬 12-2 月
+   SEASONAL THEME — 春夏秋冬四套完整主题
+   移植自旧版 themes.css 配色(春绿/夏橙/秋红/冬蓝),
+   每季含完整变量集:主色 + 背景 + 文字 + 边框 + 光泽
    ======================================== */
 
-/* 春 — 嫩绿 + 樱粉 */
+/* 春 — 嫩绿:浅绿底 + 深绿字 */
 html[data-season="spring"] {
   --primary-color: #16a34a;
   --primary-color-light: #4ade80;
   --primary-color-dark: #15803d;
-  --accent-color: #f472b6;
-  --accent-secondary: #a78bfa;
+  --accent-color: #65a30d;
+  --accent-secondary: #84cc16;
   --card-sheen-rgb: 22, 163, 74;
+  --text-primary: #0d3b1e;
+  --text-secondary: #2d6a3f;
+  --text-tertiary: #6ba07a;
+  --bg-primary: #f2fdf5;
+  --bg-secondary: #e6f7eb;
+  --bg-card: rgba(255, 255, 255, 0.75);
+  --bg-card-solid: #ffffff;
+  --border-color: rgba(22, 163, 74, 0.14);
+  --border-color-strong: rgba(22, 163, 74, 0.28);
 }
 
-/* 夏 — 天蓝 + 青绿 */
+/* 夏 — 阳光橙:暖橙底 + 深橙棕字 */
 html[data-season="summer"] {
+  --primary-color: #ea580c;
+  --primary-color-light: #fb923c;
+  --primary-color-dark: #c2410c;
+  --accent-color: #f59e0b;
+  --accent-secondary: #fbbf24;
+  --card-sheen-rgb: 234, 88, 12;
+  --text-primary: #7c2d12;
+  --text-secondary: #b8451a;
+  --text-tertiary: #d4957a;
+  --bg-primary: #fff9f2;
+  --bg-secondary: #fff7ed;
+  --bg-card: rgba(255, 255, 255, 0.78);
+  --bg-card-solid: #ffffff;
+  --border-color: rgba(234, 88, 12, 0.14);
+  --border-color-strong: rgba(234, 88, 12, 0.28);
+}
+
+/* 秋 — 枫叶红:红棕底 + 深红棕字 */
+html[data-season="autumn"] {
+  --primary-color: #c2410c;
+  --primary-color-light: #ea580c;
+  --primary-color-dark: #9a3412;
+  --accent-color: #dc2626;
+  --accent-secondary: #ef4444;
+  --card-sheen-rgb: 194, 65, 12;
+  --text-primary: #5c1a07;
+  --text-secondary: #9a3412;
+  --text-tertiary: #c2785a;
+  --bg-primary: #fff8f0;
+  --bg-secondary: #fef3e7;
+  --bg-card: rgba(255, 255, 255, 0.78);
+  --bg-card-solid: #ffffff;
+  --border-color: rgba(194, 65, 12, 0.14);
+  --border-color-strong: rgba(194, 65, 12, 0.28);
+}
+
+/* 冬 — 清冷蓝:冷灰蓝底 + 深蓝灰字 */
+html[data-season="winter"] {
   --primary-color: #0ea5e9;
   --primary-color-light: #38bdf8;
   --primary-color-dark: #0284c7;
-  --accent-color: #14b8a6;
-  --accent-secondary: #06b6d4;
+  --accent-color: #06b6d4;
+  --accent-secondary: #22d3ee;
   --card-sheen-rgb: 14, 165, 233;
+  --text-primary: #1a2a3e;
+  --text-secondary: #445a74;
+  --text-tertiary: #8899b4;
+  --bg-primary: #f0f4f8;
+  --bg-secondary: #e8eef4;
+  --bg-card: rgba(255, 255, 255, 0.78);
+  --bg-card-solid: #ffffff;
+  --border-color: rgba(14, 165, 233, 0.14);
+  --border-color-strong: rgba(14, 165, 233, 0.28);
 }
 
-/* 秋 — 枫橙 + 金黄 */
-html[data-season="autumn"] {
-  --primary-color: #f97316;
-  --primary-color-light: #fb923c;
-  --primary-color-dark: #ea580c;
-  --accent-color: #eab308;
-  --accent-secondary: #f59e0b;
-  --card-sheen-rgb: 249, 115, 22;
-}
-
-/* 冬 — 冰蓝 + 紫蓝 */
-html[data-season="winter"] {
-  --primary-color: #60a5fa;
-  --primary-color-light: #93c5fd;
-  --primary-color-dark: #3b82f6;
-  --accent-color: #818cf8;
-  --accent-secondary: #a5b4fc;
-  --card-sheen-rgb: 96, 165, 250;
-}
-
-/* 深色模式下保证 primary 亮度和对比度
+/* 暗色模式:深底 + 季节主色(亮化保证对比度)
    (.dark 加在 <html> 上,由 Redefine 切换;.dark-mode 则在 <body> 上) */
-html.dark[data-season="spring"] { --primary-color: #4ade80; --primary-color-dark: #22c55e; }
-html.dark[data-season="summer"]  { --primary-color: #38bdf8; --primary-color-dark: #0ea5e9; }
-html.dark[data-season="autumn"]  { --primary-color: #fb923c; --primary-color-dark: #f97316; }
-html.dark[data-season="winter"]  { --primary-color: #93c5fd; --primary-color-dark: #60a5fa; }
+html.dark[data-season="spring"] {
+  --primary-color: #4ade80;
+  --primary-color-light: #86efac;
+  --primary-color-dark: #22c55e;
+  --accent-color: #a3e635;
+  --accent-secondary: #84cc16;
+  --card-sheen-rgb: 74, 222, 128;
+  --text-primary: #d1fae5;
+  --text-secondary: #86efac;
+  --text-tertiary: #6ee7b7;
+  --bg-primary: #08130b;
+  --bg-secondary: #0d1f12;
+  --bg-card: rgba(19, 40, 26, 0.78);
+  --bg-card-solid: #12291a;
+  --border-color: rgba(74, 222, 128, 0.16);
+  --border-color-strong: rgba(74, 222, 128, 0.3);
+}
+
+html.dark[data-season="summer"] {
+  --primary-color: #fb923c;
+  --primary-color-light: #fdba74;
+  --primary-color-dark: #f97316;
+  --accent-color: #fbbf24;
+  --accent-secondary: #f59e0b;
+  --card-sheen-rgb: 251, 146, 60;
+  --text-primary: #ffedd5;
+  --text-secondary: #fdba74;
+  --text-tertiary: #fb923c;
+  --bg-primary: #1a0e05;
+  --bg-secondary: #2a1608;
+  --bg-card: rgba(58, 34, 12, 0.78);
+  --bg-card-solid: #38220d;
+  --border-color: rgba(251, 146, 60, 0.16);
+  --border-color-strong: rgba(251, 146, 60, 0.3);
+}
+
+html.dark[data-season="autumn"] {
+  --primary-color: #ea580c;
+  --primary-color-light: #f97316;
+  --primary-color-dark: #c2410c;
+  --accent-color: #ef4444;
+  --accent-secondary: #dc2626;
+  --card-sheen-rgb: 234, 88, 12;
+  --text-primary: #fef2e9;
+  --text-secondary: #fca5a5;
+  --text-tertiary: #f87171;
+  --bg-primary: #160a04;
+  --bg-secondary: #24100a;
+  --bg-card: rgba(52, 26, 12, 0.78);
+  --bg-card-solid: #341a0c;
+  --border-color: rgba(234, 88, 12, 0.16);
+  --border-color-strong: rgba(234, 88, 12, 0.3);
+}
+
+html.dark[data-season="winter"] {
+  --primary-color: #38bdf8;
+  --primary-color-light: #7dd3fc;
+  --primary-color-dark: #0ea5e9;
+  --accent-color: #67e8f9;
+  --accent-secondary: #22d3ee;
+  --card-sheen-rgb: 56, 189, 248;
+  --text-primary: #e0f2fe;
+  --text-secondary: #7dd3fc;
+  --text-tertiary: #38bdf8;
+  --bg-primary: #060d14;
+  --bg-secondary: #0b1824;
+  --bg-card: rgba(15, 33, 48, 0.78);
+  --bg-card-solid: #0f2130;
+  --border-color: rgba(56, 189, 248, 0.16);
+  --border-color-strong: rgba(56, 189, 248, 0.3);
+}
+
+/* 主题切换平滑过渡(移植自旧版 theme-transitioning) */
+.theme-transitioning,
+.theme-transitioning * {
+  transition: background-color 0.5s ease, color 0.3s ease, border-color 0.4s ease, box-shadow 0.4s ease !important;
+}
 
 /* 首页横幅:叠一层季节色调,让图片氛围随季节走 */
 .home-banner-container::after {
@@ -1749,6 +1999,106 @@ footer.footer.at-bottom + .footer-mascot {
   background: rgba(239, 68, 68, 0.1);
   border-color: rgba(239, 68, 68, 0.3);
   color: #ef4444;
+}
+
+/* ========================================
+   友链页 — 弹入动画 + 头像漂浮(移植自旧版)
+   ======================================== */
+.links-page .link-item {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.25s ease;
+  animation: linkBounceIn 0.4s ease both;
+}
+
+.links-page .link-item:nth-child(1) { animation-delay: 0s; }
+.links-page .link-item:nth-child(2) { animation-delay: 0.08s; }
+.links-page .link-item:nth-child(3) { animation-delay: 0.16s; }
+.links-page .link-item:nth-child(4) { animation-delay: 0.24s; }
+.links-page .link-item:nth-child(5) { animation-delay: 0.32s; }
+.links-page .link-item:nth-child(6) { animation-delay: 0.40s; }
+
+@keyframes linkBounceIn {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.9);
+  }
+  60% {
+    transform: translateY(-6px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.links-page .link-item:hover {
+  border-color: rgba(var(--card-sheen-rgb), 0.3);
+  box-shadow: var(--shadow-xl);
+  transform: translateY(-8px) scale(1.02);
+}
+
+.links-page .link-item:active {
+  transform: translateY(-2px) scale(0.98);
+}
+
+.links-page .link-item img {
+  border-radius: 50%;
+  border: 2px solid var(--border-color);
+  transition: border-color var(--transition-fast), transform var(--transition-main);
+}
+
+.links-page .link-item:hover img {
+  border-color: var(--primary-color);
+  transform: scale(1.1) rotate(5deg);
+  animation: avatarFloat 2s ease-in-out infinite;
+}
+
+@keyframes avatarFloat {
+  0%, 100% { transform: translateY(0) scale(1.1); }
+  50% { transform: translateY(-4px) scale(1.1); }
+}
+
+/* ========================================
+   ABOUT PAGE — Skill Bars + 链接图标前缀(移植自旧版)
+   ======================================== */
+.post-content table td:last-child {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.85em;
+  letter-spacing: -0.02em;
+}
+
+.post-content table td:last-child {
+  background: linear-gradient(
+    90deg,
+    rgba(var(--card-sheen-rgb), 0.12) 0%,
+    rgba(var(--card-sheen-rgb), 0.12) var(--progress, 80%),
+    transparent var(--progress, 80%)
+  );
+  border-radius: 4px;
+}
+
+.post-content a[href*="github.com"]::before {
+  content: "🔗 ";
+}
+
+.post-content a[href*="/2026/"]::before {
+  content: "📝 ";
+}
+
+/* ========================================
+   FOOTER powered/theme 隐藏 fallback
+   (兼容不支持 :has() 的浏览器)
+   ======================================== */
+footer.footer a[href="https://hexo.io"],
+footer.footer a[href*="redefine"] {
+  font-size: 0 !important;
+  line-height: 0 !important;
+  color: transparent !important;
+  pointer-events: none !important;
 }
 
 /* ========================================

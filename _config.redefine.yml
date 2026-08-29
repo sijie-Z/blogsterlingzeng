@@ -100,8 +100,8 @@ home_banner:
       - "在这里，技术和思考相遇"
       - "Keep Rolling, Keep Coding"
     hitokoto:
-      enable: true
-      show_author: true
+      enable: false
+      show_author: false
       api: https://v1.hitokoto.cn
     typing_speed: 80
     backing_speed: 60
@@ -306,8 +306,8 @@ footer:
   statistics: false
   customize: "用代码构建世界，用文字记录成长"
   icp:
-    enable: false
-    number:
+    enable: true
+    number: 蜀ICP备2026016586号
     url: https://beian.miit.gov.cn/
   powered: false
   theme_info: false

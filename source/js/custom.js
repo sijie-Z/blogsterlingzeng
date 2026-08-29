@@ -131,6 +131,20 @@
           const docHeight = document.documentElement.scrollHeight - window.innerHeight;
           const progress = (scrollTop / docHeight) * 100;
           progressBar.style.width = `${progress}%`;
+
+          // Dynamic Island 导航栏:滚动 >60px 收缩成胶囊
+          const navbar = document.querySelector('.navbar-container');
+          if (navbar) {
+            navbar.classList.toggle('scrolled', scrollTop > 60);
+          }
+
+          // Dynamic Island 页脚:滚到底展开全宽(猫吉祥物跟随上移)
+          const footer = document.querySelector('footer.footer');
+          if (footer) {
+            const atBottom = (scrollTop + window.innerHeight) >= (document.documentElement.scrollHeight - 4);
+            footer.classList.toggle('at-bottom', atBottom);
+          }
+
           ticking = false;
         });
         ticking = true;
@@ -216,10 +230,22 @@
     const current = season === 'auto' ? autoSeason() : season;
     document.documentElement.dataset.season = current;
 
-    // 季节横幅:固定模式的两张 img(亮/暗)都换成季节图
-    if (SEASON_BANNERS[current]) {
+    // 主题切换平滑过渡(旧版 theme-transitioning)
+    const body = document.body;
+    body.classList.add('theme-transitioning');
+    clearTimeout(applySeason._t);
+    applySeason._t = setTimeout(() => body.classList.remove('theme-transitioning'), 600);
+
+    // 季节横幅:换 img src + 容器背景图(覆盖 fixed 模式的两种渲染)
+    const url = SEASON_BANNERS[current];
+    if (url) {
       document.querySelectorAll('.home-banner-background img').forEach(img => {
-        img.src = SEASON_BANNERS[current];
+        img.src = url;
+        img.classList.remove('hidden', 'dark:hidden', 'dark:block');
+        img.style.display = '';
+      });
+      document.querySelectorAll('.home-banner-background').forEach(div => {
+        div.style.backgroundImage = 'url(' + url + ')';
       });
     }
 
@@ -231,8 +257,21 @@
     if (btn) btn.textContent = season === 'auto' ? '🍀' : SEASON_ICONS[current];
   }
 
+  // 预加载全部季节 banner,避免手动切换时闪烁(旧版 initDynamicBanners)
+  function preloadSeasonBanners() {
+    const loaded = {};
+    Object.values(SEASON_BANNERS).forEach(url => {
+      if (loaded[url]) return;
+      loaded[url] = true;
+      const img = new Image();
+      img.src = url;
+    });
+  }
+
   function initSeason() {
     applySeason(effectiveSeason());
+    // 页面加载后延迟预加载,不抢占首屏
+    setTimeout(preloadSeasonBanners, 2000);
   }
 
   // ============================
@@ -415,6 +454,38 @@
   // ============================
   // Article stats — 阅读数 + 点赞(本地存储)
   // ============================
+  // 点赞/取消赞 — document 级事件委托(旧版 initLikeHandler 方式)
+  // 一次绑定全站生效,swup 换页后无需重新绑定
+  function initLikeHandler() {
+    document.addEventListener('click', e => {
+      const btn = e.target.closest('.like-btn');
+      if (!btn) return;
+      e.preventDefault();
+      e.stopPropagation();
+
+      const href = btn.dataset.href;
+      const likeKey = 'likes_' + href;
+      const likedKey = 'liked_' + href;
+      let likes = parseInt(localStorage.getItem(likeKey) || '0');
+      const isLiked = localStorage.getItem(likedKey) === 'true';
+
+      if (isLiked) {
+        likes = Math.max(0, likes - 1);
+        localStorage.removeItem(likedKey);
+        btn.classList.remove('liked');
+      } else {
+        likes++;
+        localStorage.setItem(likedKey, 'true');
+        btn.classList.add('liked');
+      }
+      localStorage.setItem(likeKey, String(likes));
+      const iconClass = 'fa-' + (isLiked ? 'regular' : 'solid') + ' fa-heart';
+      const suffix = btn.classList.contains('post-page-stats') ? ' 个赞' : '';
+      btn.innerHTML = '<i class="' + iconClass + '"></i> ' + likes + suffix;
+    });
+  }
+
+  // 首页卡片:渲染浏览数 + 点赞
   function initArticleStats() {
     document.querySelectorAll('.home-article-item').forEach(card => {
       const titleEl = card.querySelector('.home-article-title a');
@@ -438,31 +509,9 @@
       const metaContainer = card.querySelector('.home-article-meta-info-container');
       if (metaContainer) metaContainer.appendChild(statsDiv);
     });
-
-    document.querySelectorAll('.like-btn').forEach(btn => {
-      if (btn.dataset.bound) return;
-      btn.dataset.bound = '1';
-      btn.addEventListener('click', () => {
-        const href = btn.dataset.href;
-        const likeKey = 'likes_' + href;
-        let likes = parseInt(localStorage.getItem(likeKey) || '0');
-        const isLiked = localStorage.getItem('liked_' + href) === 'true';
-        if (isLiked) {
-          likes = Math.max(0, likes - 1);
-          localStorage.setItem('liked_' + href, 'false');
-          btn.classList.remove('liked');
-          btn.innerHTML = '<i class="fa-regular fa-heart"></i> ' + likes;
-        } else {
-          likes++;
-          localStorage.setItem('liked_' + href, 'true');
-          btn.classList.add('liked');
-          btn.innerHTML = '<i class="fa-solid fa-heart"></i> ' + likes;
-        }
-        localStorage.setItem(likeKey, String(likes));
-      });
-    });
   }
 
+  // 文章页:渲染阅读数 + 点赞(阅读数 +1)
   function initPostStats() {
     const postTitle = document.querySelector('.article-title');
     if (!postTitle || document.querySelector('.post-page-stats')) return;
@@ -489,25 +538,6 @@
     } else {
       postTitle.parentNode.insertBefore(statsDiv, postTitle.nextSibling);
     }
-
-    const btn = statsDiv.querySelector('.like-btn');
-    btn.addEventListener('click', () => {
-      const likeKey = 'likes_' + path;
-      let n = parseInt(localStorage.getItem(likeKey) || '0');
-      const isLiked = localStorage.getItem('liked_' + path) === 'true';
-      if (isLiked) {
-        n = Math.max(0, n - 1);
-        localStorage.setItem('liked_' + path, 'false');
-        btn.classList.remove('liked');
-        btn.innerHTML = '<i class="fa-regular fa-heart"></i> ' + n + ' 个赞';
-      } else {
-        n++;
-        localStorage.setItem('liked_' + path, 'true');
-        btn.classList.add('liked');
-        btn.innerHTML = '<i class="fa-solid fa-heart"></i> ' + n + ' 个赞';
-      }
-      localStorage.setItem(likeKey, String(n));
-    });
   }
 
   // ============================
@@ -687,6 +717,7 @@
     initMouseFollower();
     initArticleStats();
     initPostStats();
+    initLikeHandler();
   }
 
   // Run on DOM ready
