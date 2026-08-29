@@ -1,4 +1,4 @@
-- links_category: "技术博客"
+- links_category: "常读的博客"
   has_thumbnail: false
   list:
     - name: 阮一峰的网络日志
@@ -14,7 +14,7 @@
       avatar: https://assets.ericterminal.com/logo-transparent.png
       description: 高中生开发者，技术深度和独立思考让人敬佩
 
-- links_category: "工具与社区"
+- links_category: "常用工具与社区"
   has_thumbnail: false
   list:
     - name: GitHub
