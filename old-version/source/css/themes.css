@@ -1,0 +1,287 @@
+/* ========================================
+   Theme Color Definitions
+   ======================================== */
+
+/* Light themes — dark text on light bg */
+.theme-light,
+.theme-spring,
+.theme-summer,
+.theme-autumn,
+.theme-winter {
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-tertiary: #94a3b8;
+  --bg-primary: #f8fafc;
+  --bg-secondary: #f1f5f9;
+  --bg-card: rgba(255, 255, 255, 0.72);
+  --bg-card-solid: #ffffff;
+  --border-color: rgba(148, 163, 184, 0.18);
+  --border-color-strong: rgba(148, 163, 184, 0.3);
+  --card-sheen-rgb: 10, 132, 255;
+}
+
+.theme-spring {
+  --primary-color: #16a34a;
+  --primary-color-light: #4ade80;
+  --primary-color-dark: #15803d;
+  --accent-color: #65a30d;
+  --accent-secondary: #84cc16;
+  --card-sheen-rgb: 22, 163, 74;
+}
+.theme-summer {
+  --primary-color: #ea580c;
+  --primary-color-light: #fb923c;
+  --primary-color-dark: #c2410c;
+  --accent-color: #f59e0b;
+  --accent-secondary: #fbbf24;
+  --card-sheen-rgb: 234, 88, 12;
+}
+.theme-autumn {
+  --primary-color: #c2410c;
+  --primary-color-light: #ea580c;
+  --primary-color-dark: #9a3412;
+  --accent-color: #dc2626;
+  --accent-secondary: #ef4444;
+  --card-sheen-rgb: 194, 65, 12;
+}
+.theme-winter {
+  --primary-color: #0ea5e9;
+  --primary-color-light: #38bdf8;
+  --primary-color-dark: #0284c7;
+  --accent-color: #06b6d4;
+  --accent-secondary: #22d3ee;
+  --card-sheen-rgb: 14, 165, 233;
+}
+
+/* Dark theme — light text on dark bg */
+.theme-dark {
+  --primary-color: #8b5cf6;
+  --primary-color-light: #a78bfa;
+  --primary-color-dark: #7c3aed;
+  --accent-color: #818cf8;
+  --accent-secondary: #6366f1;
+  --card-sheen-rgb: 139, 92, 246;
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-tertiary: #64748b;
+  --bg-primary: #090d1a;
+  --bg-secondary: #131a2e;
+  --bg-card: rgba(19, 26, 46, 0.78);
+  --bg-card-solid: #1a2340;
+  --border-color: rgba(71, 85, 105, 0.25);
+  --border-color-strong: rgba(71, 85, 105, 0.4);
+}
+
+/* ========================================
+   SMOOTH THEME TRANSITION
+   ======================================== */
+.theme-transitioning,
+.theme-transitioning * {
+  transition: background-color 0.5s ease, color 0.3s ease, border-color 0.4s ease, box-shadow 0.4s ease !important;
+}
+
+/* ========================================
+   NAVBAR CONTROLS — Inside navbar
+   ======================================== */
+.nb-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  position: relative;
+  z-index: 10;
+}
+
+.nb-theme-btn,
+.nb-timer-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  background: rgba(255, 255, 255, 0.4);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+  outline: none;
+  color: #475569;
+}
+
+.dark-mode .nb-theme-btn,
+.dark-mode .nb-timer-btn {
+  background: rgba(30, 41, 59, 0.5);
+  border-color: rgba(71, 85, 105, 0.2);
+  color: #94a3b8;
+}
+
+.nb-theme-btn:hover,
+.nb-timer-btn:hover {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.dark-mode .nb-theme-btn:hover,
+.dark-mode .nb-timer-btn:hover {
+  background: rgba(30, 41, 59, 0.8);
+}
+
+/* Theme dropdown */
+.nb-dropdown {
+  position: absolute;
+  top: 40px;
+  right: 0;
+  min-width: 160px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 12px;
+  padding: 5px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px) scale(0.97);
+  transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: 9999;
+}
+
+.dark-mode .nb-dropdown {
+  background: rgba(15, 23, 42, 0.9);
+  border-color: rgba(71, 85, 105, 0.2);
+}
+
+.nb-dropdown.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+}
+
+.nb-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 10px;
+  border: none;
+  background: transparent;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #334155;
+  transition: background 0.15s ease;
+  outline: none;
+}
+
+.dark-mode .nb-opt { color: #cbd5e1; }
+.nb-opt:hover { background: rgba(10, 132, 255, 0.08); }
+.nb-opt.active { background: rgba(10, 132, 255, 0.12); font-weight: 600; color: #0a84ff; }
+.dark-mode .nb-opt.active { color: #60a5fa; }
+
+.nb-div {
+  height: 1px;
+  background: rgba(148, 163, 184, 0.12);
+  margin: 3px 6px;
+}
+
+/* Timer panel */
+.nb-timer-panel {
+  position: absolute;
+  top: 40px;
+  right: 36px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 12px;
+  padding: 12px 16px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.1);
+  display: none;
+  min-width: 170px;
+  text-align: center;
+  z-index: 9999;
+}
+
+.dark-mode .nb-timer-panel {
+  background: rgba(15, 23, 42, 0.9);
+  border-color: rgba(71, 85, 105, 0.2);
+}
+
+.nb-timer-panel.show {
+  display: block;
+  animation: fadeSlideIn 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.nb-timer-time {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1e293b;
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 8px;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.dark-mode .nb-timer-time { color: #e2e8f0; }
+
+.nb-timer-btns {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+}
+
+.nb-timer-btns button {
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  background: rgba(255, 255, 255, 0.5);
+  color: #475569;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dark-mode .nb-timer-btns button {
+  background: rgba(30, 41, 59, 0.5);
+  border-color: rgba(71, 85, 105, 0.15);
+  color: #94a3b8;
+}
+
+.nb-timer-btns button:hover {
+  background: #0a84ff;
+  color: #fff;
+  border-color: #0a84ff;
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ========================================
+   管中窥豹 — Flashlight
+   ======================================== */
+.flashlight-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 9998;
+  background: radial-gradient(
+    circle 200px at var(--fx, 50%) var(--fy, 50%),
+    transparent 0%, transparent 45%,
+    rgba(0, 0, 0, 0.5) 100%
+  );
+}
+.flashlight-mode { cursor: none; }
+.flashlight-mode .nb-controls, .flashlight-mode .nb-theme-btn, .flashlight-mode .nb-timer-btn { cursor: pointer; }
+.flashlight-mode .page-container,
+.flashlight-mode .home-banner-container,
+.flashlight-mode .sidebar-content,
+.flashlight-mode .sidebar-links { filter: brightness(0.3); transition: filter 0.3s ease; }
+
+/* ========================================
+   Mobile
+   ======================================== */
+@media (max-width: 768px) {
+  .nb-theme-btn, .nb-timer-btn { width: 28px; height: 28px; font-size: 12px; }
+  .nb-dropdown { min-width: 140px; }
+}

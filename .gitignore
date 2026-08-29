@@ -37,3 +37,6 @@ tmp/
 
 # Theme zip
 *.zip
+
+# Local-only media sources (wallpaper videos, >100MB each — GitHub rejects)
+source/videos/
