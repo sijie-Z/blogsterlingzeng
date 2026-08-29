@@ -227,8 +227,9 @@
   }
 
   function applySeason(season) {
-    const current = season === 'auto' ? autoSeason() : season;
-    document.documentElement.dataset.season = current;
+    // 自动模式:主题色用独立的浅色系(html 标 auto),banner 跟随当月季节
+    const resolved = season === 'auto' ? autoSeason() : season;
+    document.documentElement.dataset.season = season;
 
     // 主题切换平滑过渡(旧版 theme-transitioning)
     const body = document.body;
@@ -237,7 +238,7 @@
     applySeason._t = setTimeout(() => body.classList.remove('theme-transitioning'), 600);
 
     // 季节横幅:换 img src + 容器背景图(覆盖 fixed 模式的两种渲染)
-    const url = SEASON_BANNERS[current];
+    const url = SEASON_BANNERS[resolved];
     if (url) {
       document.querySelectorAll('.home-banner-background img').forEach(img => {
         img.src = url;
@@ -254,7 +255,7 @@
       el.classList.toggle('active', el.dataset.season === season);
     });
     const btn = document.querySelector('.nb-theme-btn');
-    if (btn) btn.textContent = season === 'auto' ? '🍀' : SEASON_ICONS[current];
+    if (btn) btn.textContent = season === 'auto' ? '🍀' : SEASON_ICONS[season];
   }
 
   // 预加载全部季节 banner,避免手动切换时闪烁(旧版 initDynamicBanners)

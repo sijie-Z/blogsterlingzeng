@@ -1430,6 +1430,45 @@ textarea:focus-visible {
    每季含完整变量集:主色 + 背景 + 文字 + 边框 + 光泽
    ======================================== */
 
+/* 自动模式 — 独立浅色主题(薄荷青)
+   与四个季节都区分:夏天的橙、春天的绿、秋天的红、冬天的蓝 */
+html[data-season="auto"] {
+  --primary-color: #0d9488;
+  --primary-color-light: #2dd4bf;
+  --primary-color-dark: #0f766e;
+  --accent-color: #6366f1;
+  --accent-secondary: #8b5cf6;
+  --card-sheen-rgb: 13, 148, 136;
+  --text-primary: #134e4a;
+  --text-secondary: #2f6f6a;
+  --text-tertiary: #7aa8a3;
+  --bg-primary: #f0fdfa;
+  --bg-secondary: #ccfbf1;
+  --bg-card: rgba(255, 255, 255, 0.78);
+  --bg-card-solid: #ffffff;
+  --border-color: rgba(13, 148, 136, 0.14);
+  --border-color-strong: rgba(13, 148, 136, 0.28);
+}
+
+/* 自动模式暗色变体 */
+html.dark[data-season="auto"] {
+  --primary-color: #2dd4bf;
+  --primary-color-light: #5eead4;
+  --primary-color-dark: #14b8a6;
+  --accent-color: #818cf8;
+  --accent-secondary: #6366f1;
+  --card-sheen-rgb: 45, 212, 191;
+  --text-primary: #ccfbf1;
+  --text-secondary: #5eead4;
+  --text-tertiary: #2dd4bf;
+  --bg-primary: #04211d;
+  --bg-secondary: #062e29;
+  --bg-card: rgba(8, 47, 41, 0.78);
+  --bg-card-solid: #07312b;
+  --border-color: rgba(45, 212, 191, 0.16);
+  --border-color-strong: rgba(45, 212, 191, 0.3);
+}
+
 /* 春 — 嫩绿:浅绿底 + 深绿字 */
 html[data-season="spring"] {
   --primary-color: #16a34a;
