@@ -493,7 +493,7 @@
       }
       localStorage.setItem(likeKey, String(likes));
       const iconClass = 'fa-' + (isLiked ? 'regular' : 'solid') + ' fa-heart';
-      const suffix = btn.classList.contains('post-page-stats') ? ' 个赞' : '';
+      const suffix = btn.closest('.post-page-stats') ? ' 个赞' : '';
       btn.innerHTML = '<i class="' + iconClass + '"></i> ' + likes + suffix;
     });
   }
