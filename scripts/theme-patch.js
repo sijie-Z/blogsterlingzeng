@@ -30,25 +30,23 @@ try {
     .filter(line => !/__\(["']theme["']\)/.test(line))
     .join('\n');
 
-  // 禁用 odometer 翻页动画:删除含 new Odometer 的 script 块。
-  // 用户要求运行时间数字直接更新(21->22 直接换),不要翻页滚动效果。
-  // 主题 runtime.js 仍会每秒用 innerHTML 填数字,span 保持普通文本。
-  // 注意:不能用正则从 <script 起匹配(会误删前面的 vercount script 块),
-  // 必须从 new Odometer 定位再向前后扩展。
+  // 禁用 odometer 翻页组件。
+  // odometer 在部分字体/布局下 ribbon 高度塌陷为 0,数字被裁剪,
+  // 静止时不可见、仅滑动瞬间露出。改用 custom.js 的轻量滑动动画。
+  // 1) 删除 footer.ejs 的显式初始化
   const odomIdx = content.indexOf('new Odometer');
   if (odomIdx !== -1) {
     const start = content.lastIndexOf('<script', odomIdx);
     const end = content.indexOf('</script>', odomIdx) + '</script>'.length;
     content = content.slice(0, start) + content.slice(end);
-    console.log('[theme-patch] 已移除 footer 的 odometer 初始化 script 块');
   }
 
-  fs.writeFileSync(target, content, 'utf8');
+  if (content !== original) {
+    fs.writeFileSync(target, content, 'utf8');
+    console.log('[theme-patch] footer.ejs: 已删 powered/theme 行与 odometer 初始化');
+  }
 
-  // scripts.ejs:移除 odometer 库加载。
-  // odometer.min.js 自带 DOMContentLoaded 自动初始化(扫描 .odometer),
-  // 只删 footer 的显式初始化不够——库本身会接管元素并翻页。
-  // runtime.js 仍会用 innerHTML 填数字,span 保持普通文本直接更新。
+  // 2) scripts.ejs:移除 odometer 库(自带 DOMContentLoaded 自动初始化)
   const scriptsTarget = path.join(
     __dirname, '..', 'node_modules',
     'hexo-theme-redefine', 'layout', 'components', 'scripts.ejs'
@@ -60,7 +58,7 @@ try {
     .join('\n');
   if (scripts !== scriptsOriginal) {
     fs.writeFileSync(scriptsTarget, scripts, 'utf8');
-    console.log('[theme-patch] 已移除 scripts.ejs 的 odometer 库加载');
+    console.log('[theme-patch] scripts.ejs: 已移除 odometer 库加载');
   }
 } catch (e) {
   console.error('[theme-patch] 失败(不影响构建):', e.message);

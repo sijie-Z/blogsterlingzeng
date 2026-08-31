@@ -153,6 +153,30 @@
   }
 
   // ============================
+  // Runtime counter — 滑动刷新(替代 odometer)
+  // odometer 翻页结构在部分字体下 ribbon 高度塌陷,数字静止时被
+  // 裁剪不可见。这里监听主题 runtime.js 的数字更新,做轻量滑动
+  // 动画——有滑动感,数字始终可见(不透明度最低 0.3,绝不消失)。
+  // ============================
+  function initRuntimeSlide() {
+    const els = ['runtime_days', 'runtime_hours', 'runtime_minutes', 'runtime_seconds']
+      .map(id => document.getElementById(id))
+      .filter(Boolean);
+    if (els.length === 0) return;
+
+    els.forEach(el => {
+      if (el.dataset.slide) return;
+      el.dataset.slide = '1';
+      const observer = new MutationObserver(() => {
+        el.classList.remove('rt-slide');
+        void el.offsetWidth; // 强制重排,让动画能重复触发
+        el.classList.add('rt-slide');
+      });
+      observer.observe(el, { childList: true, characterData: true, subtree: true });
+    });
+  }
+
+  // ============================
   // Copy link button (article post-tools)
   // ============================
   function showToast(msg) {
@@ -734,6 +758,7 @@
     initArticleStats();
     initPostStats();
     initLikeHandlerOnce();
+    initRuntimeSlide();
   }
 
   // Run on DOM ready
