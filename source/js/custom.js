@@ -239,17 +239,20 @@
     applySeason._t = setTimeout(() => body.classList.remove('theme-transitioning'), 600);
 
     if (!isAuto) {
-      // 季节 banner:换 img src(保留 hidden/dark 类,亮暗各显示自己的 img,
-      // 内容都是季节图;类保留以便切回自动时能正确还原)
+      // 季节 banner:新图预加载完成后再替换,避免切换时空白等待
       const url = SEASON_BANNERS[season];
       if (url) {
-        document.querySelectorAll('.home-banner-background img').forEach(img => {
-          img.src = url;
-          img.style.display = '';
-        });
-        document.querySelectorAll('.home-banner-background').forEach(div => {
-          div.style.backgroundImage = 'url(' + url + ')';
-        });
+        const probe = new Image();
+        probe.onload = () => {
+          document.querySelectorAll('.home-banner-background img').forEach(img => {
+            img.src = url;
+            img.style.display = '';
+          });
+          document.querySelectorAll('.home-banner-background').forEach(div => {
+            div.style.backgroundImage = 'url(' + url + ')';
+          });
+        };
+        probe.src = url;
       }
     } else {
       // 自动模式:还原配置默认 banner(亮色=太空城市,暗色=赛博雨夜)
