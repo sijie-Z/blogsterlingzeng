@@ -138,11 +138,11 @@
             navbar.classList.toggle('scrolled', scrollTop > 60);
           }
 
-          // 页脚 reveal:滚动接近页面底部(剩余 300px 内)时滑出
+          // 页脚:滚到页面最底部时展开全宽(猫吉祥物跟随上移)
           const footer = document.querySelector('footer.footer');
           if (footer) {
-            const remaining = document.documentElement.scrollHeight - window.innerHeight - scrollTop;
-            footer.classList.toggle('at-bottom', remaining <= 300);
+            const atBottom = (scrollTop + window.innerHeight) >= (document.documentElement.scrollHeight - 4);
+            footer.classList.toggle('at-bottom', atBottom);
           }
 
           ticking = false;
