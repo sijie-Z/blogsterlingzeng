@@ -119,6 +119,7 @@ html.dark .navbar-container.scrolled .navbar-content {
 }
 
 /* 收起时整体缩放,链接保留可见(参考 ericterminal 方案) */
+.navbar-container.scrolled .navbar-content .left .logo-title,
 .navbar-container.scrolled .navbar-content .left .logo-title h1 {
   font-size: 0.95rem;
 }
@@ -135,6 +136,7 @@ html.dark .navbar-container.scrolled .navbar-content {
   gap: 4px;
 }
 
+.navbar-content .left .logo-title,
 .navbar-content .left .logo-title h1 {
   font-weight: 700;
   letter-spacing: -0.03em;
