@@ -200,7 +200,9 @@ html.dark .navbar-container.scrolled .navbar-content {
    ARTICLE CARDS — Glass Morphism
    ======================================== */
 .home-article-item {
-  background: var(--bg-card-solid) !important;
+  background: var(--bg-card) !important;
+  backdrop-filter: blur(8px) saturate(120%);
+  -webkit-backdrop-filter: blur(8px) saturate(120%);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-xl) !important;
   overflow: hidden;
@@ -336,7 +338,9 @@ html.dark .navbar-container.scrolled .navbar-content {
    SIDEBAR — Glass Panel
    ======================================== */
 .sidebar-content {
-  background: var(--bg-card-solid) !important;
+  background: var(--bg-card) !important;
+  backdrop-filter: blur(8px) saturate(120%);
+  -webkit-backdrop-filter: blur(8px) saturate(120%);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-xl) !important;
   padding: 1.5rem !important;
@@ -394,7 +398,9 @@ html.dark .navbar-container.scrolled .navbar-content {
 
 /* Sidebar links */
 .sidebar-links {
-  background: var(--bg-card-solid) !important;
+  background: var(--bg-card) !important;
+  backdrop-filter: blur(8px) saturate(120%);
+  -webkit-backdrop-filter: blur(8px) saturate(120%);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-xl) !important;
   overflow: hidden;
@@ -659,8 +665,8 @@ html.dark .home-article-item .home-article-meta-info .article-category {
    ======================================== */
 .tool-scroll-to-top {
   background: var(--bg-card) !important;
-  backdrop-filter: blur(16px) saturate(150%);
-  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   box-shadow: var(--shadow-md) !important;
   border-radius: var(--radius-md) !important;
   border: 1px solid var(--border-color);
@@ -1320,7 +1326,9 @@ html.dark .project-card-lang {
   left: 50%;
   bottom: 3.5rem;
   transform: translateX(-50%) translateY(12px);
-  background: var(--bg-card-solid);
+  background: var(--bg-card);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
   border-radius: 999px;
@@ -1763,7 +1771,9 @@ html.dark .nb-timer-btn:hover {
   top: 40px;
   right: 0;
   min-width: 160px;
-  background: var(--bg-card-solid);
+  background: var(--bg-card);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 5px;
@@ -1810,7 +1820,9 @@ html.dark .nb-timer-btn:hover {
   position: absolute;
   top: 40px;
   right: 36px;
-  background: var(--bg-card-solid);
+  background: var(--bg-card);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 12px 16px;
