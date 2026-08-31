@@ -440,29 +440,143 @@
   }
 
   // ============================
-  // Footer mascot — 猫吉祥物
+  // Spark 宠物(参考 ChatGPT 桌面版宠物)
+  // SVG 精灵:视线追踪鼠标、随机眨眼、点击表情+台词、可拖拽
   // ============================
-  function initFooterMascot() {
-    if (document.querySelector('.footer-mascot')) return;
-    const mascot = document.createElement('div');
-    mascot.className = 'footer-mascot';
-    mascot.innerHTML = '🐱';
-    mascot.title = '喵~';
-    mascot.addEventListener('click', () => {
-      const phrases = ['喵~ 🐱', 'Meow! ✨', 'にゃん~ 🌟', '喵呜~ 💫', 'Meow~ 🎵', 'にゃ〜 🌸'];
-      const phrase = phrases[Math.floor(Math.random() * phrases.length)];
-      mascot.innerHTML = phrase;
-      setTimeout(() => { mascot.innerHTML = '🐱'; }, 1500);
-    });
-    document.body.appendChild(mascot);
+  const SPARK_PHRASES = [
+    '我在看你的代码 ✨',
+    '今天也要加油',
+    '嗯…这个 bug 有点意思',
+    'Sterling 又在写 bug 了',
+    '保持好奇',
+    '休息一下,喝口水',
+    '点击我会有惊喜?并没有',
+    '喵?哦不,我是 Spark',
+  ];
 
-    const footer = document.querySelector('footer.footer');
-    if (footer) {
-      const observer = new MutationObserver(() => {
-        mascot.style.bottom = footer.classList.contains('at-bottom') ? '42px' : '10px';
-      });
-      observer.observe(footer, { attributes: true, attributeFilter: ['class'] });
+  function initSparkPet() {
+    if (document.querySelector('.spark-pet')) return;
+    const pet = document.createElement('div');
+    pet.className = 'spark-pet';
+    pet.innerHTML = `
+      <div class="spark-bubble" hidden></div>
+      <div class="spark-body" tabindex="0" role="img" aria-label="Spark 宠物">
+        <svg viewBox="0 0 100 100" class="spark-svg" aria-hidden="true">
+          <defs>
+            <radialGradient id="sparkBody" cx="0.35" cy="0.3" r="0.9">
+              <stop offset="0%" stop-color="#8ab4ff"/>
+              <stop offset="55%" stop-color="#5b7cfa"/>
+              <stop offset="100%" stop-color="#7c4dff"/>
+            </radialGradient>
+            <linearGradient id="sparkGlow" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#60a5fa" stop-opacity="0.5"/>
+              <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <!-- 光晕 -->
+          <circle cx="50" cy="52" r="46" fill="url(#sparkGlow)"/>
+          <!-- 身体 -->
+          <circle cx="50" cy="55" r="34" fill="url(#sparkBody)"/>
+          <ellipse cx="40" cy="40" rx="14" ry="9" fill="#ffffff" opacity="0.18"/>
+          <!-- 眼睛组 -->
+          <g class="spark-eyes">
+            <circle class="spark-eye" cx="38" cy="50" r="8" fill="#ffffff"/>
+            <circle class="spark-eye" cx="62" cy="50" r="8" fill="#ffffff"/>
+            <circle class="spark-pupil" cx="40" cy="51" r="4" fill="#1e2a78"/>
+            <circle class="spark-pupil" cx="64" cy="51" r="4" fill="#1e2a78"/>
+            <circle cx="41.5" cy="49.5" r="1.3" fill="#ffffff"/>
+            <circle cx="65.5" cy="49.5" r="1.3" fill="#ffffff"/>
+          </g>
+          <!-- 嘴 -->
+          <path class="spark-mouth" d="M42 64 Q50 70 58 64" stroke="#ffffff" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>`;
+    document.body.appendChild(pet);
+
+    const body = pet.querySelector('.spark-body');
+    const svg = pet.querySelector('.spark-svg');
+    const pupils = pet.querySelectorAll('.spark-pupil');
+    const eyes = pet.querySelectorAll('.spark-eye');
+    const mouth = pet.querySelector('.spark-mouth');
+    const bubble = pet.querySelector('.spark-bubble');
+
+    // 视线追踪:瞳孔跟随鼠标(限制偏移范围)
+    let petRect = body.getBoundingClientRect();
+    const updateRect = () => { petRect = body.getBoundingClientRect(); };
+    window.addEventListener('resize', updateRect);
+    document.addEventListener('mousemove', e => {
+      const dx = e.clientX - (petRect.left + petRect.width / 2);
+      const dy = e.clientY - (petRect.top + petRect.height / 2);
+      const max = 4;
+      const ox = Math.max(-max, Math.min(max, dx / 12));
+      const oy = Math.max(-max, Math.min(max, dy / 12));
+      pupils.forEach(p => p.setAttribute('transform', `translate(${ox}, ${oy})`));
+    });
+
+    // 随机眨眼
+    function blink() {
+      eyes.forEach(e => e.setAttribute('ry', '1'));
+      setTimeout(() => eyes.forEach(e => e.setAttribute('ry', '8')), 130);
+      setTimeout(blink, 2500 + Math.random() * 3500);
     }
+    setTimeout(blink, 3000);
+
+    // 点击:表情 + 台词
+    function say(text) {
+      bubble.textContent = text;
+      bubble.hidden = false;
+      bubble.classList.remove('spark-pop');
+      void bubble.offsetWidth;
+      bubble.classList.add('spark-pop');
+      setTimeout(() => { bubble.hidden = true; }, 2000);
+    }
+
+    function express(type) {
+      mouth.removeAttribute('d');
+      eyes.forEach(e => e.setAttribute('ry', '8'));
+      if (type === 'happy') {
+        mouth.setAttribute('d', 'M40 62 Q50 72 60 62');
+        eyes.forEach((e, i) => e.setAttribute('d', i === 0
+          ? 'M31 50 Q38 42 45 50 Q38 53 31 50'
+          : 'M55 50 Q62 42 69 50 Q62 53 55 50'));
+      } else if (type === 'think') {
+        mouth.setAttribute('d', 'M45 65 Q50 62 55 65');
+      } else if (type === 'wow') {
+        mouth.setAttribute('d', 'M44 63 Q50 70 56 63');
+        eyes.forEach(e => e.setAttribute('r', '9'));
+      }
+    }
+
+    body.addEventListener('click', () => {
+      const r = Math.random();
+      if (r < 0.4) express('happy');
+      else if (r < 0.7) express('wow');
+      else express('think');
+      say(SPARK_PHRASES[Math.floor(Math.random() * SPARK_PHRASES.length)]);
+      setTimeout(() => {
+        mouth.setAttribute('d', 'M42 64 Q50 70 58 64');
+        eyes.forEach(e => e.setAttribute('r', '8'));
+      }, 2200);
+    });
+
+    // 拖拽
+    let dragging = false, offsetX = 0, offsetY = 0;
+    body.addEventListener('pointerdown', e => {
+      dragging = true;
+      const rect = body.getBoundingClientRect();
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+      body.setPointerCapture(e.pointerId);
+    });
+    body.addEventListener('pointermove', e => {
+      if (!dragging) return;
+      const x = e.clientX - offsetX;
+      const y = e.clientY - offsetY;
+      body.style.left = x + 'px';
+      body.style.top = y + 'px';
+      updateRect();
+    });
+    body.addEventListener('pointerup', () => { dragging = false; });
   }
 
   // ============================
@@ -757,7 +871,7 @@
     initRelatedPosts();
     initSeason();
     initThemeSwitcher();
-    initFooterMascot();
+    initSparkPet();
     initMouseFollower();
     initArticleStats();
     initPostStats();

@@ -1942,45 +1942,87 @@ html.dark .nb-timer-btns button {
 }
 
 /* ========================================
-   FOOTER MASCOT — 猫
+   SPARK PET — ChatGPT 桌面版风格宠物
    ======================================== */
-.footer-mascot {
+.spark-pet {
   position: fixed;
-  bottom: 10px;
-  right: 18px;
-  z-index: 101;
-  font-size: 2.2rem;
-  cursor: pointer;
+  right: 22px;
+  bottom: 58px;
+  z-index: 1000;
   user-select: none;
-  transition: transform 0.3s ease, bottom 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-  animation: mascotIdle 3s ease-in-out infinite;
+  -webkit-user-select: none;
 }
 
-.footer-mascot:hover {
-  transform: scale(1.3) translateY(-6px);
-  animation: mascotJump 0.5s ease;
+.spark-body {
+  width: 58px;
+  height: 58px;
+  cursor: pointer;
+  position: relative;
+  animation: sparkFloat 3.2s ease-in-out infinite;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  touch-action: none;
 }
 
-.footer-mascot:active {
-  transform: scale(0.9);
+.spark-body:hover {
+  transform: scale(1.12);
 }
 
-@keyframes mascotIdle {
-  0%, 100% { transform: translateY(0); }
-  30% { transform: translateY(-4px); }
-  60% { transform: translateY(-1px); }
+.spark-body:active {
+  transform: scale(0.95);
 }
 
-@keyframes mascotJump {
-  0% { transform: scale(1) translateY(0); }
-  40% { transform: scale(1.3) translateY(-14px); }
-  60% { transform: scale(1.25) translateY(-8px); }
-  100% { transform: scale(1.3) translateY(-6px); }
+.spark-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
 }
 
-footer.footer.at-bottom ~ .footer-mascot,
-footer.footer.at-bottom + .footer-mascot {
-  bottom: 38px;
+@keyframes sparkFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.spark-bubble {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-card-solid);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 7px 12px;
+  font-size: 0.78rem;
+  white-space: nowrap;
+  box-shadow: var(--shadow-lg);
+  z-index: 1001;
+}
+
+.spark-bubble.spark-pop {
+  animation: sparkPop 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes sparkPop {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(6px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 768px) {
+  .spark-body {
+    width: 46px;
+    height: 46px;
+  }
 }
 
 /* ========================================
