@@ -71,7 +71,9 @@ date: 2026-05-10 12:00:00
 
 ## 📅 时间线
 
-**2026.08** — MiQroGate 凭证虚拟化网关上线（Java 21 + WebFlux）；NFT Launchpad Kit v1.0.0 发布冲刺；博客更新到 17 篇文章
+**2026.09** — 博客 HTTPS 上线（Cloudflare）;NFT Launchpad Kit v1.0.0 发布并转向 Agent-Native 方向
+
+**2026.08** — MiQroGate 凭证虚拟化网关推进至 Phase 1 G7.4（响应缓存）;NFT Launchpad Kit v1.0.0 发布冲刺;博客更新到 17 篇文章
 
 **2026.07** — NLP 训练实验框架（BERT → LoRA 微调 Qwen）；DocMind Agent 消融研究（7 组对照实验，69% → 93.1%）
 

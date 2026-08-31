@@ -350,6 +350,16 @@ html.dark .navbar-container.scrolled .navbar-content {
   transform: translateX(4px);
 }
 
+
+/* 首页卡片 hover:封面图缓慢缩放 */
+.home-article-item:hover .home-article-thumbnail img {
+  transform: scale(1.06);
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.home-article-item .home-article-thumbnail img {
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
 /* ========================================
    SIDEBAR — Glass Panel
    ======================================== */
@@ -456,7 +466,7 @@ html.dark .navbar-container.scrolled .navbar-content {
 /* Headings */
 .article-content h2 {
   position: relative;
-  padding-left: 18px;
+  padding-left: 26px !important;
   margin-top: 3em;
   margin-bottom: 0.8em;
   font-weight: 800;
@@ -2231,6 +2241,34 @@ footer.footer a[href*="redefine"] {
   line-height: 0 !important;
   color: transparent !important;
   pointer-events: none !important;
+}
+
+/* ========================================
+   SCROLL REVEAL — 滚动进入视口动画
+   ======================================== */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.reveal.reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 文章标题:竖线随标题一起生长 */
+.article-content h2.reveal::before {
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.1s;
+}
+
+.article-content h2.reveal.reveal-visible::before {
+  transform: scaleY(1);
 }
 
 /* ========================================

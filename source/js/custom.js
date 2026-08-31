@@ -440,6 +440,39 @@
   }
 
   // ============================
+  // Scroll reveal — 滚动进入视口动画
+  // 文章标题/图片/代码块/引用/表格 + 相关阅读 + 项目卡片等,
+  // 进入视口时淡入上移,一次性动画,不重复触发
+  // ============================
+  function initReveal() {
+    if (!('IntersectionObserver' in window)) return;
+    const targets = document.querySelectorAll(
+      '.article-content h2, .article-content h3, .article-content h4, ' +
+      '.article-content p img, .article-content blockquote, .article-content pre, ' +
+      '.article-content table, .related-post-item, .project-card, ' +
+      '.friends-link-container .group, .page-template-content h2, .page-template-content h3'
+    );
+    if (targets.length === 0) return;
+
+    targets.forEach(el => {
+      if (el.dataset.reveal) return;
+      el.dataset.reveal = '1';
+      el.classList.add('reveal');
+    });
+
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('reveal-visible');
+          obs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.06, rootMargin: '0px 0px -36px 0px' });
+
+    targets.forEach(el => obs.observe(el));
+  }
+
+  // ============================
   // Spark 宠物(参考 ChatGPT 桌面版宠物)
   // SVG 精灵:视线追踪鼠标、随机眨眼、点击表情+台词、可拖拽
   // ============================
@@ -872,6 +905,7 @@
     initSeason();
     initThemeSwitcher();
     initSparkPet();
+    initReveal();
     initMouseFollower();
     initArticleStats();
     initPostStats();

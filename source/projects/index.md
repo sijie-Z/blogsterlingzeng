@@ -11,7 +11,7 @@ date: 2026-08-28 10:00:00
 
 ### 把 API Key 关进网关
 
-**miqro-gate** | Java 21 · Spring WebFlux
+**miqro-gate** | Java 21 · Spring WebFlux · Phase 1 推进至 G7.4
 
 企业级 AI 凭证虚拟化与用量治理系统。把真实上游 API Key 安全映射为可独立追踪、轮换、吊销的 Virtual Key，内部用户在门户自助创建，网关负责鉴权替换、确定性转发、用量统计与审计。
 
@@ -21,7 +21,7 @@ date: 2026-08-28 10:00:00
 - 控制面/数据面分离，热路径零数据库访问（路由快照 + pg_notify）
 - 统一 404 防探测、常量时间 HMAC、密钥零残留
 - 不保存提示词/代码/回答正文；不因预算阻断，Webhook 告警
-- 7 家厂商 20 个产品适配器；449 个 Java 文件、134 个测试文件
+- 响应缓存已启用（对齐供应商精确缓存方案,ADR-0009）；7 家厂商 20 个产品适配器
 
 [Github](https://github.com/sijie-Z/miqro-gate) · [博客文章](/2026/08/28/miqro-gate-virtual-key-design/)
 
@@ -99,20 +99,19 @@ date: 2026-08-28 10:00:00
 
 ---
 
-### NFT Launchpad Kit — NFT 发行平台
+### NFT Launchpad Kit — Agent-Native 发行基础设施
 
-**nft-launchpad-kit** | Solidity · TypeScript
+**nft-launchpad-kit** | Solidity · TypeScript · **v1.0.0 已发布**
 
-一站式 NFT 发行平台，支持 6 种铸造模式。从智能合约到前端管理后台的全链路实现。
+"代理发行,用户铸造。" 给任何 AI agent 一把密钥,它就能创建合集、签发铸造授权、发行链上资产——会员卡、任务奖励、凭证,全自动,全可验证。
 
-**技术栈：** Solidity · ERC721A · Next.js · Hardhat · viem · wagmi
+**技术栈：** Solidity · ERC721A · Next.js 14 · Hardhat · viem · wagmi · The Graph
 
 **亮点：**
-- 6 种铸造模式（公开、白名单、荷兰拍、签名授权、ERC20 支付、分阶段）
-- ERC721A 批量铸造（节省 70-90% gas）
-- ERC-1167 Clone 工厂（节省 93% 部署 gas）
-- EIP-712 结构化签名 + nonce 防重放
-- v1.0.0 发布冲刺：15 个 issue 还工程债（CI 从未运行过、密钥清理、测试基线）
+- trusted-signer 流程(mintWithSignature712V2):离线签名授权链上铸造,一次性、限时、限量——签名者不一定是人
+- 6 种铸造模式 + Factory Clone + 无代码创建向导 + AI 元数据管线
+- 204 个测试,CI 3-4 分钟
+- 15 个 issue 的发布冲刺已完成:CI 从未运行过、密钥清理、测试基线——v1.0.0 已打 tag 发布
 
 [Github](https://github.com/sijie-Z/nft-launchpad-kit) · [博客文章](/2026/08/28/nft-launchpad-release-sprint/)
 
