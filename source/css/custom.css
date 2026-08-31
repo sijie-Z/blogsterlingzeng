@@ -127,6 +127,8 @@ html.dark .navbar-container.scrolled .navbar-content {
   font-weight: 700;
   letter-spacing: -0.03em;
   font-size: 1.15rem;
+  line-height: 1.4;
+  padding-bottom: 3px;
   background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -1472,7 +1474,7 @@ html[data-season="summer"] {
   --shadow-color-2: rgba(0, 0, 0, 0.04);
 }
 
-/* 秋 — 枫叶红:红棕底 + 深红棕字 */
+/* 秋 — 枫叶红:浅暖灰底 + 深红棕字(去黄调整) */
 html[data-season="autumn"] {
   --primary-color: #c2410c;
   --primary-color-light: #ea580c;
@@ -1481,22 +1483,22 @@ html[data-season="autumn"] {
   --accent-secondary: #ef4444;
   --card-sheen-rgb: 194, 65, 12;
   --text-primary: #5c1a07;
-  --text-secondary: #9a3412;
-  --text-tertiary: #c2785a;
-  --bg-primary: #fff8f0;
-  --bg-secondary: #fef3e7;
-  --bg-card: rgba(255, 255, 255, 0.78);
+  --text-secondary: #8a3a1e;
+  --text-tertiary: #b07a5e;
+  --bg-primary: #faf4ef;
+  --bg-secondary: #f3ebe4;
+  --bg-card: rgba(255, 255, 255, 0.8);
   --bg-card-solid: #ffffff;
-  --border-color: rgba(194, 65, 12, 0.14);
-  --border-color-strong: rgba(194, 65, 12, 0.28);
+  --border-color: rgba(194, 65, 12, 0.13);
+  --border-color-strong: rgba(194, 65, 12, 0.26);
   /* 覆盖 Redefine 编译变量(完整换色) */
-  --background-color: #fff8f0;
-  --second-background-color: #fef3e7;
-  --third-background-color: #fde8d5;
+  --background-color: #faf4ef;
+  --second-background-color: #f3ebe4;
+  --third-background-color: #ece0d6;
   --default-text-color: #5c1a07;
   --first-text-color: #5c1a07;
-  --second-text-color: #9a3412;
-  --third-text-color: #c2785a;
+  --second-text-color: #8a3a1e;
+  --third-text-color: #b07a5e;
   --shadow-color-1: rgba(0, 0, 0, 0.02);
   --shadow-color-2: rgba(0, 0, 0, 0.04);
 }
