@@ -742,7 +742,14 @@
   }
 
   // Re-run on swup page transition (if using single page mode)
+  // swup v3: swup.on('contentReplaced', cb); swup v4: swup.hooks.on('content:replace', cb)
   if (typeof swup !== 'undefined') {
-    swup.on('contentReplaced', init);
+    try {
+      if (typeof swup.on === 'function') {
+        swup.on('contentReplaced', init);
+      } else if (swup.hooks && typeof swup.hooks.on === 'function') {
+        swup.hooks.on('content:replace', init);
+      }
+    } catch (e) { /* swup 版本差异,页面切换后功能重新初始化为尽力而为 */ }
   }
 })();
