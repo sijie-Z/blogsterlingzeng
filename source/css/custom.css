@@ -94,17 +94,23 @@ html.dark .navbar-container:not(.scrolled) {
 }
 
 .navbar-container.scrolled .navbar-content {
-  max-width: 680px;
-  margin: 8px auto;
-  padding: 6px 16px;
-  border-radius: 18px;
+  max-width: 760px !important;
+  margin: 10px auto !important;
+  padding: 7px 20px !important;
+  border-radius: 999px !important;
   background: rgba(255, 255, 255, 0.82) !important;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(148, 163, 184, 0.08);
-  transform: translateZ(0) scale(0.96);
+  box-shadow: 0 18px 38px -28px rgba(8, 18, 34, 0.24) !important;
+  transform: translateZ(0) scale(0.99);
   transform-origin: top center;
-  transition: all 0.55s cubic-bezier(0.25, 1.1, 0.5, 1);
+  transition: width 0.56s cubic-bezier(0.16, 1, 0.3, 1),
+              margin 0.56s cubic-bezier(0.16, 1, 0.3, 1),
+              padding 0.56s cubic-bezier(0.16, 1, 0.3, 1),
+              border-radius 0.56s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.42s cubic-bezier(0.33, 1, 0.68, 1),
+              box-shadow 0.42s cubic-bezier(0.33, 1, 0.68, 1),
+              transform 0.56s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 html.dark .navbar-container.scrolled .navbar-content {
@@ -759,8 +765,7 @@ a.page-number.current {
 }
 
 /* ========================================
-   FOOTER — Reveal(参考 ericterminal 的 data-footer-reveal)
-   平时藏在屏幕外,滚动接近页面底部时弹性滑出
+   FOOTER — Dynamic Island(常驻底部胶囊)
    ======================================== */
 footer.footer {
   position: relative;
@@ -773,16 +778,16 @@ footer.footer {
 
 footer.footer .info-container {
   position: fixed;
-  bottom: calc(-1 * (var(--footer-reveal-height, 44px) + 24px));
+  bottom: 0;
   left: 50%;
-  transform: translateX(-50%) translateY(12px);
+  transform: translateX(-50%);
   width: auto;
   max-width: 92vw;
   padding: 8px 24px !important;
   border-radius: 18px 18px 0 0;
-  background: rgba(255, 255, 255, 0.82) !important;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.88) !important;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   border: 1px solid rgba(148, 163, 184, 0.1);
   border-bottom: none;
   box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.06);
@@ -796,34 +801,13 @@ footer.footer .info-container {
   justify-content: center;
   gap: 18px;
   flex-wrap: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition:
-    bottom 0.7s cubic-bezier(0.25, 1.1, 0.5, 1),
-    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.4s ease;
 }
 
 html.dark footer.footer .info-container {
-  background: rgba(15, 23, 42, 0.8) !important;
+  background: rgba(15, 23, 42, 0.75) !important;
   border-color: rgba(71, 85, 105, 0.15);
   box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.3);
 }
-
-/* 接近页面底部 — 弹性滑出 */
-footer.footer.at-bottom .info-container {
-  bottom: 12px;
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateX(-50%) translateY(0);
-}
-
-@media (max-width: 768px) {
-  footer.footer.at-bottom .info-container {
-    bottom: 6px;
-  }
-}
-
 
 footer.footer .info-container .customize-info {
   font-size: 0.8rem;
