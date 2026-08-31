@@ -753,25 +753,6 @@ a.page-number.current {
 }
 
 /* ========================================
-   FOOTER RUNTIME — 滑动刷新动画
-   odometer 替代:数字变化时从下方轻滑入,始终可见
-   ======================================== */
-.rt-slide {
-  animation: rtSlideIn 0.25s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-@keyframes rtSlideIn {
-  from {
-    transform: translateY(5px);
-    opacity: 0.3;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-/* ========================================
    FOOTER — Dynamic Island(移植自旧版)
    底部悬浮居中胶囊,滚到页面底部时展开全宽
    ======================================== */

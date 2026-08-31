@@ -153,27 +153,31 @@
   }
 
   // ============================
-  // Runtime counter — 滑动刷新(替代 odometer)
-  // odometer 翻页结构在部分字体下 ribbon 高度塌陷,数字静止时被
-  // 裁剪不可见。这里监听主题 runtime.js 的数字更新,做轻量滑动
-  // 动画——有滑动感,数字始终可见(不透明度最低 0.3,绝不消失)。
+  // Odometer — 等字体加载完成再初始化
+  // odometer 在 DOMContentLoaded 自动初始化时,4 套 Google 字体
+  // 尚未就绪,数字度量错误导致 ribbon 高度塌陷为 0——静止时数字
+  // 被裁剪不可见,仅滚动瞬间露出。这里阻止自动初始化,等
+  // document.fonts.ready 后再手动初始化,滚动效果正常且数字可见。
   // ============================
-  function initRuntimeSlide() {
-    const els = ['runtime_days', 'runtime_hours', 'runtime_minutes', 'runtime_seconds']
-      .map(id => document.getElementById(id))
-      .filter(Boolean);
-    if (els.length === 0) return;
+  function initOdometer() {
+    if (!window.Odometer) return;
+    // 阻止库的 DOMContentLoaded 自动初始化(它在 ready 时检查 options.auto)
+    window.Odometer.options.auto = false;
 
-    els.forEach(el => {
-      if (el.dataset.slide) return;
-      el.dataset.slide = '1';
-      const observer = new MutationObserver(() => {
-        el.classList.remove('rt-slide');
-        void el.offsetWidth; // 强制重排,让动画能重复触发
-        el.classList.add('rt-slide');
+    const start = () => {
+      document.querySelectorAll('.odometer').forEach(el => {
+        if (el.odometer) return;
+        try {
+          new window.Odometer({ el, format: '( ddd).dd', duration: 200 });
+        } catch (e) {}
       });
-      observer.observe(el, { childList: true, characterData: true, subtree: true });
-    });
+    };
+
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => setTimeout(start, 50));
+    } else {
+      setTimeout(start, 500);
+    }
   }
 
   // ============================
@@ -758,7 +762,7 @@
     initArticleStats();
     initPostStats();
     initLikeHandlerOnce();
-    initRuntimeSlide();
+    initOdometer();
   }
 
   // Run on DOM ready
