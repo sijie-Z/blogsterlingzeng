@@ -741,6 +741,18 @@ a.page-number.current {
 }
 
 /* ========================================
+   FOOTER RUNTIME — odometer 等宽字体修复
+   数字位宽度由隐藏 spacer('8')撑开,非等宽字体下数字间出现
+   空隙显示成 "1 4 2";等宽字体让所有位宽度一致,数字粘连
+   ======================================== */
+.odometer,
+.odometer .odometer-digit-spacer,
+.odometer .odometer-value {
+  font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ========================================
    FOOTER — Dynamic Island(移植自旧版)
    底部悬浮居中胶囊,滚到页面底部时展开全宽
    ======================================== */
