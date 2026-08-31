@@ -391,9 +391,13 @@ cover: /images/cover.jpg
 
 ## 部署指南
 
+> **当前架构**:域名(阿里云)→ Cloudflare(DNS/HTTPS/CDN)→ GitHub Pages(内容)。
+> 完整运维手册见 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)——包含账号位置、DNS 现状、日常操作速查。
+> 日常发布 = 写文章 + git push,自动部署。
+
 ### 方式一：宝塔面板手动上传（最简单）
 
-这是目前使用的方式。
+这是早期使用的方式(现已被 GitHub Actions 自动部署取代)。
 
 **步骤：**
 
