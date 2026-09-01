@@ -1,18 +1,18 @@
-- image: https://cdn.jsdelivr.net/gh/sijie-Z/blogsterlingzeng@main/assets/banner/banner-light.webp
+- image: /images/banner-light.webp
   title: 太空城市
   description: 自动模式的默认横幅
-- image: https://cdn.jsdelivr.net/gh/sijie-Z/blogsterlingzeng@main/assets/banner/banner-dark.webp
+- image: /images/banner-dark.webp
   title: 赛博雨夜
   description: 暗色模式的默认横幅
-- image: https://cdn.jsdelivr.net/gh/sijie-Z/blogsterlingzeng@main/assets/banner/banner-spring.webp
+- image: /images/banner-spring.webp
   title: 春日 LoFi
   description: 春季主题横幅
-- image: https://cdn.jsdelivr.net/gh/sijie-Z/blogsterlingzeng@main/assets/banner/banner-summer.webp
+- image: /images/banner-summer.webp
   title: 孤独的猫
   description: 夏季主题横幅
-- image: https://cdn.jsdelivr.net/gh/sijie-Z/blogsterlingzeng@main/assets/banner/banner-autumn.webp
+- image: /images/banner-autumn.webp
   title: 秋日石桥
   description: 秋季主题横幅
-- image: https://cdn.jsdelivr.net/gh/sijie-Z/blogsterlingzeng@main/assets/banner/banner-winter.webp
+- image: /images/banner-winter.webp
   title: 雪夜 LoFi
   description: 冬季主题横幅

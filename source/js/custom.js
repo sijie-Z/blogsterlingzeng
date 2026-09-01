@@ -235,10 +235,10 @@
   const SEASON_ICONS = { spring: '🌸', summer: '🌻', autumn: '🍂', winter: '❄️' };
   const SEASON_NAMES = { spring: '春季', summer: '夏季', autumn: '秋季', winter: '冬季' };
   const SEASON_BANNERS = {
-    spring: 'https://cdn.jsdelivr.net/gh/sijie-Z/blogsterlingzeng@main/assets/banner/banner-spring.webp',
-    summer: 'https://cdn.jsdelivr.net/gh/sijie-Z/blogsterlingzeng@main/assets/banner/banner-summer.webp',
-    autumn: 'https://cdn.jsdelivr.net/gh/sijie-Z/blogsterlingzeng@main/assets/banner/banner-autumn.webp',
-    winter: 'https://cdn.jsdelivr.net/gh/sijie-Z/blogsterlingzeng@main/assets/banner/banner-winter.webp',
+    spring: '/images/banner-spring.webp',
+    summer: '/images/banner-summer.webp',
+    autumn: '/images/banner-autumn.webp',
+    winter: '/images/banner-winter.webp',
   };
 
   function autoSeason() {
@@ -284,8 +284,8 @@
       document.querySelectorAll('.home-banner-background img').forEach(img => {
         const isDarkImg = img.classList.contains('dark:block');
         img.src = isDarkImg
-          ? 'https://cdn.jsdelivr.net/gh/sijie-Z/blogsterlingzeng@main/assets/banner/banner-dark.webp'
-          : 'https://cdn.jsdelivr.net/gh/sijie-Z/blogsterlingzeng@main/assets/banner/banner-light.webp';
+          ? '/images/banner-dark.webp'
+          : '/images/banner-light.webp';
       });
       document.querySelectorAll('.home-banner-background').forEach(div => {
         div.style.backgroundImage = '';
