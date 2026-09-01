@@ -153,6 +153,49 @@
   }
 
   // ============================
+  // Theme ripple — 主题切换辐射动画
+  // 黑白/四季切换时,从点击位置圆形扩散(类似 iOS 深色切换)
+  // 时长基准:16 寸屏(视口对角线 ~2200px)0.75s,屏幕越大越慢
+  // ============================
+  let rippleLastX = 0, rippleLastY = 0;
+  document.addEventListener('click', e => {
+    rippleLastX = e.clientX;
+    rippleLastY = e.clientY;
+  }, true);
+
+  function themeRipple(x, y) {
+    const vw = window.innerWidth, vh = window.innerHeight;
+    if (!vw || !vh) return;
+    const maxR = Math.hypot(Math.max(x, vw - x), Math.max(y, vh - y)) + 60;
+    const diag = Math.hypot(vw, vh);
+    const dur = Math.min(1.2, Math.max(0.55, 0.75 * diag / 2200));
+
+    const overlay = document.createElement('div');
+    overlay.className = 'theme-ripple';
+    overlay.style.clipPath = 'circle(0px at ' + x + 'px ' + y + 'px)';
+    overlay.style.transitionDuration = dur + 's';
+    document.body.appendChild(overlay);
+
+    requestAnimationFrame(() => {
+      overlay.style.clipPath = 'circle(' + maxR + 'px at ' + x + 'px ' + y + 'px)';
+    });
+    setTimeout(() => overlay.remove(), dur * 1000 + 200);
+  }
+
+  // 明暗切换检测(Redefine 在 <html> 上切 .dark):变化时从最后点击位置辐射
+  function initDarkRipple() {
+    let lastDark = document.documentElement.classList.contains('dark');
+    const obs = new MutationObserver(() => {
+      const nowDark = document.documentElement.classList.contains('dark');
+      if (nowDark !== lastDark) {
+        lastDark = nowDark;
+        themeRipple(rippleLastX || window.innerWidth / 2, rippleLastY || window.innerHeight / 2);
+      }
+    });
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+  }
+
+  // ============================
   // Odometer — 等字体加载完成再初始化
   // odometer 在 DOMContentLoaded 自动初始化时,4 套 Google 字体
   // 尚未就绪,数字度量错误导致 ribbon 高度塌陷为 0——静止时数字
@@ -255,6 +298,8 @@
   }
 
   function applySeason(season) {
+    // 从点击位置辐射扩散(主题切换动画)
+    themeRipple(rippleLastX || window.innerWidth / 2, rippleLastY || window.innerHeight / 2);
     // 自动 = 旧版 light 明亮主题:浅色主题 + 太空城市 banner(配置默认)
     // 手动选季节 = 季节完整主题 + 对应季节图
     const isAuto = season === 'auto';
@@ -491,46 +536,47 @@
     if (document.querySelector('.spark-pet')) return;
     const pet = document.createElement('div');
     pet.className = 'spark-pet';
-    pet.innerHTML = `
-      <div class="spark-bubble" hidden></div>
-      <div class="spark-body" tabindex="0" role="img" aria-label="Spark 宠物">
-        <svg viewBox="0 0 100 100" class="spark-svg" aria-hidden="true">
-          <defs>
-            <radialGradient id="sparkBody" cx="0.35" cy="0.3" r="0.9">
-              <stop offset="0%" stop-color="#8ab4ff"/>
-              <stop offset="55%" stop-color="#5b7cfa"/>
-              <stop offset="100%" stop-color="#7c4dff"/>
-            </radialGradient>
-            <linearGradient id="sparkGlow" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#60a5fa" stop-opacity="0.5"/>
-              <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>
-            </linearGradient>
-          </defs>
-          <!-- 光晕 -->
-          <circle cx="50" cy="52" r="46" fill="url(#sparkGlow)"/>
-          <!-- 身体 -->
-          <circle cx="50" cy="55" r="34" fill="url(#sparkBody)"/>
-          <ellipse cx="40" cy="40" rx="14" ry="9" fill="#ffffff" opacity="0.18"/>
-          <!-- 眼睛组 -->
-          <g class="spark-eyes">
-            <circle class="spark-eye" cx="38" cy="50" r="8" fill="#ffffff"/>
-            <circle class="spark-eye" cx="62" cy="50" r="8" fill="#ffffff"/>
-            <circle class="spark-pupil" cx="40" cy="51" r="4" fill="#1e2a78"/>
-            <circle class="spark-pupil" cx="64" cy="51" r="4" fill="#1e2a78"/>
-            <circle cx="41.5" cy="49.5" r="1.3" fill="#ffffff"/>
-            <circle cx="65.5" cy="49.5" r="1.3" fill="#ffffff"/>
-          </g>
-          <!-- 嘴 -->
-          <path class="spark-mouth" d="M42 64 Q50 70 58 64" stroke="#ffffff" stroke-width="2.6" fill="none" stroke-linecap="round"/>
-        </svg>
-      </div>`;
+    pet.innerHTML =
+      '<div class="spark-bubble" hidden></div>' +
+      '<div class="spark-body" tabindex="0" role="img" aria-label="Spark 宠物">' +
+        '<svg viewBox="0 0 100 100" class="spark-svg" aria-hidden="true">' +
+          '<defs>' +
+            '<radialGradient id="sparkBody" cx="0.35" cy="0.3" r="0.9">' +
+              '<stop offset="0%" stop-color="#8ab4ff"/>' +
+              '<stop offset="55%" stop-color="#5b7cfa"/>' +
+              '<stop offset="100%" stop-color="#7c4dff"/>' +
+            '</radialGradient>' +
+            '<linearGradient id="sparkGlow" x1="0" y1="0" x2="1" y2="1">' +
+              '<stop offset="0%" stop-color="#60a5fa" stop-opacity="0.5"/>' +
+              '<stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>' +
+            '</linearGradient>' +
+          '</defs>' +
+          '<circle cx="50" cy="52" r="46" fill="url(#sparkGlow)"/>' +
+          '<circle cx="50" cy="55" r="34" fill="url(#sparkBody)"/>' +
+          '<ellipse cx="40" cy="40" rx="14" ry="9" fill="#ffffff" opacity="0.18"/>' +
+          '<g class="spark-eyes-normal">' +
+            '<circle class="spark-eye" cx="38" cy="50" r="8" fill="#ffffff"/>' +
+            '<circle class="spark-eye" cx="62" cy="50" r="8" fill="#ffffff"/>' +
+            '<circle class="spark-pupil" cx="40" cy="51" r="4" fill="#1e2a78"/>' +
+            '<circle class="spark-pupil" cx="64" cy="51" r="4" fill="#1e2a78"/>' +
+            '<circle cx="41.5" cy="49.5" r="1.3" fill="#ffffff"/>' +
+            '<circle cx="65.5" cy="49.5" r="1.3" fill="#ffffff"/>' +
+          '</g>' +
+          '<g class="spark-eyes-happy" style="display:none">' +
+            '<path d="M31 50 Q38 43 45 50" stroke="#ffffff" stroke-width="2.6" fill="none" stroke-linecap="round"/>' +
+            '<path d="M55 50 Q62 43 69 50" stroke="#ffffff" stroke-width="2.6" fill="none" stroke-linecap="round"/>' +
+          '</g>' +
+          '<path class="spark-mouth spark-mouth-default" d="M42 64 Q50 70 58 64" stroke="#ffffff" stroke-width="2.6" fill="none" stroke-linecap="round"/>' +
+          '<path class="spark-mouth spark-mouth-happy" d="M40 62 Q50 72 60 62" stroke="#ffffff" stroke-width="2.6" fill="none" stroke-linecap="round" style="display:none"/>' +
+          '<path class="spark-mouth spark-mouth-wow" d="M44 63 Q50 70 56 63" stroke="#ffffff" stroke-width="2.6" fill="none" stroke-linecap="round" style="display:none"/>' +
+        '</svg>' +
+      '</div>';
     document.body.appendChild(pet);
 
     const body = pet.querySelector('.spark-body');
     const svg = pet.querySelector('.spark-svg');
     const pupils = pet.querySelectorAll('.spark-pupil');
     const eyes = pet.querySelectorAll('.spark-eye');
-    const mouth = pet.querySelector('.spark-mouth');
     const bubble = pet.querySelector('.spark-bubble');
 
     // 视线追踪:瞳孔跟随鼠标(限制偏移范围)
@@ -543,7 +589,7 @@
       const max = 4;
       const ox = Math.max(-max, Math.min(max, dx / 12));
       const oy = Math.max(-max, Math.min(max, dy / 12));
-      pupils.forEach(p => p.setAttribute('transform', `translate(${ox}, ${oy})`));
+      pupils.forEach(p => p.setAttribute('transform', 'translate(' + ox + ', ' + oy + ')'));
     });
 
     // 随机眨眼
@@ -554,7 +600,7 @@
     }
     setTimeout(blink, 3000);
 
-    // 点击:表情 + 台词
+    // 台词气泡
     function say(text) {
       bubble.textContent = text;
       bubble.hidden = false;
@@ -564,53 +610,52 @@
       setTimeout(() => { bubble.hidden = true; }, 2000);
     }
 
+    // 表情:切 CSS class(可靠,不依赖动态 SVG 属性)
+    let expressTimer = null;
     function express(type) {
-      mouth.removeAttribute('d');
-      eyes.forEach(e => e.setAttribute('ry', '8'));
-      if (type === 'happy') {
-        mouth.setAttribute('d', 'M40 62 Q50 72 60 62');
-        eyes.forEach((e, i) => e.setAttribute('d', i === 0
-          ? 'M31 50 Q38 42 45 50 Q38 53 31 50'
-          : 'M55 50 Q62 42 69 50 Q62 53 55 50'));
-      } else if (type === 'think') {
-        mouth.setAttribute('d', 'M45 65 Q50 62 55 65');
-      } else if (type === 'wow') {
-        mouth.setAttribute('d', 'M44 63 Q50 70 56 63');
-        eyes.forEach(e => e.setAttribute('r', '9'));
-      }
+      svg.classList.remove('spark-happy', 'spark-wow');
+      if (type === 'happy') svg.classList.add('spark-happy');
+      else if (type === 'wow') svg.classList.add('spark-wow');
+      clearTimeout(expressTimer);
+      expressTimer = setTimeout(() => svg.classList.remove('spark-happy', 'spark-wow'), 2200);
     }
 
+    // 点击(未拖拽时):表情 + 台词
     body.addEventListener('click', () => {
+      if (moved) return;
       const r = Math.random();
-      if (r < 0.4) express('happy');
-      else if (r < 0.7) express('wow');
-      else express('think');
+      if (r < 0.5) express('happy');
+      else express('wow');
       say(SPARK_PHRASES[Math.floor(Math.random() * SPARK_PHRASES.length)]);
-      setTimeout(() => {
-        mouth.setAttribute('d', 'M42 64 Q50 70 58 64');
-        eyes.forEach(e => e.setAttribute('r', '8'));
-      }, 2200);
     });
 
-    // 拖拽
-    let dragging = false, offsetX = 0, offsetY = 0;
+    // 拖拽:超过 6px 位移才进入拖拽,点击不会误拖
+    let dragging = false, moved = false, offsetX = 0, offsetY = 0, startX = 0, startY = 0;
     body.addEventListener('pointerdown', e => {
-      dragging = true;
+      moved = false;
+      startX = e.clientX; startY = e.clientY;
       const rect = body.getBoundingClientRect();
       offsetX = e.clientX - rect.left;
       offsetY = e.clientY - rect.top;
       body.setPointerCapture(e.pointerId);
     });
     body.addEventListener('pointermove', e => {
-      if (!dragging) return;
+      if (!dragging) {
+        if (Math.hypot(e.clientX - startX, e.clientY - startY) < 6) return;
+        dragging = true;
+      }
+      moved = true;
       const x = e.clientX - offsetX;
       const y = e.clientY - offsetY;
       body.style.left = x + 'px';
       body.style.top = y + 'px';
+      body.style.right = 'auto';
+      body.style.bottom = 'auto';
       updateRect();
     });
     body.addEventListener('pointerup', () => { dragging = false; });
   }
+
 
   // ============================
   // Mouse follower — 发光跟随点
@@ -906,6 +951,7 @@
     initThemeSwitcher();
     initSparkPet();
     initReveal();
+    initDarkRipple();
     initMouseFollower();
     initArticleStats();
     initPostStats();

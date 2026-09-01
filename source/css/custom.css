@@ -2280,3 +2280,35 @@ footer.footer a[href*="redefine"] {
     animation-duration: 0.01ms !important;
   }
 }
+
+/* ========================================
+   SPARK PET 表情 — 默认/开心/惊讶
+   ======================================== */
+.spark-happy .spark-eyes-normal { display: none; }
+.spark-happy .spark-eyes-happy { display: block; }
+.spark-happy .spark-mouth-default { display: none; }
+.spark-happy .spark-mouth-happy { display: block; }
+.spark-wow .spark-eyes-normal .spark-eye {
+  transform: scale(1.2);
+  transform-origin: center;
+}
+.spark-wow .spark-mouth-default { display: none; }
+.spark-wow .spark-mouth-wow { display: block; }
+.spark-svg .spark-eye {
+  transition: ry 0.1s ease, transform 0.15s ease;
+}
+
+/* ========================================
+   THEME RIPPLE — 主题切换辐射动画
+   ======================================== */
+.theme-ripple {
+  position: fixed;
+  inset: -80px;
+  z-index: 99998;
+  pointer-events: none;
+  background: rgba(15, 23, 42, 0.28);
+  transition-property: clip-path;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: clip-path;
+}
+
