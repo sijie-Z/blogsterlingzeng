@@ -2306,9 +2306,7 @@ footer.footer a[href*="redefine"] {
   inset: -80px;
   z-index: 99998;
   pointer-events: none;
-  background: rgba(15, 23, 42, 0.28);
-  transition-property: clip-path;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(15, 23, 42, 0.4);
   will-change: clip-path;
 }
 

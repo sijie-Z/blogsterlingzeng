@@ -168,18 +168,22 @@
     if (!vw || !vh) return;
     const maxR = Math.hypot(Math.max(x, vw - x), Math.max(y, vh - y)) + 60;
     const diag = Math.hypot(vw, vh);
-    const dur = Math.min(1.2, Math.max(0.55, 0.75 * diag / 2200));
+    const dur = Math.min(1.1, Math.max(0.55, 0.75 * diag / 2200));
 
+    // 全屏暗色遮罩,clip-path 圆孔从点击处扩大——新主题从点击点"擦出"
     const overlay = document.createElement('div');
     overlay.className = 'theme-ripple';
-    overlay.style.clipPath = 'circle(0px at ' + x + 'px ' + y + 'px)';
-    overlay.style.transitionDuration = dur + 's';
     document.body.appendChild(overlay);
 
-    requestAnimationFrame(() => {
-      overlay.style.clipPath = 'circle(' + maxR + 'px at ' + x + 'px ' + y + 'px)';
+    const anim = overlay.animate([
+      { clipPath: 'circle(0px at ' + x + 'px ' + y + 'px)' },
+      { clipPath: 'circle(' + maxR + 'px at ' + x + 'px ' + y + 'px)' }
+    ], {
+      duration: dur * 1000,
+      easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+      fill: 'forwards'
     });
-    setTimeout(() => overlay.remove(), dur * 1000 + 200);
+    anim.onfinish = () => overlay.remove();
   }
 
   // 明暗切换检测(Redefine 在 <html> 上切 .dark):变化时从最后点击位置辐射
