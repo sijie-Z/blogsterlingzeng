@@ -163,16 +163,25 @@
     rippleLastY = e.clientY;
   }, true);
 
-  function themeRipple(x, y) {
+  // 各主题背景色(与 CSS 变量一致)——明暗/四季切换时遮罩用对应颜色
+  const SEASON_BG = {
+    auto: { light: '#f8fafc', dark: '#0a0e1a' },
+    spring: { light: '#f2fdf5', dark: '#08130b' },
+    summer: { light: '#fff9f2', dark: '#1a0e05' },
+    autumn: { light: '#faf4ef', dark: '#160a04' },
+    winter: { light: '#f0f4f8', dark: '#060d14' }
+  };
+
+  function themeRipple(x, y, oldBg) {
     const vw = window.innerWidth, vh = window.innerHeight;
     if (!vw || !vh) return;
     const maxR = Math.hypot(Math.max(x, vw - x), Math.max(y, vh - y)) + 60;
     const diag = Math.hypot(vw, vh);
-    const dur = Math.min(1.1, Math.max(0.55, 0.75 * diag / 2200));
+    const dur = Math.min(0.8, Math.max(0.4, 0.5 * diag / 2200));
 
-    // 全屏暗色遮罩,clip-path 圆孔从点击处扩大——新主题从点击点"擦出"
     const overlay = document.createElement('div');
     overlay.className = 'theme-ripple';
+    overlay.style.background = oldBg;
     document.body.appendChild(overlay);
 
     const anim = overlay.animate([
@@ -180,7 +189,7 @@
       { clipPath: 'circle(' + maxR + 'px at ' + x + 'px ' + y + 'px)' }
     ], {
       duration: dur * 1000,
-      easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+      easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
       fill: 'forwards'
     });
     anim.onfinish = () => overlay.remove();
@@ -193,7 +202,10 @@
       const nowDark = document.documentElement.classList.contains('dark');
       if (nowDark !== lastDark) {
         lastDark = nowDark;
-        themeRipple(rippleLastX || window.innerWidth / 2, rippleLastY || window.innerHeight / 2);
+        const oldIsDark = lastDark;
+        const season = document.documentElement.dataset.season || 'auto';
+        const oldBg = (SEASON_BG[season] || SEASON_BG.auto)[oldIsDark ? 'dark' : 'light'];
+        themeRipple(rippleLastX || window.innerWidth / 2, rippleLastY || window.innerHeight / 2, oldBg);
       }
     });
     obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
@@ -301,9 +313,13 @@
     return SEASON_NAMES[saved] ? saved : 'auto';
   }
 
-  function applySeason(season) {
+  function applySeason(season, withRipple) {
     // 从点击位置辐射扩散(主题切换动画)
     themeRipple(rippleLastX || window.innerWidth / 2, rippleLastY || window.innerHeight / 2);
+    if (withRipple) {
+      const oldBg = getComputedStyle(document.body).backgroundColor || '#f8fafc';
+      themeRipple(rippleLastX || window.innerWidth / 2, rippleLastY || window.innerHeight / 2, oldBg);
+    }
     // 自动 = 旧版 light 明亮主题:浅色主题 + 太空城市 banner(配置默认)
     // 手动选季节 = 季节完整主题 + 对应季节图
     const isAuto = season === 'auto';
@@ -412,7 +428,7 @@
           return;
         }
         localStorage.setItem('blog-season', opt.dataset.season);
-        applySeason(opt.dataset.season);
+        applySeason(opt.dataset.season, true);
         dropdown.classList.remove('show');
       });
     });
@@ -519,145 +535,6 @@
     }, { threshold: 0.06, rootMargin: '0px 0px -36px 0px' });
 
     targets.forEach(el => obs.observe(el));
-  }
-
-  // ============================
-  // Spark 宠物(参考 ChatGPT 桌面版宠物)
-  // SVG 精灵:视线追踪鼠标、随机眨眼、点击表情+台词、可拖拽
-  // ============================
-  const SPARK_PHRASES = [
-    '我在看你的代码 ✨',
-    '今天也要加油',
-    '嗯…这个 bug 有点意思',
-    'Sterling 又在写 bug 了',
-    '保持好奇',
-    '休息一下,喝口水',
-    '点击我会有惊喜?并没有',
-    '喵?哦不,我是 Spark',
-  ];
-
-  function initSparkPet() {
-    if (document.querySelector('.spark-pet')) return;
-    const pet = document.createElement('div');
-    pet.className = 'spark-pet';
-    pet.innerHTML =
-      '<div class="spark-bubble" hidden></div>' +
-      '<div class="spark-body" tabindex="0" role="img" aria-label="Spark 宠物">' +
-        '<svg viewBox="0 0 100 100" class="spark-svg" aria-hidden="true">' +
-          '<defs>' +
-            '<radialGradient id="sparkBody" cx="0.35" cy="0.3" r="0.9">' +
-              '<stop offset="0%" stop-color="#8ab4ff"/>' +
-              '<stop offset="55%" stop-color="#5b7cfa"/>' +
-              '<stop offset="100%" stop-color="#7c4dff"/>' +
-            '</radialGradient>' +
-            '<linearGradient id="sparkGlow" x1="0" y1="0" x2="1" y2="1">' +
-              '<stop offset="0%" stop-color="#60a5fa" stop-opacity="0.5"/>' +
-              '<stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>' +
-            '</linearGradient>' +
-          '</defs>' +
-          '<circle cx="50" cy="52" r="46" fill="url(#sparkGlow)"/>' +
-          '<circle cx="50" cy="55" r="34" fill="url(#sparkBody)"/>' +
-          '<ellipse cx="40" cy="40" rx="14" ry="9" fill="#ffffff" opacity="0.18"/>' +
-          '<g class="spark-eyes-normal">' +
-            '<circle class="spark-eye" cx="38" cy="50" r="8" fill="#ffffff"/>' +
-            '<circle class="spark-eye" cx="62" cy="50" r="8" fill="#ffffff"/>' +
-            '<circle class="spark-pupil" cx="40" cy="51" r="4" fill="#1e2a78"/>' +
-            '<circle class="spark-pupil" cx="64" cy="51" r="4" fill="#1e2a78"/>' +
-            '<circle cx="41.5" cy="49.5" r="1.3" fill="#ffffff"/>' +
-            '<circle cx="65.5" cy="49.5" r="1.3" fill="#ffffff"/>' +
-          '</g>' +
-          '<g class="spark-eyes-happy" style="display:none">' +
-            '<path d="M31 50 Q38 43 45 50" stroke="#ffffff" stroke-width="2.6" fill="none" stroke-linecap="round"/>' +
-            '<path d="M55 50 Q62 43 69 50" stroke="#ffffff" stroke-width="2.6" fill="none" stroke-linecap="round"/>' +
-          '</g>' +
-          '<path class="spark-mouth spark-mouth-default" d="M42 64 Q50 70 58 64" stroke="#ffffff" stroke-width="2.6" fill="none" stroke-linecap="round"/>' +
-          '<path class="spark-mouth spark-mouth-happy" d="M40 62 Q50 72 60 62" stroke="#ffffff" stroke-width="2.6" fill="none" stroke-linecap="round" style="display:none"/>' +
-          '<path class="spark-mouth spark-mouth-wow" d="M44 63 Q50 70 56 63" stroke="#ffffff" stroke-width="2.6" fill="none" stroke-linecap="round" style="display:none"/>' +
-        '</svg>' +
-      '</div>';
-    document.body.appendChild(pet);
-
-    const body = pet.querySelector('.spark-body');
-    const svg = pet.querySelector('.spark-svg');
-    const pupils = pet.querySelectorAll('.spark-pupil');
-    const eyes = pet.querySelectorAll('.spark-eye');
-    const bubble = pet.querySelector('.spark-bubble');
-
-    // 视线追踪:瞳孔跟随鼠标(限制偏移范围)
-    let petRect = body.getBoundingClientRect();
-    const updateRect = () => { petRect = body.getBoundingClientRect(); };
-    window.addEventListener('resize', updateRect);
-    document.addEventListener('mousemove', e => {
-      const dx = e.clientX - (petRect.left + petRect.width / 2);
-      const dy = e.clientY - (petRect.top + petRect.height / 2);
-      const max = 4;
-      const ox = Math.max(-max, Math.min(max, dx / 12));
-      const oy = Math.max(-max, Math.min(max, dy / 12));
-      pupils.forEach(p => p.setAttribute('transform', 'translate(' + ox + ', ' + oy + ')'));
-    });
-
-    // 随机眨眼
-    function blink() {
-      eyes.forEach(e => e.setAttribute('ry', '1'));
-      setTimeout(() => eyes.forEach(e => e.setAttribute('ry', '8')), 130);
-      setTimeout(blink, 2500 + Math.random() * 3500);
-    }
-    setTimeout(blink, 3000);
-
-    // 台词气泡
-    function say(text) {
-      bubble.textContent = text;
-      bubble.hidden = false;
-      bubble.classList.remove('spark-pop');
-      void bubble.offsetWidth;
-      bubble.classList.add('spark-pop');
-      setTimeout(() => { bubble.hidden = true; }, 2000);
-    }
-
-    // 表情:切 CSS class(可靠,不依赖动态 SVG 属性)
-    let expressTimer = null;
-    function express(type) {
-      svg.classList.remove('spark-happy', 'spark-wow');
-      if (type === 'happy') svg.classList.add('spark-happy');
-      else if (type === 'wow') svg.classList.add('spark-wow');
-      clearTimeout(expressTimer);
-      expressTimer = setTimeout(() => svg.classList.remove('spark-happy', 'spark-wow'), 2200);
-    }
-
-    // 点击(未拖拽时):表情 + 台词
-    body.addEventListener('click', () => {
-      if (moved) return;
-      const r = Math.random();
-      if (r < 0.5) express('happy');
-      else express('wow');
-      say(SPARK_PHRASES[Math.floor(Math.random() * SPARK_PHRASES.length)]);
-    });
-
-    // 拖拽:超过 6px 位移才进入拖拽,点击不会误拖
-    let dragging = false, moved = false, offsetX = 0, offsetY = 0, startX = 0, startY = 0;
-    body.addEventListener('pointerdown', e => {
-      moved = false;
-      startX = e.clientX; startY = e.clientY;
-      const rect = body.getBoundingClientRect();
-      offsetX = e.clientX - rect.left;
-      offsetY = e.clientY - rect.top;
-      body.setPointerCapture(e.pointerId);
-    });
-    body.addEventListener('pointermove', e => {
-      if (!dragging) {
-        if (Math.hypot(e.clientX - startX, e.clientY - startY) < 6) return;
-        dragging = true;
-      }
-      moved = true;
-      const x = e.clientX - offsetX;
-      const y = e.clientY - offsetY;
-      body.style.left = x + 'px';
-      body.style.top = y + 'px';
-      body.style.right = 'auto';
-      body.style.bottom = 'auto';
-      updateRect();
-    });
-    body.addEventListener('pointerup', () => { dragging = false; });
   }
 
 
@@ -953,7 +830,6 @@
     initRelatedPosts();
     initSeason();
     initThemeSwitcher();
-    initSparkPet();
     initReveal();
     initDarkRipple();
     initMouseFollower();

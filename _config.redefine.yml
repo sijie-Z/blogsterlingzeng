@@ -317,6 +317,7 @@ inject:
     - <link rel="preconnect" href="https://fonts.googleapis.com">
     - <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   footer:
+    - <script src="/live2d/autoload.js"></script>
     - <div class="footer-extra-icons">
         <a href="/atom.xml" title="RSS 订阅" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-rss"></i></a>
         <a href="https://github.com/sijie-Z" title="GitHub" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-github"></i></a>
