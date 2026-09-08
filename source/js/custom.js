@@ -804,7 +804,7 @@
     const vw = window.innerWidth, vh = window.innerHeight;
     if (!vw || !vh) return;
     const maxR = Math.hypot(Math.max(x, vw - x), Math.max(y, vh - y)) + 60;
-    const dur = Math.min(800, Math.max(500, 620 * Math.hypot(vw, vh) / 2200));
+    const dur = 620;  // 与 ericterminal 一致
     const clip = [
       'circle(0px at ' + x + 'px ' + y + 'px)',
       'circle(' + maxR + 'px at ' + x + 'px ' + y + 'px)'

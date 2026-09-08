@@ -2228,16 +2228,17 @@ footer.footer a[href*="redefine"] {
 
 
 /* ========================================
-   VIEW TRANSITION — 主题切换丝滑过渡
-   (参考 ericterminal:startViewTransition + clip-path 圆形扩散)
+   VIEW TRANSITION — 与 ericterminal 完全一致
    ======================================== */
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation: none;
-  mix-blend-mode: normal;
+::view-transition-group(*),
+::view-transition-old(*),
+::view-transition-new(*) {
+  animation: none !important;
 }
 
-html[data-theme-switching='ripple']::view-transition-old(root) {
+html[data-theme-switching]::view-transition-old(root),
+html[data-theme-switching]::view-transition-new(root) {
   animation: none;
+  mix-blend-mode: normal;
 }
 
