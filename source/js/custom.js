@@ -93,8 +93,11 @@
         if (searchBtn) searchBtn.click();
       }
 
-      // Escape: Close modals
+      // Escape: 退出管中窥豹 / 关闭弹窗
       if (e.key === 'Escape') {
+        if (document.body.classList.contains('flashlight-mode')) {
+          toggleFlashlight();
+        }
         const modals = document.querySelectorAll('.modal.active');
         modals.forEach(modal => modal.classList.remove('active'));
       }
@@ -891,15 +894,8 @@
         switchTheme(() => toggleDarkManually(next), e.clientX || 0, e.clientY || 0);
       }
     }, true);
-    // 兜底:如果 Redefine 自己切了(没被拦截),做检测补动画
-    const obs = new MutationObserver(() => {
-      const nowDark = html.classList.contains('dark');
-      if (nowDark !== lastDark) {
-        lastDark = nowDark;
-        switchTheme(() => {}, window.innerWidth / 2, window.innerHeight / 2);
-      }
-    });
-    obs.observe(html, { attributes: true, attributeFilter: ['class'] });
+    // 不做 MutationObserver 兜底:切换已被捕获拦截接管,
+    // 若 Redefine 自行切换(拦截失败),让它瞬间完成,避免空 View Transition 假过渡
   }
 
 })();
