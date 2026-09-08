@@ -255,8 +255,6 @@
   }
 
   function applySeason(season) {
-    // 从点击位置辐射扩散(主题切换动画)
-    themeRipple(rippleLastX || window.innerWidth / 2, rippleLastY || window.innerHeight / 2);
     // 自动 = 旧版 light 明亮主题:浅色主题 + 太空城市 banner(配置默认)
     // 手动选季节 = 季节完整主题 + 对应季节图
     const isAuto = season === 'auto';
