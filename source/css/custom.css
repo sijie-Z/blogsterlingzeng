@@ -2226,3 +2226,18 @@ footer.footer a[href*="redefine"] {
   will-change: clip-path;
 }
 
+
+/* ========================================
+   VIEW TRANSITION — 主题切换丝滑过渡
+   (参考 ericterminal:startViewTransition + clip-path 圆形扩散)
+   ======================================== */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+html[data-theme-switching='ripple']::view-transition-old(root) {
+  animation: none;
+}
+

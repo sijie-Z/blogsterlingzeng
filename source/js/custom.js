@@ -153,65 +153,6 @@
   }
 
   // ============================
-  // Theme ripple — 主题切换辐射动画
-  // 黑白/四季切换时,从点击位置圆形扩散(类似 iOS 深色切换)
-  // 时长基准:16 寸屏(视口对角线 ~2200px)0.75s,屏幕越大越慢
-  // ============================
-  let rippleLastX = 0, rippleLastY = 0;
-  document.addEventListener('click', e => {
-    rippleLastX = e.clientX;
-    rippleLastY = e.clientY;
-  }, true);
-
-  // 各主题背景色(与 CSS 变量一致)——明暗/四季切换时遮罩用对应颜色
-  const SEASON_BG = {
-    auto: { light: '#f8fafc', dark: '#0a0e1a' },
-    spring: { light: '#f2fdf5', dark: '#08130b' },
-    summer: { light: '#fff9f2', dark: '#1a0e05' },
-    autumn: { light: '#faf4ef', dark: '#160a04' },
-    winter: { light: '#f0f4f8', dark: '#060d14' }
-  };
-
-  function themeRipple(x, y, oldBg) {
-    const vw = window.innerWidth, vh = window.innerHeight;
-    if (!vw || !vh) return;
-    const maxR = Math.hypot(Math.max(x, vw - x), Math.max(y, vh - y)) + 60;
-    const diag = Math.hypot(vw, vh);
-    const dur = Math.min(0.8, Math.max(0.4, 0.5 * diag / 2200));
-
-    const overlay = document.createElement('div');
-    overlay.className = 'theme-ripple';
-    overlay.style.background = oldBg;
-    document.body.appendChild(overlay);
-
-    const anim = overlay.animate([
-      { clipPath: 'circle(0px at ' + x + 'px ' + y + 'px)' },
-      { clipPath: 'circle(' + maxR + 'px at ' + x + 'px ' + y + 'px)' }
-    ], {
-      duration: dur * 1000,
-      easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
-      fill: 'forwards'
-    });
-    anim.onfinish = () => overlay.remove();
-  }
-
-  // 明暗切换检测(Redefine 在 <html> 上切 .dark):变化时从最后点击位置辐射
-  function initDarkRipple() {
-    let lastDark = document.documentElement.classList.contains('dark');
-    const obs = new MutationObserver(() => {
-      const nowDark = document.documentElement.classList.contains('dark');
-      if (nowDark !== lastDark) {
-        lastDark = nowDark;
-        const oldIsDark = lastDark;
-        const season = document.documentElement.dataset.season || 'auto';
-        const oldBg = (SEASON_BG[season] || SEASON_BG.auto)[oldIsDark ? 'dark' : 'light'];
-        themeRipple(rippleLastX || window.innerWidth / 2, rippleLastY || window.innerHeight / 2, oldBg);
-      }
-    });
-    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-  }
-
-  // ============================
   // Odometer — 等字体加载完成再初始化
   // odometer 在 DOMContentLoaded 自动初始化时,4 套 Google 字体
   // 尚未就绪,数字度量错误导致 ribbon 高度塌陷为 0——静止时数字
@@ -313,13 +254,9 @@
     return SEASON_NAMES[saved] ? saved : 'auto';
   }
 
-  function applySeason(season, withRipple) {
+  function applySeason(season) {
     // 从点击位置辐射扩散(主题切换动画)
     themeRipple(rippleLastX || window.innerWidth / 2, rippleLastY || window.innerHeight / 2);
-    if (withRipple) {
-      const oldBg = getComputedStyle(document.body).backgroundColor || '#f8fafc';
-      themeRipple(rippleLastX || window.innerWidth / 2, rippleLastY || window.innerHeight / 2, oldBg);
-    }
     // 自动 = 旧版 light 明亮主题:浅色主题 + 太空城市 banner(配置默认)
     // 手动选季节 = 季节完整主题 + 对应季节图
     const isAuto = season === 'auto';
@@ -428,7 +365,8 @@
           return;
         }
         localStorage.setItem('blog-season', opt.dataset.season);
-        applySeason(opt.dataset.season, true);
+        const rect = opt.getBoundingClientRect();
+        switchTheme(() => applySeason(opt.dataset.season), rect.left + rect.width / 2, rect.top + rect.height / 2);
         dropdown.classList.remove('show');
       });
     });
@@ -831,7 +769,7 @@
     initSeason();
     initThemeSwitcher();
     initReveal();
-    initDarkRipple();
+    initThemeToggle();
     initMouseFollower();
     initArticleStats();
     initPostStats();
@@ -857,4 +795,113 @@
       }
     } catch (e) { /* swup 版本差异,页面切换后功能重新初始化为尽力而为 */ }
   }
+
+  // ============================
+  // View Transition 主题切换(参考 ericterminal)
+  // startViewTransition 快照页面 → ready 后 clip-path 圆形扩散
+  // ============================
+  function rippleAnim(x, y) {
+    const vw = window.innerWidth, vh = window.innerHeight;
+    if (!vw || !vh) return;
+    const maxR = Math.hypot(Math.max(x, vw - x), Math.max(y, vh - y)) + 60;
+    const dur = Math.min(800, Math.max(500, 620 * Math.hypot(vw, vh) / 2200));
+    const clip = [
+      'circle(0px at ' + x + 'px ' + y + 'px)',
+      'circle(' + maxR + 'px at ' + x + 'px ' + y + 'px)'
+    ];
+    try {
+      const anim = document.documentElement.animate(
+        { clipPath: clip },
+        {
+          duration: dur,
+          easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+          pseudoElement: '::view-transition-new(root)'
+        }
+      );
+      return anim.finished.catch(() => undefined);
+    } catch (e) {
+      return Promise.resolve();
+    }
+  }
+
+  function switchTheme(applyFn, x, y) {
+    if (typeof document.startViewTransition === 'function') {
+      document.documentElement.setAttribute('data-theme-switching', 'ripple');
+      let vt;
+      try {
+        vt = document.startViewTransition(applyFn);
+      } catch (e) {
+        document.documentElement.removeAttribute('data-theme-switching');
+        applyFn();
+        return;
+      }
+      const ripple = vt.ready.then(() => rippleAnim(x, y)).catch(() => undefined);
+      Promise.allSettled([vt.finished, ripple]).finally(() => {
+        document.documentElement.removeAttribute('data-theme-switching');
+      });
+    } else {
+      applyFn();
+    }
+  }
+
+  // 手动切明暗(与 Redefine 的 enableDarkMode/enableLightMode 等效)
+  function toggleDarkManually(dark) {
+    const html = document.documentElement;
+    const body = document.body;
+    if (dark) {
+      html.classList.remove('light');
+      html.classList.add('dark');
+      body.classList.remove('light-mode');
+      body.classList.add('dark-mode');
+    } else {
+      html.classList.remove('dark');
+      html.classList.add('light');
+      body.classList.remove('dark-mode');
+      body.classList.add('light-mode');
+    }
+    const icon = document.querySelector('.tool-dark-light-toggle i');
+    if (icon) icon.className = dark ? 'fa-regular fa-brightness' : 'fa-regular fa-moon';
+    try {
+      const key = 'REDEFINE-THEME-STATUS';
+      const st = JSON.parse(localStorage.getItem(key) || '{}');
+      st.isDark = dark;
+      localStorage.setItem(key, JSON.stringify(st));
+    } catch (e) {}
+    // giscus 主题跟随
+    if (window.giscus && typeof window.giscus.setTheme === 'function') {
+      try { window.giscus.setTheme(dark ? 'dark' : 'light'); } catch (e) {}
+    }
+  }
+
+  // 拦截 Redefine 的明暗切换按钮,包进 View Transition
+  function initThemeToggle() {
+    if (!('IntersectionObserver' in window)) {}
+    const html = document.documentElement;
+    let lastDark = html.classList.contains('dark');
+    document.addEventListener('click', e => {
+      const btn = e.target.closest('.tool-dark-light-toggle');
+      if (!btn) return;
+      // 防抖:如果 Redefine 已处理(状态已变),只补 ripple
+      const isDark = html.classList.contains('dark');
+      if (isDark === lastDark) {
+        // Redefine 还没来得及处理,我们自己接管
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        const next = !isDark;
+        lastDark = next;
+        switchTheme(() => toggleDarkManually(next), e.clientX || 0, e.clientY || 0);
+      }
+    }, true);
+    // 兜底:如果 Redefine 自己切了(没被拦截),做检测补动画
+    const obs = new MutationObserver(() => {
+      const nowDark = html.classList.contains('dark');
+      if (nowDark !== lastDark) {
+        lastDark = nowDark;
+        switchTheme(() => {}, window.innerWidth / 2, window.innerHeight / 2);
+      }
+    });
+    obs.observe(html, { attributes: true, attributeFilter: ['class'] });
+  }
+
 })();
