@@ -313,7 +313,7 @@ footer:
 inject:
   enable: true
   head:
-    - <link rel="stylesheet" href="/css/custom.css">
+    - <link rel="stylesheet" href="/css/custom.css?v=20260908">
     - <link rel="preconnect" href="https://fonts.googleapis.com">
     - <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   footer:
@@ -323,7 +323,7 @@ inject:
         <a href="https://github.com/sijie-Z" title="GitHub" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-github"></i></a>
         <a href="mailto:1683039482@qq.com" title="邮件联系"><i class="fa-regular fa-envelope"></i></a>
       </div>
-    - <script src="/js/custom.js" data-swup-reload-script></script>
+    - <script src="/js/custom.js?v=20260908" data-swup-reload-script></script>
 # INJECT <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
 
 
