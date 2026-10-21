@@ -75,7 +75,7 @@ function loadExternalResource(url, type) {
 
     tools: ['hitokoto', 'asteroids', 'photo', 'info', 'quit'],
     logLevel: 'warn',
-    drag: false,
+    drag: true,
   });
   // 等页面 load 后空闲再初始化,避免 4MB 模型抢首屏带宽
   if (document.readyState === 'complete') {

@@ -94,6 +94,73 @@
     } catch (e) { return null; }
   }
 
+  function initLive2DDrag(waifu) {
+    if (waifu.__cjDrag) return;
+    waifu.__cjDrag = true;
+    const canvas = document.getElementById('live2d');
+    if (canvas) canvas.title = '拖动可移动,双击复位';
+
+    // 持久化上次拖到的位置
+    try {
+      const saved = JSON.parse(localStorage.getItem('live2d-position') || 'null');
+      if (saved && Number.isFinite(saved.left) && Number.isFinite(saved.top)) {
+        const w = waifu.offsetWidth || 200;
+        const h = waifu.offsetHeight || 200;
+        waifu.style.bottom = 'auto';
+        waifu.style.left = Math.min(Math.max(0, saved.left), Math.max(0, innerWidth - w)) + 'px';
+        waifu.style.top = Math.min(Math.max(0, saved.top), Math.max(0, innerHeight - h)) + 'px';
+      }
+    } catch (e) {}
+
+    let dragStart = null;
+    waifu.addEventListener('mousedown', e => {
+      if (e.target.id !== 'live2d') return;
+      const rect = waifu.getBoundingClientRect();
+      dragStart = { x: e.clientX, y: e.clientY };
+      window.__l2dDragMoved = false;
+      // 组件用 top/left 拖动,先清掉 bottom 并固定当前坐标
+      waifu.style.bottom = 'auto';
+      waifu.style.top = rect.top + 'px';
+      waifu.style.left = rect.left + 'px';
+    }, true);
+
+    document.addEventListener('mousemove', e => {
+      if (!dragStart) return;
+      if (Math.abs(e.clientX - dragStart.x) + Math.abs(e.clientY - dragStart.y) > 6) {
+        window.__l2dDragMoved = true;
+      }
+    }, true);
+
+    document.addEventListener('mouseup', () => {
+      if (!dragStart) return;
+      dragStart = null;
+      if (waifu.style.top) {
+        try {
+          localStorage.setItem('live2d-position', JSON.stringify({
+            left: parseFloat(waifu.style.left) || 0,
+            top: parseFloat(waifu.style.top) || 0,
+          }));
+        } catch (e) {}
+      }
+    }, true);
+
+    window.addEventListener('resize', () => {
+      if (!waifu.style.top) return;
+      const w = waifu.offsetWidth || 200;
+      const h = waifu.offsetHeight || 200;
+      waifu.style.left = Math.min(Math.max(0, parseFloat(waifu.style.left) || 0), Math.max(0, innerWidth - w)) + 'px';
+      waifu.style.top = Math.min(Math.max(0, parseFloat(waifu.style.top) || 0), Math.max(0, innerHeight - h)) + 'px';
+    });
+
+    // 双击复位到左下角
+    waifu.addEventListener('dblclick', () => {
+      try { localStorage.removeItem('live2d-position'); } catch (e) {}
+      waifu.style.top = '';
+      waifu.style.left = '';
+      waifu.style.bottom = '';
+    });
+  }
+
   function attachWaifuVisibilityObserver() {
     const waifu = document.getElementById('waifu');
     if (!waifu) {
@@ -111,6 +178,7 @@
     waifu.__cjObserved = true;
     const canvas = document.getElementById('live2d');
     if (canvas) canvas.setAttribute('aria-hidden', 'true');
+    initLive2DDrag(waifu);
     new MutationObserver(() => {
       const app = window.__l2dApp;
       if (!app) return;
@@ -170,6 +238,10 @@
     const TAP_MOTIONS = ['Hammer', 'BubbleGum', 'SprayWater', 'OpenCase', 'Selfie', 'SelfieQuick', 'Ketchup'];
     document.addEventListener('click', e => {
       if (e.target.id !== 'live2d') return;
+      if (window.__l2dDragMoved) {
+        window.__l2dDragMoved = false;
+        return;
+      }
       const model = getLive2DModel();
       if (!model) return;
       try {

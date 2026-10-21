@@ -115,6 +115,25 @@ function check(name, cond, extra) {
     });
     check('点击宠物触发动作', tap.motions > 0, JSON.stringify(tap));
 
+    const drag = await page.evaluate(async () => {
+      const w = document.getElementById('waifu');
+      const c = document.getElementById('live2d');
+      const r = c.getBoundingClientRect();
+      c.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientX: r.left + 40, clientY: r.top + 40, button: 0 }));
+      document.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: r.left + 140, clientY: r.top + 20 }));
+      document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+      await new Promise(res => setTimeout(res, 80));
+      return { left: w.style.left, top: w.style.top, saved: localStorage.getItem('live2d-position') };
+    });
+    check('宠物可拖拽并记住位置', !!drag.left && !!drag.top && !!drag.saved, JSON.stringify(drag));
+    await page.evaluate(() => {
+      localStorage.removeItem('live2d-position');
+      const w = document.getElementById('waifu');
+      w.style.left = '';
+      w.style.top = '';
+      w.style.bottom = '';
+    });
+
     const hidden = await page.evaluate(async () => {
       const w = document.getElementById('waifu');
       w.classList.remove('waifu-active');

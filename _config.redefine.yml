@@ -315,13 +315,13 @@ inject:
   head:
     - <link rel="stylesheet" href="/css/custom.css?v=20261022b">
   footer:
-    - <script src="/live2d/autoload.js?v=20261022c"></script>
+    - <script src="/live2d/autoload.js?v=20261022d"></script>
     - <div class="footer-extra-icons">
         <a href="/atom.xml" title="RSS 订阅" aria-label="RSS 订阅" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-rss" aria-hidden="true"></i></a>
         <a href="https://github.com/sijie-Z" title="GitHub" aria-label="GitHub" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-github" aria-hidden="true"></i></a>
         <a href="mailto:1683039482@qq.com" title="邮件联系" aria-label="邮件联系"><i class="fa-regular fa-envelope" aria-hidden="true"></i></a>
       </div>
-    - <script src="/js/custom.js?v=20261022b" data-swup-reload-script></script>
+    - <script src="/js/custom.js?v=20261022c" data-swup-reload-script></script>
 # INJECT <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
 
 
