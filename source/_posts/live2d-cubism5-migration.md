@@ -138,6 +138,17 @@ Live2D 的入场原来是 `bottom: -500px` 到 `0`，3 秒。改成 `transform` 
 
 页面切换的 `pageEnter` 动画里有一个 `filter: blur(4px)`，全页模糊。删掉，时长从 0.45 秒降到 0.36 秒。
 
+第一轮调完曲线，滚动还是不够顺。又查了一遍，问题不在时长：
+
+- 主题的 `SwupScrollPlugin` 自己用 rAF 逐帧滚动，而 `html` 上又设了 `scroll-behavior: smooth`，两个滚动动画互相打断。全局改回 `auto`，需要平滑的地方单独传 `behavior: 'smooth'`。
+- 首页每张卡片入场的 `cardSettle` 关键帧里有一个 `filter: blur(8px)`，卡片本身还带 `backdrop-filter`。最多 10 张卡同时做两层模糊。关键帧只保留 `opacity` 和 `transform`，卡片上的 `backdrop-filter` 也去掉。
+- `.reveal` 上常驻 `will-change: opacity, transform`，几十个元素各占一个合成层。删掉。
+- 主题的 `updateScrollStyle` 已经在维护进度条，`custom.js` 里的滚动回调又写了一遍宽度，还在每帧读 `scrollHeight`。删掉重复写入，滚动回调只保留导航和页脚状态。
+- Swup 的滑动主题默认 60px / 0.4s，和页面的 `pageEnter` 叠在一起。滑动收到 16px / 0.32s，`pageEnter` 只在首屏播放。
+- 导航收缩阈值 60px 在慢速滚动时会反复触发，加迟滞：100px 进入、40px 退出；页脚同理，距底 8px 展开、离开 80px 才收回。
+
+这些改完，滚动路径上不再有每帧的布局写入和整卡模糊。
+
 ## 收尾
 
 CSS 里删了约 200 行不再匹配任何元素的选择器：`spark-*`、`theme-ripple`、`post-nav`、`article-category` 这些。删之前用脚本统计了生成页面里的 class token，确认数量为 0。

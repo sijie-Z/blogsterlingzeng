@@ -119,39 +119,40 @@
   // Reading progress bar
   // ============================
   function initReadingProgress() {
+    // 进度条由主题的 updateScrollStyle 维护,这里只处理导航与页脚状态
+    const update = () => {
+      const scrollTop = window.scrollY;
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+
+      // Dynamic Island 导航栏:进入用 100px、退出用 40px,避免阈值附近反复抖动
+      const navbar = document.querySelector('.navbar-container');
+      if (navbar) {
+        const scrolled = navbar.classList.contains('scrolled');
+        const compact = scrolled ? scrollTop > 40 : scrollTop > 100;
+        navbar.classList.toggle('scrolled', compact);
+      }
+
+      // 页脚:接近底部展开;离开 80px 以上才收回,避免滚动时反复开合
+      const footer = document.querySelector('footer.footer');
+      if (footer) {
+        const remaining = maxScroll - scrollTop;
+        const atBottom = footer.classList.contains('at-bottom');
+        if (!atBottom && remaining <= 8) footer.classList.add('at-bottom');
+        else if (atBottom && remaining > 80) footer.classList.remove('at-bottom');
+      }
+    };
+
     let ticking = false;
     window.addEventListener('scroll', () => {
       if (!ticking) {
         requestAnimationFrame(() => {
-          // swup 换页后进度条元素会被替换,每次取最新的
-          const progressBar = document.querySelector('.scroll-progress-bar');
-          if (!progressBar) {
-            ticking = false;
-            return;
-          }
-          const scrollTop = window.scrollY;
-          const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-          const progress = (scrollTop / docHeight) * 100;
-          progressBar.style.width = `${progress}%`;
-
-          // Dynamic Island 导航栏:滚动 >60px 收缩成胶囊
-          const navbar = document.querySelector('.navbar-container');
-          if (navbar) {
-            navbar.classList.toggle('scrolled', scrollTop > 60);
-          }
-
-          // 页脚:滚到页面最底部时展开全宽(猫吉祥物跟随上移)
-          const footer = document.querySelector('footer.footer');
-          if (footer) {
-            const atBottom = (scrollTop + window.innerHeight) >= (document.documentElement.scrollHeight - 4);
-            footer.classList.toggle('at-bottom', atBottom);
-          }
-
+          update();
           ticking = false;
         });
         ticking = true;
       }
     }, { passive: true });
+    update();
   }
 
   // ============================
@@ -511,20 +512,26 @@
     let mouseX = window.innerWidth / 2, mouseY = window.innerHeight / 2;
     let followerX = mouseX, followerY = mouseY;
     let lastX = mouseX;
+    let rafId = null;
 
-    document.addEventListener('mousemove', e => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
-    });
+    follower.style.transform = `translate(${followerX - 16}px, ${followerY - 16}px)`;
 
-    (function animate() {
+    function animate() {
       followerX += (mouseX - followerX) * 0.06;
       followerY += (mouseY - followerY) * 0.06;
       const scaleX = (mouseX > lastX + 2) ? -1 : 1;
       lastX = mouseX;
       follower.style.transform = 'translate(' + (followerX - 16) + 'px, ' + (followerY - 16) + 'px) scaleX(' + scaleX + ')';
-      requestAnimationFrame(animate);
-    })();
+      // 追到目标后停止 rAF,鼠标再次移动时重启
+      const moving = Math.abs(mouseX - followerX) > 0.1 || Math.abs(mouseY - followerY) > 0.1;
+      rafId = moving ? requestAnimationFrame(animate) : null;
+    }
+
+    document.addEventListener('mousemove', e => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      if (!rafId) rafId = requestAnimationFrame(animate);
+    });
   }
 
   // ============================

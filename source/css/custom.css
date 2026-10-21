@@ -51,8 +51,16 @@ html.dark {
 }
 
 /* ---- Base ---- */
+/* SwupScrollPlugin 自己用 rAF 逐帧滚动;CSS smooth 会和它互相打断 */
 html {
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
+}
+
+/* SwupSlideTheme 默认 60px / 0.4s 的滑动偏重,收小到 16px / 0.32s */
+html:root {
+  --swup-slide-theme-translate: 16px;
+  --swup-slide-theme-duration-slide: 0.32s;
+  --swup-slide-theme-duration-fade: 0.24s;
 }
 
 ::selection {
@@ -84,8 +92,7 @@ html body .navbar-container .navbar-content {
     padding 0.38s cubic-bezier(0.34, 1.2, 0.64, 1),
     border-radius 0.38s cubic-bezier(0.34, 1.2, 0.64, 1),
     background-color 0.28s ease,
-    box-shadow 0.28s ease,
-    transform 0.38s cubic-bezier(0.34, 1.2, 0.64, 1);
+    box-shadow 0.28s ease;
 }
 
 /* 顶部常态 — 全宽玻璃 */
@@ -115,8 +122,6 @@ html.dark .navbar-container:not(.scrolled) {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   box-shadow: 0 18px 38px -28px rgba(8, 18, 34, 0.24) !important;
-  transform: translateZ(0) scale(0.985);
-  transform-origin: top center;
 }
 
 html.dark .navbar-container.scrolled .navbar-content {
@@ -224,8 +229,6 @@ html.dark .navbar-container.scrolled .navbar-content {
    ======================================== */
 .home-article-item {
   background: var(--bg-card) !important;
-  backdrop-filter: blur(8px) saturate(120%);
-  -webkit-backdrop-filter: blur(8px) saturate(120%);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-xl) !important;
   overflow: hidden;
@@ -251,12 +254,10 @@ html.dark .navbar-container.scrolled .navbar-content {
 @keyframes cardSettle {
   0% {
     opacity: 0;
-    filter: blur(8px);
     transform: translateY(16px);
   }
   100% {
     opacity: 1;
-    filter: blur(0);
     transform: translateY(0);
   }
 }
@@ -371,8 +372,8 @@ html.dark .navbar-container.scrolled .navbar-content {
    ======================================== */
 .sidebar-content {
   background: var(--bg-card) !important;
-  backdrop-filter: blur(8px) saturate(120%);
-  -webkit-backdrop-filter: blur(8px) saturate(120%);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-xl) !important;
   padding: 1.5rem !important;
@@ -431,8 +432,8 @@ html.dark .navbar-container.scrolled .navbar-content {
 /* Sidebar links */
 .sidebar-links {
   background: var(--bg-card) !important;
-  backdrop-filter: blur(8px) saturate(120%);
-  -webkit-backdrop-filter: blur(8px) saturate(120%);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-xl) !important;
   overflow: hidden;
@@ -887,6 +888,11 @@ footer.footer .info-container div:not(.customize-info):not(.text-center):not(.ic
    ======================================== */
 .page-container {
   animation: pageEnter 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Swup 换页时由 SwupSlideTheme 负责过渡,避免双重动画 */
+html.is-animating .page-container {
+  animation: none;
 }
 
 @keyframes pageEnter {
@@ -2029,7 +2035,6 @@ html.dark .nb-timer-btns button {
   transition:
     opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
     transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: opacity, transform;
 }
 
 .reveal.reveal-visible {

@@ -138,6 +138,7 @@ npm run serve               # http://127.0.0.1:4140
 # 测试(需要 puppeteer-core 与本机 Chrome)
 npm test                    # 22 项端到端检查
 npm run test:l2d            # Live2D 加载诊断(模型 / Core / 404)
+npm run test:smooth         # 滚动与动效平滑度回归
 
 # 写作
 hexo new "文章标题"          # 新建文章
