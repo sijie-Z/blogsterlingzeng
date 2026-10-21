@@ -3,7 +3,7 @@ const puppeteer = require('puppeteer-core');
 const { startServer } = require('./static-server');
 let server;
 
-const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
+const CHROME = process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const BASE = process.env.BASE || 'http://127.0.0.1:4140';
 
 let pass = 0, fail = 0;
@@ -16,7 +16,7 @@ function check(name, cond, extra) {
   console.log('启动 Chrome...');
   const browser = await puppeteer.launch({
     executablePath: CHROME,
-    headless: 'new',
+    headless: true,
     args: ['--no-sandbox', '--no-proxy-server', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--disable-dev-shm-usage'],
   });
   const page = await browser.newPage();
@@ -69,14 +69,15 @@ function check(name, cond, extra) {
       }
     });
     await page.evaluate(() => document.querySelector('.tool-dark-light-toggle').dispatchEvent(new MouseEvent('click', {bubbles: true, clientX: 200, clientY: 200})));
-    await new Promise(r => setTimeout(r, 1500));
+    // Live2D 模型加载可能阻塞主线程,等待状态翻转而非固定延时
+    await page.waitForFunction(d => document.documentElement.classList.contains('dark') !== d, { timeout: 15000 }, before).catch(() => {});
     const after = await page.evaluate(() => document.documentElement.classList.contains('dark'));
     const vtCount = await page.evaluate(() => window.__vtCount || 0);
     check('明暗切换生效', before !== after, 'before=' + before + ' after=' + after);
     check('View Transition 触发', vtCount >= 1, '次数 ' + vtCount);
     // 切回来
     await page.evaluate(() => document.querySelector('.tool-dark-light-toggle').dispatchEvent(new MouseEvent('click', {bubbles: true, clientX: 200, clientY: 200})));
-    await new Promise(r => setTimeout(r, 1200));
+    await page.waitForFunction(d => document.documentElement.classList.contains('dark') !== d, { timeout: 15000 }, after).catch(() => {});
   }
 
   console.log('=== 4. 管中窥豹 + ESC ===');
@@ -107,6 +108,33 @@ function check(name, cond, extra) {
   check('页脚', await page.$('footer.footer'));
   check('Spark 宠物已移除', !(await page.$('.spark-pet')));
   check('旧猫已移除', !(await page.$('.footer-mascot')));
+
+  console.log('=== 6.5 SPA 导航 ===');
+  const navLink = await page.$('a[href="/about"]');
+  check('导航链接存在', !!navLink);
+  if (navLink) {
+    await navLink.click();
+    await page.waitForFunction(() => location.pathname.includes('/about'), { timeout: 10000 }).catch(() => {});
+    await new Promise(r => setTimeout(r, 800));
+    check('SPA 导航成功', await page.evaluate(() => location.pathname.includes('/about')), await page.evaluate(() => location.pathname));
+    check('Live2D 导航后仍存在', !!(await page.$('#waifu')));
+    // 返回首页后点赞:全局 click 监听若在换页后重复注册,点赞会加一又减一
+    const homeLink = await page.$('.navbar-content a[href="/"]');
+    if (homeLink) {
+      await homeLink.click();
+      await page.waitForFunction(() => location.pathname === '/', { timeout: 10000 }).catch(() => {});
+      await new Promise(r => setTimeout(r, 1200));
+      const likeBtn = await page.$('.like-btn');
+      check('换页后点赞按钮存在', !!likeBtn);
+      if (likeBtn) {
+        const likeBefore = await likeBtn.evaluate(el => el.textContent.trim());
+        await likeBtn.click();
+        await new Promise(r => setTimeout(r, 300));
+        const likeAfter = await likeBtn.evaluate(el => el.textContent.trim());
+        check('换页后点赞只触发一次', likeBefore !== likeAfter, likeBefore + ' -> ' + likeAfter);
+      }
+    }
+  }
 
   console.log('=== 7. JS 错误 ===');
   check('零页面错误', errors.length === 0, errors.slice(0, 3).join(' | '));

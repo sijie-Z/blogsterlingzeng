@@ -8,7 +8,10 @@
     "clean": "hexo clean",
     "deploy": "bash deploy.sh",
     "server": "hexo server",
+    "serve": "node test/serve.js",
     "publish": "hexo publish",
+    "test": "node test/e2e-test.js",
+    "test:l2d": "node test/l2d-debug.js",
     "postinstall": "node scripts/theme-patch.js"
   },
   "hexo": {
@@ -36,6 +39,9 @@
     "blog",
     "sterlingzeng"
   ],
+  "devDependencies": {
+    "puppeteer-core": "^24.0.0"
+  },
   "author": "Sterling Zeng",
   "license": "MIT"
 }

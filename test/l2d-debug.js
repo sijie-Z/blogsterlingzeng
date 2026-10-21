@@ -1,13 +1,13 @@
 /* Live2D 专项调试(自管理静态服务器) */
 const puppeteer = require('puppeteer-core');
 const { startServer } = require('./static-server');
-const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
+const CHROME = process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 
 (async () => {
   const server = await startServer();
   const browser = await puppeteer.launch({
     executablePath: CHROME,
-    headless: 'new',
+    headless: true,
     args: ['--no-sandbox', '--no-proxy-server', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
   });
   const page = await browser.newPage();
