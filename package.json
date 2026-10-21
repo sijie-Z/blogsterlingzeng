@@ -13,6 +13,7 @@
     "test": "node test/e2e-test.js",
     "test:l2d": "node test/l2d-debug.js",
     "test:smooth": "node test/smoothness-check.js",
+    "perf": "node test/perf-probe.js",
     "postinstall": "node scripts/theme-patch.js"
   },
   "hexo": {

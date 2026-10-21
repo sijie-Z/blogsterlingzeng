@@ -55,7 +55,7 @@ function loadExternalResource(url, type) {
   // 加载 waifu.css 和 waifu-tips.js
   await Promise.all([
     loadExternalResource(live2d_path + 'waifu.css?v=20261021b', 'css'),
-    loadExternalResource(live2d_path + 'waifu-tips.js', 'js')
+    loadExternalResource(live2d_path + 'waifu-tips.js?v=20261021d', 'js')
   ]);
   // For detailed usage of configuration options, see README.en.md
   // 配置选项的具体用法见 README.md

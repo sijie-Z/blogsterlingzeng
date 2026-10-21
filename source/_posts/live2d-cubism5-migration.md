@@ -149,6 +149,8 @@ Live2D 的入场原来是 `bottom: -500px` 到 `0`，3 秒。改成 `transform` 
 
 这些改完，滚动路径上不再有每帧的布局写入和整卡模糊。
 
+Live2D 的 Cubism 循环也一并处理了：滚动时调用 `stop()`，`scrollend` 或 1.2 秒空闲后 `run()`；空闲帧率限制到 30fps，`deltaTime` 上限钳到 50ms，避免暂停恢复后动作跳变。用无头 Chrome 开真实 GPU（AMD 核显）连续滚 6 秒：有宠物时 p50 8ms、p95 17ms，关掉宠物 p95 9ms。滚动时不再和宠物抢主线程。
+
 ## 收尾
 
 CSS 里删了约 200 行不再匹配任何元素的选择器：`spark-*`、`theme-ripple`、`post-nav`、`article-category` 这些。删之前用脚本统计了生成页面里的 class token，确认数量为 0。

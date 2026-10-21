@@ -139,6 +139,7 @@ npm run serve               # http://127.0.0.1:4140
 npm test                    # 22 项端到端检查
 npm run test:l2d            # Live2D 加载诊断(模型 / Core / 404)
 npm run test:smooth         # 滚动与动效平滑度回归
+npm run perf                # 滚动性能探针(帧间隔 / 长任务 / 布局)
 
 # 写作
 hexo new "文章标题"          # 新建文章

@@ -118,9 +118,17 @@
   // ============================
   // Reading progress bar
   // ============================
+  function resumeLive2D() {
+    if (!window.__l2dPaused) return;
+    window.__l2dPaused = false;
+    const waifu = document.querySelector('#waifu');
+    if (!waifu || !waifu.classList.contains('waifu-active')) return;
+    try { window.__l2dApp.run(); } catch (e) {}
+  }
+
   function initReadingProgress() {
     // 进度条由主题的 updateScrollStyle 维护,这里只处理导航与页脚状态
-    const update = () => {
+    const update = (fromScroll = false) => {
       const scrollTop = window.scrollY;
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
 
@@ -140,18 +148,32 @@
         if (!atBottom && remaining <= 8) footer.classList.add('at-bottom');
         else if (atBottom && remaining > 80) footer.classList.remove('at-bottom');
       }
+
+      // 滚动期间暂停 Cubism 渲染,scrollend 或 700ms 空闲后恢复
     };
 
     let ticking = false;
     window.addEventListener('scroll', () => {
+      // 同步暂停,不等 rAF:scrollend 恢复后新的 scroll 会再次暂停
+      const l2d = window.__l2dApp;
+      const waifu = document.querySelector('#waifu');
+      if (l2d && waifu && waifu.classList.contains('waifu-active')) {
+        if (!window.__l2dPaused) {
+          window.__l2dPaused = true;
+          try { l2d.stop(); } catch (e) {}
+        }
+        clearTimeout(window.__l2dResumeTimer);
+        window.__l2dResumeTimer = setTimeout(resumeLive2D, 1200);
+      }
       if (!ticking) {
         requestAnimationFrame(() => {
-          update();
+          update(true);
           ticking = false;
         });
         ticking = true;
       }
     }, { passive: true });
+    document.addEventListener('scrollend', resumeLive2D, { passive: true });
     update();
   }
 

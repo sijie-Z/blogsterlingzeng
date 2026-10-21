@@ -83,7 +83,25 @@ function check(name, cond, extra) {
   await sleep(700);
   check('上滚 240px 收回', !(await atBottom()));
 
-  console.log('=== 5. 页面错误 ===');
+  console.log('=== 5. Live2D 滚动暂停 ===');
+  const hasL2d = await page.waitForFunction(() => !!window.__l2dApp, { timeout: 15000 }).then(() => true).catch(() => false);
+  check('Live2D 实例已暴露', hasL2d);
+  if (hasL2d) {
+    const paused = await page.evaluate(() => {
+      window.dispatchEvent(new Event('scroll'));
+      return {
+        flag: !!window.__l2dPaused,
+        frame: window.__l2dApp._drawFrameId,
+        waifuClass: document.querySelector('#waifu')?.className || 'missing',
+      };
+    });
+    await sleep(1400);
+    const resumed = await page.evaluate(() => ({ flag: !!window.__l2dPaused, frame: window.__l2dApp._drawFrameId }));
+    check('滚动时暂停渲染', paused.flag === true && paused.frame === null, JSON.stringify(paused));
+    check('停止滚动后恢复', resumed.flag === false && typeof resumed.frame === 'number', JSON.stringify(resumed));
+  }
+
+  console.log('=== 6. 页面错误 ===');
   check('零页面错误', errors.length === 0, errors.slice(0, 2).join(' | '));
 
   console.log(`\n结果: ${pass} 通过, ${fail} 失败`);
