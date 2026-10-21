@@ -429,13 +429,14 @@
   // Seasonal theme — 春夏秋冬四套配色
   // 默认按月份自动换季;导航栏可手动覆盖(localStorage 'blog-season')
   // ============================
-  const SEASON_ICONS = { spring: '🌸', summer: '🌻', autumn: '🍂', winter: '❄️' };
-  const SEASON_NAMES = { spring: '春季', summer: '夏季', autumn: '秋季', winter: '冬季' };
+  const SEASON_ICONS = { spring: '🌸', summer: '🌻', autumn: '🍂', winter: '❄️', space: '🛰️' };
+  const SEASON_NAMES = { spring: '春季', summer: '夏季', autumn: '秋季', winter: '冬季', space: '太空站' };
   const SEASON_BANNERS = {
     spring: '/images/banner-spring.webp',
     summer: '/images/banner-summer.webp',
     autumn: '/images/banner-autumn.webp',
     winter: '/images/banner-winter.webp',
+    space: '/images/banner-light.webp',
   };
 
   function autoSeason() {
@@ -529,7 +530,7 @@
     controls.innerHTML = `
       <button class="nb-theme-btn" title="切换季节主题" aria-label="切换季节主题" aria-haspopup="true" aria-expanded="false">${current === 'auto' ? '🍀' : SEASON_ICONS[current]}</button>
       <div class="nb-dropdown">
-        <button class="nb-opt${current === 'auto' ? ' active' : ''}" data-season="auto"><span>🍀</span><span>自动(浅色)</span></button>
+        <button class="nb-opt${current === 'auto' ? ' active' : ''}" data-season="auto"><span>🍀</span><span>自动(跟随明暗)</span></button>
         ${Object.keys(SEASON_ICONS).map(s =>
           `<button class="nb-opt${current === s ? ' active' : ''}" data-season="${s}"><span>${SEASON_ICONS[s]}</span><span>${SEASON_NAMES[s]}</span></button>`
         ).join('')}

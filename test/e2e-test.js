@@ -44,12 +44,28 @@ function check(name, cond, extra) {
     check('下拉打开', dropOpen);
     // 点夏季(第 3 个选项:auto/spring/summer)
     const opts = await page.$$('.nb-opt');
-    check('下拉选项数 = 6', opts.length === 6, '实际 ' + opts.length);
+    check('下拉选项数 = 7', opts.length === 7, '实际 ' + opts.length);
     if (opts.length >= 3) {
       await opts[2].click();
       await new Promise(r => setTimeout(r, 1200));
       const season = await page.evaluate(() => document.documentElement.dataset.season);
       check('点击夏季后 data-season=summer', season === 'summer', '实际 ' + season);
+      await page.waitForFunction(() => !document.documentElement.hasAttribute('data-theme-switching'), { timeout: 15000 }).catch(() => {});
+    }
+    const spaceOpt = await page.$('.nb-opt[data-season="space"]');
+    check('太空站选项存在', !!spaceOpt);
+    if (spaceOpt) {
+      await page.evaluate(() => document.querySelector('.nb-theme-btn').click());
+      await page.waitForFunction(() => document.querySelector('.nb-dropdown').classList.contains('show'), { timeout: 5000 }).catch(() => {});
+      await spaceOpt.click();
+      await page.waitForFunction(() => document.documentElement.dataset.season === 'space', { timeout: 15000 }).catch(() => {});
+      await page.waitForFunction(() => !document.documentElement.hasAttribute('data-theme-switching'), { timeout: 15000 }).catch(() => {});
+      const spaceState = await page.evaluate(() => ({
+        season: document.documentElement.dataset.season,
+        imgs: [...document.querySelectorAll('.home-banner-background img')].map(i => i.getAttribute('src')),
+      }));
+      check('选择太空站模式', spaceState.season === 'space', '实际 ' + spaceState.season);
+      check('太空站 banner 生效', spaceState.imgs.some(s => s && s.includes('banner-light.webp')), JSON.stringify(spaceState.imgs));
     }
   }
 
