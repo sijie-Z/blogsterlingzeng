@@ -37,7 +37,7 @@ skip_render:
   - "css/**"
   - "js/**"
   - "images/**"
-  - "data/**"
+  - "live2d/**"
   - "music/**"
   - "*.svg"
 

@@ -313,17 +313,15 @@ footer:
 inject:
   enable: true
   head:
-    - <link rel="stylesheet" href="/css/custom.css?v=20260908">
-    - <link rel="preconnect" href="https://fonts.googleapis.com">
-    - <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    - <link rel="stylesheet" href="/css/custom.css?v=20261021b">
   footer:
-    - <script src="/live2d/autoload.js"></script>
+    - <script src="/live2d/autoload.js?v=20261021b"></script>
     - <div class="footer-extra-icons">
-        <a href="/atom.xml" title="RSS 订阅" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-rss"></i></a>
-        <a href="https://github.com/sijie-Z" title="GitHub" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-github"></i></a>
-        <a href="mailto:1683039482@qq.com" title="邮件联系"><i class="fa-regular fa-envelope"></i></a>
+        <a href="/atom.xml" title="RSS 订阅" aria-label="RSS 订阅" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-rss" aria-hidden="true"></i></a>
+        <a href="https://github.com/sijie-Z" title="GitHub" aria-label="GitHub" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-github" aria-hidden="true"></i></a>
+        <a href="mailto:1683039482@qq.com" title="邮件联系" aria-label="邮件联系"><i class="fa-regular fa-envelope" aria-hidden="true"></i></a>
       </div>
-    - <script src="/js/custom.js?v=20260908" data-swup-reload-script></script>
+    - <script src="/js/custom.js?v=20261021b" data-swup-reload-script></script>
 # INJECT <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
 
 

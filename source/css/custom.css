@@ -72,7 +72,20 @@ body {
    滚动 >60px 时收缩成居中胶囊,隐藏链接只留 logo + 控件
    ======================================== */
 .navbar-container {
-  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: background-color 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
+}
+
+/* 收缩与展开共用同一组过渡,避免回到顶部时其余属性瞬间跳变
+   (选择器加 html body 以压过主题同名规则) */
+html body .navbar-container .navbar-content {
+  transition:
+    max-width 0.38s cubic-bezier(0.34, 1.2, 0.64, 1),
+    margin 0.38s cubic-bezier(0.34, 1.2, 0.64, 1),
+    padding 0.38s cubic-bezier(0.34, 1.2, 0.64, 1),
+    border-radius 0.38s cubic-bezier(0.34, 1.2, 0.64, 1),
+    background-color 0.28s ease,
+    box-shadow 0.28s ease,
+    transform 0.38s cubic-bezier(0.34, 1.2, 0.64, 1);
 }
 
 /* 顶部常态 — 全宽玻璃 */
@@ -102,15 +115,8 @@ html.dark .navbar-container:not(.scrolled) {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   box-shadow: 0 18px 38px -28px rgba(8, 18, 34, 0.24) !important;
-  transform: translateZ(0) scale(0.99);
+  transform: translateZ(0) scale(0.985);
   transform-origin: top center;
-  transition: width 0.56s cubic-bezier(0.16, 1, 0.3, 1),
-              margin 0.56s cubic-bezier(0.16, 1, 0.3, 1),
-              padding 0.56s cubic-bezier(0.16, 1, 0.3, 1),
-              border-radius 0.56s cubic-bezier(0.16, 1, 0.3, 1),
-              background-color 0.42s cubic-bezier(0.33, 1, 0.68, 1),
-              box-shadow 0.42s cubic-bezier(0.33, 1, 0.68, 1),
-              transform 0.56s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 html.dark .navbar-container.scrolled .navbar-content {
@@ -200,6 +206,7 @@ html.dark .navbar-container.scrolled .navbar-content {
   letter-spacing: -0.04em;
   line-height: 1.15;
   color: #fff;
+  text-wrap: balance;
   text-shadow: 0 2px 20px rgba(0, 0, 0, 0.6), 0 0 40px rgba(0, 0, 0, 0.3);
 }
 
@@ -354,7 +361,6 @@ html.dark .navbar-container.scrolled .navbar-content {
 /* 首页卡片 hover:封面图缓慢缩放 */
 .home-article-item:hover .home-article-thumbnail img {
   transform: scale(1.06);
-  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .home-article-item .home-article-thumbnail img {
@@ -412,7 +418,7 @@ html.dark .navbar-container.scrolled .navbar-content {
 }
 
 /* Announcement */
-.sidebar-content .announcement {
+.sidebar-links .announcement {
   background: linear-gradient(135deg, rgba(var(--card-sheen-rgb), 0.06), rgba(99, 102, 241, 0.04));
   border: 1px solid rgba(var(--card-sheen-rgb), 0.12);
   border-radius: var(--radius-md);
@@ -622,54 +628,6 @@ html.dark .article-content blockquote {
 }
 
 /* ========================================
-   TAGS & CATEGORIES
-   ======================================== */
-.post-tags a {
-  display: inline-block;
-  transition: all var(--transition-fast);
-  border-radius: 6px;
-}
-
-.post-tags a:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-.article-category,
-.article-tag {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 6px;
-  font-size: 0.78rem;
-  font-weight: 500;
-  background: rgba(var(--card-sheen-rgb), 0.08);
-  color: var(--primary-color);
-  transition: all var(--transition-fast);
-}
-
-.article-category:hover,
-.article-tag:hover {
-  background: rgba(var(--card-sheen-rgb), 0.15);
-  transform: translateY(-1px);
-}
-
-.home-article-item .home-article-meta-info .article-category {
-  display: inline-block;
-  padding: 2px 9px;
-  background: rgba(var(--card-sheen-rgb), 0.08);
-  color: var(--primary-color);
-  border-radius: 5px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-}
-
-html.dark .home-article-item .home-article-meta-info .article-category {
-  background: rgba(59, 130, 246, 0.15);
-  color: #93c5fd;
-}
-
-/* ========================================
    TOC
    ======================================== */
 .post-toc .nav-link.active {
@@ -704,32 +662,6 @@ html.dark .home-article-item .home-article-meta-info .article-category {
   transform: translateY(-4px) !important;
   box-shadow: var(--shadow-lg) !important;
   border-color: var(--primary-color);
-}
-
-/* ========================================
-   POST NAVIGATION
-   ======================================== */
-.post-nav .post-nav-item {
-  border-radius: var(--radius-lg);
-  transition: all var(--transition-main);
-  border: 1px solid var(--border-color);
-  background: var(--bg-card);
-}
-
-.post-nav .post-nav-item:hover {
-  border-color: rgba(var(--card-sheen-rgb), 0.3);
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-3px);
-}
-
-/* ========================================
-   POST BOX SHADOW
-   ======================================== */
-.redefine-box-shadow {
-  border-radius: var(--radius-xl) !important;
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-sm) !important;
-  background: var(--bg-card);
 }
 
 /* ========================================
@@ -803,7 +735,7 @@ footer.footer .info-container {
   border: 1px solid rgba(148, 163, 184, 0.1);
   border-bottom: none;
   box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.06);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: var(--text-tertiary);
   text-align: center;
   line-height: 1.3;
@@ -813,7 +745,15 @@ footer.footer .info-container {
   justify-content: center;
   gap: 18px;
   flex-wrap: nowrap;
-  transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  transition:
+    left 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    right 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    max-width 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    padding 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    border-radius 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s ease,
+    background-color 0.3s ease;
 }
 
 html.dark footer.footer .info-container {
@@ -828,7 +768,7 @@ footer.footer.at-bottom .info-container {
   right: 0;
   max-width: 100vw;
   transform: none;
-  border-radius: 0;
+  border-radius: 14px 14px 0 0;
   padding: 12px 24px !important;
   border-top: 1px solid rgba(148, 163, 184, 0.1);
   box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
@@ -877,11 +817,6 @@ footer.footer .info-container div:not(.customize-info):not(.text-center):not(.ic
   white-space: nowrap;
 }
 
-footer.footer .info-container {
-  font-size: 0.85rem;
-  color: var(--text-tertiary);
-}
-
 /* ========================================
    ARCHIVE PAGE
    ======================================== */
@@ -919,29 +854,7 @@ footer.footer .info-container {
 /* ========================================
    FRIENDS PAGE
    ======================================== */
-.friends-link-container .group {
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-color);
-  background: var(--bg-card);
-  transition: all var(--transition-main);
-}
-
-.friends-link-container .group:hover {
-  border-color: rgba(var(--card-sheen-rgb), 0.3);
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-4px);
-}
-
-.friends-link-container .group img {
-  border-radius: 50%;
-  border: 2px solid var(--border-color);
-  transition: border-color var(--transition-fast), transform var(--transition-main);
-}
-
-.friends-link-container .group:hover img {
-  border-color: var(--primary-color);
-  transform: scale(1.05);
-}
+/* 友链卡片样式统一见文件后部「友链页 — 弹入动画」段落 */
 
 /* ========================================
    CUSTOM SCROLLBAR
@@ -970,34 +883,20 @@ footer.footer .info-container {
 }
 
 /* ========================================
-   STICKY LABEL
-   ======================================== */
-.home-article-sticky-label {
-  background: rgba(var(--card-sheen-rgb), 0.08) !important;
-  color: var(--primary-color) !important;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 0.75rem;
-  padding: 2px 10px;
-}
-
-/* ========================================
    PAGE TRANSITIONS
    ======================================== */
 .page-container {
-  animation: pageEnter 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: pageEnter 0.36s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes pageEnter {
   from {
     opacity: 0;
-    transform: translateY(16px);
-    filter: blur(4px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
-    filter: blur(0);
   }
 }
 
@@ -1717,16 +1616,6 @@ html[data-season="spring"] .home-banner-container::after {
 }
 
 /* ========================================
-   FOOTER — 隐藏引擎/主题信息
-   Redefine 模板强制渲染 powered by / theme,
-   用 :has() 定位并隐藏整块
-   ======================================== */
-footer.footer .info-container > div:has(a[href="https://hexo.io"]),
-footer.footer .info-container > div:has(a[href="https://github.com/EvanNotFound/hexo-theme-redefine"]) {
-  display: none !important;
-}
-
-/* ========================================
    FOOTER EXTRA ICONS — RSS / GitHub / Email
    ======================================== */
 .footer-extra-icons {
@@ -2123,40 +2012,12 @@ html.dark .nb-timer-btns button {
 /* ========================================
    ABOUT PAGE — Skill Bars + 链接图标前缀(移植自旧版)
    ======================================== */
-.article-content table td:last-child {
-  font-family: "JetBrains Mono", monospace;
-  font-size: 0.85em;
-  letter-spacing: -0.02em;
-}
-
-.article-content table td:last-child {
-  background: linear-gradient(
-    90deg,
-    rgba(var(--card-sheen-rgb), 0.12) 0%,
-    rgba(var(--card-sheen-rgb), 0.12) var(--progress, 80%),
-    transparent var(--progress, 80%)
-  );
-  border-radius: 4px;
-}
-
 .article-content a[href*="github.com"]::before {
   content: "🔗 ";
 }
 
 .article-content a[href*="/2026/"]::before {
   content: "📝 ";
-}
-
-/* ========================================
-   FOOTER powered/theme 隐藏 fallback
-   (兼容不支持 :has() 的浏览器)
-   ======================================== */
-footer.footer a[href="https://hexo.io"],
-footer.footer a[href*="redefine"] {
-  font-size: 0 !important;
-  line-height: 0 !important;
-  color: transparent !important;
-  pointer-events: none !important;
 }
 
 /* ========================================
@@ -2188,44 +2049,42 @@ footer.footer a[href*="redefine"] {
 }
 
 /* ========================================
+   ACCESSIBILITY — 焦点 / 触控 / 锚点
+   ======================================== */
+.nb-controls button,
+.footer-extra-icons a,
+.copy-link-btn,
+.like-btn,
+.tool-dark-light-toggle {
+  touch-action: manipulation;
+}
+
+.nb-controls button:focus-visible,
+.footer-extra-icons a:focus-visible,
+.copy-link-btn:focus-visible,
+.like-btn:focus-visible,
+.tool-dark-light-toggle:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 3px;
+}
+
+/* 锚点跳转时避开顶部悬浮导航 */
+.article-content :is(h1, h2, h3, h4, h5, h6) {
+  scroll-margin-top: 96px;
+}
+
+/* ========================================
    REDUCED MOTION
    ======================================== */
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
   * {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }
 }
-
-/* ========================================
-   SPARK PET 表情 — 默认/开心/惊讶
-   ======================================== */
-.spark-happy .spark-eyes-normal { display: none; }
-.spark-happy .spark-eyes-happy { display: block; }
-.spark-happy .spark-mouth-default { display: none; }
-.spark-happy .spark-mouth-happy { display: block; }
-.spark-wow .spark-eyes-normal .spark-eye {
-  transform: scale(1.2);
-  transform-origin: center;
-}
-.spark-wow .spark-mouth-default { display: none; }
-.spark-wow .spark-mouth-wow { display: block; }
-.spark-svg .spark-eye {
-  transition: ry 0.1s ease, transform 0.15s ease;
-}
-
-/* ========================================
-   THEME RIPPLE — 主题切换辐射动画
-   ======================================== */
-.theme-ripple {
-  position: fixed;
-  inset: -80px;
-  z-index: 99998;
-  pointer-events: none;
-  background: rgba(15, 23, 42, 0.4);
-  will-change: clip-path;
-}
-
 
 /* ========================================
    VIEW TRANSITION — 与 ericterminal 完全一致

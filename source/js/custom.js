@@ -12,35 +12,33 @@
             .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
-  // swup 单页模式下 init() 会重复执行:文档级/全局监听只需注册一次
-  function once(fn) {
-    let done = false;
-    return function() {
-      if (done) return;
-      done = true;
-      return fn.apply(this, arguments);
-    };
+  // swup 换页会重新执行整个脚本,实例内的闭包标记会被重置;
+  // 用 window 标记保证文档级/全局监听在整个会话中只注册一次
+  function onceGlobal(key, fn) {
+    const flag = '__cj_once_' + key;
+    if (window[flag]) return;
+    window[flag] = true;
+    fn();
   }
 
   // ============================
   // Smooth scroll for anchor links
   // ============================
   function initSmoothScroll() {
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-      anchor.addEventListener('click', function(e) {
-        e.preventDefault();
-        const targetId = this.getAttribute('href');
-        if (targetId === '#') return;
-
-        const target = document.getElementById(targetId.slice(1));
-        if (target) {
-          target.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
-          });
-        }
-      });
-    });
+    // 事件委托 + 捕获阶段:兼容主题动态生成的目录链接,也先于主题自身处理
+    document.addEventListener('click', e => {
+      const anchor = e.target.closest('a[href^="#"]');
+      if (!anchor) return;
+      const href = anchor.getAttribute('href');
+      if (!href || href === '#') return;
+      // 中文标题的 id 在 HTML 里是原文,href 却是 percent-encoded,先解码再查
+      let id = href.slice(1);
+      try { id = decodeURIComponent(id); } catch (_) {}
+      const target = document.getElementById(id) || document.getElementById(href.slice(1));
+      if (!target) return;
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, true);
   }
 
   // ============================
@@ -54,7 +52,9 @@
     tocLinks.forEach(link => {
       const href = link.getAttribute('href');
       if (href && href.startsWith('#')) {
-        const heading = document.getElementById(href.slice(1));
+        let id = href.slice(1);
+        try { id = decodeURIComponent(id); } catch (_) {}
+        const heading = document.getElementById(id) || document.getElementById(href.slice(1));
         if (heading) {
           headings.push({ element: heading, link: link });
         }
@@ -63,6 +63,8 @@
 
     if (headings.length === 0) return;
 
+    // 换页后旧 observer 仍持有已脱离文档的标题,先断开再重建
+    if (window.__cjTocObserver) window.__cjTocObserver.disconnect();
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach(entry => {
@@ -79,6 +81,7 @@
     );
 
     headings.forEach(h => observer.observe(h.element));
+    window.__cjTocObserver = observer;
   }
 
   // ============================
@@ -93,13 +96,9 @@
         if (searchBtn) searchBtn.click();
       }
 
-      // Escape: 退出管中窥豹 / 关闭弹窗
-      if (e.key === 'Escape') {
-        if (document.body.classList.contains('flashlight-mode')) {
-          toggleFlashlight();
-        }
-        const modals = document.querySelectorAll('.modal.active');
-        modals.forEach(modal => modal.classList.remove('active'));
+      // Escape: 退出管中窥豹
+      if (e.key === 'Escape' && document.body.classList.contains('flashlight-mode')) {
+        toggleFlashlight();
       }
     });
   }
@@ -191,6 +190,8 @@
     if (old) old.remove();
     const toast = document.createElement('div');
     toast.className = 'custom-toast';
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
     toast.textContent = msg;
     document.body.appendChild(toast);
     requestAnimationFrame(() => toast.classList.add('show'));
@@ -204,17 +205,28 @@
     const list = document.querySelector('.article-tools-list');
     if (!list || list.querySelector('.copy-link-btn')) return;
 
-    const li = document.createElement('li');
-    li.className = 'copy-link-btn';
-    li.title = '复制文章链接';
-    li.innerHTML = '<i class="fa-solid fa-link"></i>';
-    li.addEventListener('click', () => {
+    const copy = () => {
       const url = window.location.href;
       const done = () => showToast('链接已复制');
       if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(url).then(done).catch(() => fallbackCopy(url, done));
       } else {
         fallbackCopy(url, done);
+      }
+    };
+
+    const li = document.createElement('li');
+    li.className = 'copy-link-btn';
+    li.title = '复制文章链接';
+    li.setAttribute('role', 'button');
+    li.setAttribute('tabindex', '0');
+    li.setAttribute('aria-label', '复制文章链接');
+    li.innerHTML = '<i class="fa-solid fa-link" aria-hidden="true"></i>';
+    li.addEventListener('click', copy);
+    li.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        copy();
       }
     });
     list.appendChild(li);
@@ -331,7 +343,7 @@
     const controls = document.createElement('div');
     controls.className = 'nb-controls';
     controls.innerHTML = `
-      <button class="nb-theme-btn" title="切换季节主题">${current === 'auto' ? '🍀' : SEASON_ICONS[current]}</button>
+      <button class="nb-theme-btn" title="切换季节主题" aria-label="切换季节主题" aria-haspopup="true" aria-expanded="false">${current === 'auto' ? '🍀' : SEASON_ICONS[current]}</button>
       <div class="nb-dropdown">
         <button class="nb-opt${current === 'auto' ? ' active' : ''}" data-season="auto"><span>🍀</span><span>自动(浅色)</span></button>
         ${Object.keys(SEASON_ICONS).map(s =>
@@ -340,7 +352,7 @@
         <div class="nb-div"></div>
         <button class="nb-opt flashlight-opt"><span>🔦</span><span>管中窥豹</span></button>
       </div>
-      <button class="nb-timer-btn" title="计时器">⏱</button>
+      <button class="nb-timer-btn" title="计时器" aria-label="计时器" aria-haspopup="true" aria-expanded="false">⏱</button>
       <div class="nb-timer-panel">
         <div class="nb-timer-time" id="nbTimerTime">00:00:00</div>
         <div class="nb-timer-btns">
@@ -353,25 +365,30 @@
 
     // 主题下拉
     const dropdown = controls.querySelector('.nb-dropdown');
-    controls.querySelector('.nb-theme-btn').addEventListener('click', e => {
+    const themeBtn = controls.querySelector('.nb-theme-btn');
+    const setDropdown = open => {
+      dropdown.classList.toggle('show', open);
+      themeBtn.setAttribute('aria-expanded', String(open));
+    };
+    themeBtn.addEventListener('click', e => {
       e.stopPropagation();
-      dropdown.classList.toggle('show');
+      setDropdown(!dropdown.classList.contains('show'));
     });
     controls.querySelectorAll('.nb-opt').forEach(opt => {
       opt.addEventListener('click', e => {
         e.stopPropagation();
         if (opt.classList.contains('flashlight-opt')) {
           toggleFlashlight();
-          dropdown.classList.remove('show');
+          setDropdown(false);
           return;
         }
         localStorage.setItem('blog-season', opt.dataset.season);
         const rect = opt.getBoundingClientRect();
         switchTheme(() => applySeason(opt.dataset.season), rect.left + rect.width / 2, rect.top + rect.height / 2);
-        dropdown.classList.remove('show');
+        setDropdown(false);
       });
     });
-    document.addEventListener('click', () => dropdown.classList.remove('show'));
+    document.addEventListener('click', () => setDropdown(false));
 
     // 秒表
     const timerPanel = controls.querySelector('.nb-timer-panel');
@@ -388,7 +405,8 @@
     }
     controls.querySelector('.nb-timer-btn').addEventListener('click', e => {
       e.stopPropagation();
-      timerPanel.classList.toggle('show');
+      const open = timerPanel.classList.toggle('show');
+      e.currentTarget.setAttribute('aria-expanded', String(open));
     });
     startBtn.addEventListener('click', () => {
       interval = setInterval(() => { seconds++; timerTime.textContent = fmt(seconds); }, 1000);
@@ -404,37 +422,38 @@
       startBtn.style.display = ''; pauseBtn.style.display = 'none';
     });
     document.addEventListener('click', e => {
-      if (!timerPanel.contains(e.target) && !e.target.closest('.nb-timer-btn')) timerPanel.classList.remove('show');
+      if (!timerPanel.contains(e.target) && !e.target.closest('.nb-timer-btn')) {
+        timerPanel.classList.remove('show');
+        controls.querySelector('.nb-timer-btn').setAttribute('aria-expanded', 'false');
+      }
     });
   }
 
   // ============================
   // Flashlight — 管中窥豹
   // ============================
-  let flashlightHandler = null;
-
   function toggleFlashlight() {
     const body = document.body;
+    // 脚本实例会随 swup 换页重建,handler 挂到 window 上才能跨实例清理
+    if (window.__cjFlashlightHandler) {
+      document.removeEventListener('mousemove', window.__cjFlashlightHandler);
+      window.__cjFlashlightHandler = null;
+    }
     if (body.classList.contains('flashlight-mode')) {
       body.classList.remove('flashlight-mode');
       const el = document.querySelector('.flashlight-overlay');
       if (el) el.remove();
-      // 移除监听,避免 swup/反复开关后 handler 累积
-      if (flashlightHandler) {
-        document.removeEventListener('mousemove', flashlightHandler);
-        flashlightHandler = null;
-      }
       localStorage.setItem('blog-flashlight', 'false');
     } else {
       body.classList.add('flashlight-mode');
       const el = document.createElement('div');
       el.className = 'flashlight-overlay';
       document.body.appendChild(el);
-      flashlightHandler = function(e) {
+      window.__cjFlashlightHandler = function(e) {
         el.style.setProperty('--fx', e.clientX + 'px');
         el.style.setProperty('--fy', e.clientY + 'px');
       };
-      document.addEventListener('mousemove', flashlightHandler);
+      document.addEventListener('mousemove', window.__cjFlashlightHandler);
       localStorage.setItem('blog-flashlight', 'true');
       showToast('管中窥豹已开启 — 再点 🍀 按钮退出');
     }
@@ -464,6 +483,7 @@
       el.classList.add('reveal');
     });
 
+    if (window.__cjRevealObserver) window.__cjRevealObserver.disconnect();
     const obs = new IntersectionObserver(entries => {
       entries.forEach(e => {
         if (e.isIntersecting) {
@@ -474,6 +494,7 @@
     }, { threshold: 0.06, rootMargin: '0px 0px -36px 0px' });
 
     targets.forEach(el => obs.observe(el));
+    window.__cjRevealObserver = obs;
   }
 
 
@@ -753,28 +774,24 @@
   // ============================
   // Initialize all features
   // ============================
-  // swup 页面切换会重新执行 init(),以下监听只需注册一次
-  const initKeyboardShortcutsOnce = once(initKeyboardShortcuts);
-  const initReadingProgressOnce = once(initReadingProgress);
-  const initLikeHandlerOnce = once(initLikeHandler);
-
   function init() {
-    initSmoothScroll();
+    // 全局监听在整个会话只注册一次(脚本每次换页都会重新执行)
+    onceGlobal('smoothScroll', initSmoothScroll);
     initTocHighlight();
-    initKeyboardShortcutsOnce();
+    onceGlobal('keyboard', initKeyboardShortcuts);
     initExternalLinks();
-    initReadingProgressOnce();
+    onceGlobal('readingProgress', initReadingProgress);
     initGithubProjects();
     initCopyLink();
     initRelatedPosts();
     initSeason();
     initThemeSwitcher();
     initReveal();
-    initThemeToggle();
+    onceGlobal('themeToggle', initThemeToggle);
     initMouseFollower();
     initArticleStats();
     initPostStats();
-    initLikeHandlerOnce();
+    onceGlobal('like', initLikeHandler);
     initOdometer();
   }
 
@@ -785,17 +802,8 @@
     init();
   }
 
-  // Re-run on swup page transition (if using single page mode)
-  // swup v3: swup.on('contentReplaced', cb); swup v4: swup.hooks.on('content:replace', cb)
-  if (typeof swup !== 'undefined') {
-    try {
-      if (typeof swup.on === 'function') {
-        swup.on('contentReplaced', init);
-      } else if (swup.hooks && typeof swup.hooks.on === 'function') {
-        swup.hooks.on('content:replace', init);
-      }
-    } catch (e) { /* swup 版本差异,页面切换后功能重新初始化为尽力而为 */ }
-  }
+  // data-swup-reload-script 会让本脚本在每次换页时重新执行并调用 init(),
+  // 不要再注册 swup 钩子,否则 init 会随换页次数线性叠加。
 
   // ============================
   // View Transition 主题切换(参考 ericterminal)
@@ -868,15 +876,20 @@
       st.isDark = dark;
       localStorage.setItem(key, JSON.stringify(st));
     } catch (e) {}
-    // giscus 主题跟随
-    if (window.giscus && typeof window.giscus.setTheme === 'function') {
-      try { window.giscus.setTheme(dark ? 'dark' : 'light'); } catch (e) {}
+    // giscus 主题跟随(主题用的是 iframe postMessage,没有 window.giscus 全局)
+    const giscusFrame = document.querySelector('iframe.giscus-frame');
+    if (giscusFrame && giscusFrame.contentWindow) {
+      try {
+        giscusFrame.contentWindow.postMessage(
+          { giscus: { setConfig: { theme: dark ? 'dark' : 'light' } } },
+          'https://giscus.app'
+        );
+      } catch (e) {}
     }
   }
 
   // 拦截 Redefine 的明暗切换按钮,包进 View Transition
   function initThemeToggle() {
-    if (!('IntersectionObserver' in window)) {}
     const html = document.documentElement;
     let lastDark = html.classList.contains('dark');
     document.addEventListener('click', e => {
@@ -891,7 +904,9 @@
         e.stopImmediatePropagation();
         const next = !isDark;
         lastDark = next;
-        switchTheme(() => toggleDarkManually(next), e.clientX || 0, e.clientY || 0);
+        const x = e.clientX || window.innerWidth / 2;
+        const y = e.clientY || window.innerHeight / 2;
+        switchTheme(() => toggleDarkManually(next), x, y);
       }
     }, true);
     // 不做 MutationObserver 兜底:切换已被捕获拦截接管,
