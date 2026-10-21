@@ -29,7 +29,7 @@
 
 这是一个完整的技术博客项目，不是简单的 Hexo 模板。包含：
 
-- **16 篇原创技术文章** — 每篇从个人经历出发，不是教科书式教程
+- **18 篇原创技术文章** — 每篇从个人经历出发，不是教科书式教程
 - **自定义 UI 设计** — 蓝色主题、磨砂导航栏、卡片浮动效果、阅读进度条
 - **多个自定义页面** — 关于、友链、书签、说说、照片墙、项目
 - **完整的部署方案** — 宝塔面板 scp 上传 / GitHub Actions
@@ -54,6 +54,7 @@
 | 文章置顶 | `sticky: 1` 字段置顶 | `hexo-generator-index` |
 | Sitemap | `sitemap.xml` + `robots.txt` | `hexo-generator-sitemap` |
 | 复制链接 | 文章页工具条复制当前链接 | `source/js/custom.js` |
+| Live2D 宠物 | DeepSeek 大肥鱼（Cubism 5，本地 Core，8 动作 / 44 表情） | `source/live2d/` |
 
 ### 自定义页面
 
@@ -131,6 +132,13 @@ npm run server              # 启动本地服务器 (localhost:4000)
 npm run build               # 生成静态文件到 public/
 npm run clean               # 清理缓存和构建产物
 
+# 本地预览(静态构建,比 hexo server 轻)
+npm run serve               # http://127.0.0.1:4140
+
+# 测试(需要 puppeteer-core 与本机 Chrome)
+npm test                    # 22 项端到端检查
+npm run test:l2d            # Live2D 加载诊断(模型 / Core / 404)
+
 # 写作
 hexo new "文章标题"          # 新建文章
 hexo new draft "草稿标题"    # 新建草稿
@@ -177,6 +185,7 @@ blogsterlingzeng/
 │   │
 │   ├── css/custom.css               # 自定义样式 (1200+ 行)
 │   ├── js/custom.js                 # 自定义脚本
+│   ├── live2d/                      # Live2D 组件 + DeepSeek 大肥鱼模型
 │   └── images/                      # 图片资源
 │       ├── avatar.jpg               # 头像 (75KB)
 │       ├── banner-light.jpg         # 亮色横幅 (466KB)
@@ -195,6 +204,7 @@ blogsterlingzeng/
 ├── _config.yml                      # Hexo 站点配置
 ├── _config.redefine.yml             # Redefine 主题配置 (360+ 行)
 ├── deploy.sh                        # 部署脚本 (scp)
+├── test/                            # E2E / Live2D 调试脚本
 ├── package.json                     # 项目依赖
 ├── LICENSE                          # MIT License
 └── README.md                        # 本文档
@@ -314,6 +324,7 @@ inject:
 
 | 文章 | 文件 | 分类 | 核心观点 |
 |------|------|------|----------|
+| 博客左下角的大肥鱼 | `live2d-cubism5-migration.md` | 项目实战 | 从 Cubism 2 到 Cubism 5：换模型顺带修掉 Swup 重复执行、监听器叠加与中文锚点 |
 | 把 API Key 关进网关 | `miqro-gate-virtual-key-design.md` | 项目实战 | 凭证虚拟化：把真实 Key 变成可轮换、吊销、计量的 Virtual Key |
 | 同一个信号,0.45 和 -0.27 | `quant-reversal-execution-gap.md` | 项目实战 | 信号存在不等于策略可投资：执行吃掉了 Alpha |
 | 我的 CI 从来没有跑过 | `nft-launchpad-release-sprint.md` | 项目实战 | 发布前用 15 个 issue 还工程债，把"我不知道"变成"我知道" |

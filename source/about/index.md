@@ -125,6 +125,12 @@ date: 2026-05-10 12:00:00
 
 ---
 
+## 🙏 致谢
+
+站内左下角的 Live2D 形象是社区二创的 DeepSeek「大肥鱼」（鲸鱼娘）。角色原作：[上善无形](https://www.pixiv.net/users/62155430)；DeepSeek 女仆风二次设计：[ZipZipPipe](https://www.pixiv.net/users/18604994)；Live2D 绑定、动作与表情：[氵六青](https://space.bilibili.com/11272072)。模型来自 [A8Chann/dsh-pet-live2d](https://github.com/A8Chann/dsh-pet-live2d)，以 [CC BY-NC-SA 4.0](/live2d/model/ds-whale-girl/LICENSE) 协议使用，本站仅作个人非商业展示。
+
+---
+
 ## 联系方式
 
 - **Email**: [1683039482@qq.com](mailto:1683039482@qq.com)(优先) / 19150649985@163.com(备用)
