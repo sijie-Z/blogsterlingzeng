@@ -5,7 +5,12 @@
 
 // Recommended to use absolute path for live2d_path parameter
 // live2d_path 参数建议使用绝对路径
-const live2d_path = '/live2d/';
+// Swup 换页会重新执行本脚本：顶层 const 重复声明会抛 SyntaxError，重复初始化会产生多个宠物
+(() => {
+  if (window.__live2dAutoloaded) return;
+  window.__live2dAutoloaded = true;
+
+  const live2d_path = '/live2d/';
 // const live2d_path = '/dist/';
 
 // Method to encapsulate asynchronous resource loading
@@ -49,24 +54,26 @@ function loadExternalResource(url, type) {
   // Load waifu.css and waifu-tips.js
   // 加载 waifu.css 和 waifu-tips.js
   await Promise.all([
-    loadExternalResource(live2d_path + 'waifu.css', 'css'),
+    loadExternalResource(live2d_path + 'waifu.css?v=20261021b', 'css'),
     loadExternalResource(live2d_path + 'waifu-tips.js', 'js')
   ]);
   // For detailed usage of configuration options, see README.en.md
   // 配置选项的具体用法见 README.md
   initWidget({
-    waifuPath: live2d_path + 'waifu-tips.json',
+    waifuPath: live2d_path + 'waifu-tips.json?v=20261021',
     cdnPath: '/live2d/',
     // cdnPath: 'https://fastly.jsdelivr.net/gh/fghrsh/live2d_api/',
     cubism2Path: live2d_path + 'live2d.min.js',
+    cubism5Path: live2d_path + 'live2dcubismcore.min.js',
 
-    tools: ['hitokoto', 'asteroids', 'switch-model', 'switch-texture', 'photo', 'info', 'quit'],
+    tools: ['hitokoto', 'asteroids', 'photo', 'info', 'quit'],
     logLevel: 'warn',
     drag: false,
   });
 })();
 
 console.log(`\n%cLive2D%cWidget%c\n`, 'padding: 8px; background: #cd3e45; font-weight: bold; font-size: large; color: white;', 'padding: 8px; background: #ff5450; font-size: large; color: #eee;', '');
+})();
 
 /*
 く__,.ヘヽ.        /  ,ー､ 〉

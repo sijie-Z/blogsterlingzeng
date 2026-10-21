@@ -1,0 +1,21 @@
+Live2D 模型使用说明与修改记录
+================================================================================
+
+模型：DeepSeek 大肥鱼（鲸鱼娘）— c_0120
+来源：https://github.com/A8Chann/dsh-pet-live2d （tag v3.3.3，pets/ds-whale-girl）
+版权与许可：见同目录 LICENSE（CC BY-NC-SA 4.0）
+作者：上善无形（角色原作「溟月」）/ ZipZipPipe（DeepSeek 女仆二创）/ 氵六青（Live2D 绑定、动作、表情）
+用途：个人非商业博客，按 CC BY-NC-SA 4.0 使用。
+
+本地修改
+--------------------------------------------------------------------------------
+- 将 c_0120.model3.json 重命名为 index.json：本站 Live2D 组件固定按 index.json
+  加载模型，文件内容未作任何修改。
+- 移除桌宠应用专用文件（catalog.json、pet.json、voice.json、previews/、安装说明.md）。
+- 保留 model/、textures/、motions/、expressions/、LICENSE、README.txt。
+
+Live2D Cubism Core
+--------------------------------------------------------------------------------
+本站将 Live2D Cubism Core（live2dcubismcore.min.js，版本 5.1.0）存放于
+source/live2d/live2dcubismcore.min.js，依据 Live2D 的 Redistributable Code
+条款随网站分发。该文件版权归 Live2D Inc.，不属于本目录模型的 CC 许可范围。
