@@ -42,49 +42,6 @@
   }
 
   // ============================
-  // Table of Contents active state
-  // ============================
-  function initTocHighlight() {
-    const tocLinks = document.querySelectorAll('.post-toc .nav-link');
-    if (tocLinks.length === 0) return;
-
-    const headings = [];
-    tocLinks.forEach(link => {
-      const href = link.getAttribute('href');
-      if (href && href.startsWith('#')) {
-        let id = href.slice(1);
-        try { id = decodeURIComponent(id); } catch (_) {}
-        const heading = document.getElementById(id) || document.getElementById(href.slice(1));
-        if (heading) {
-          headings.push({ element: heading, link: link });
-        }
-      }
-    });
-
-    if (headings.length === 0) return;
-
-    // 换页后旧 observer 仍持有已脱离文档的标题,先断开再重建
-    if (window.__cjTocObserver) window.__cjTocObserver.disconnect();
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach(entry => {
-          const item = headings.find(h => h.element === entry.target);
-          if (item) {
-            if (entry.isIntersecting) {
-              tocLinks.forEach(l => l.classList.remove('active'));
-              item.link.classList.add('active');
-            }
-          }
-        });
-      },
-      { rootMargin: '-80px 0px -80% 0px' }
-    );
-
-    headings.forEach(h => observer.observe(h.element));
-    window.__cjTocObserver = observer;
-  }
-
-  // ============================
   // Keyboard shortcuts
   // ============================
   function initKeyboardShortcuts() {
@@ -121,9 +78,139 @@
   function resumeLive2D() {
     if (!window.__l2dPaused) return;
     window.__l2dPaused = false;
+    if (document.hidden || window.__l2dReducedMotion) return;
     const waifu = document.querySelector('#waifu');
     if (!waifu || !waifu.classList.contains('waifu-active')) return;
     try { window.__l2dApp.run(); } catch (e) {}
+  }
+
+  function getLive2DModel() {
+    try {
+      const app = window.__l2dApp;
+      const sub = app && app.subdelegates && app.subdelegates.at ? app.subdelegates.at(0) : null;
+      const manager = sub && sub.getLive2DManager ? sub.getLive2DManager() : null;
+      const models = manager && manager._models;
+      return models && models.at ? models.at(0) : null;
+    } catch (e) { return null; }
+  }
+
+  function attachWaifuVisibilityObserver() {
+    const waifu = document.getElementById('waifu');
+    if (!waifu) {
+      // 组件延迟初始化,#waifu 出现后再挂观察器
+      const mo = new MutationObserver(() => {
+        if (document.getElementById('waifu')) {
+          mo.disconnect();
+          attachWaifuVisibilityObserver();
+        }
+      });
+      mo.observe(document.body, { childList: true, subtree: true });
+      return;
+    }
+    if (waifu.__cjObserved) return;
+    waifu.__cjObserved = true;
+    const canvas = document.getElementById('live2d');
+    if (canvas) canvas.setAttribute('aria-hidden', 'true');
+    new MutationObserver(() => {
+      const app = window.__l2dApp;
+      if (!app) return;
+      const active = waifu.classList.contains('waifu-active') && !waifu.classList.contains('waifu-hidden');
+      if (!active) {
+        try { app.stop(); } catch (e) {}
+      } else if (!window.__l2dPaused && !window.__l2dReducedMotion && !document.hidden && app._drawFrameId == null) {
+        try { app.run(); } catch (e) {}
+      }
+    }).observe(waifu, { attributes: true, attributeFilter: ['class'] });
+  }
+
+  function initNavA11y() {
+    document.querySelectorAll('.search-popup-trigger, .navbar-bar').forEach(el => {
+      if (el.dataset.cjA11y) return;
+      el.dataset.cjA11y = '1';
+      el.setAttribute('role', 'button');
+      el.setAttribute('tabindex', '0');
+      if (!el.getAttribute('aria-label')) {
+        el.setAttribute('aria-label', el.classList.contains('navbar-bar') ? '打开菜单' : '搜索');
+      }
+      el.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          el.click();
+        }
+      });
+    });
+
+    const bar = document.querySelector('.navbar-bar');
+    const drawer = document.querySelector('.navbar-drawer');
+    if (drawer && !drawer.dataset.cjA11y) {
+      drawer.dataset.cjA11y = '1';
+      const sync = () => {
+        const open = document.body.classList.contains('navbar-drawer-show');
+        drawer.toggleAttribute('inert', !open);
+        if (bar) bar.setAttribute('aria-expanded', String(open));
+      };
+      sync();
+      new MutationObserver(sync).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    }
+  }
+
+  function initAsideState() {
+    // 主题切换目录后同步预置类,保持与首屏布局一致
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.page-aside-toggle')) return;
+      setTimeout(() => {
+        const container = document.querySelector('.post-page-container');
+        document.documentElement.classList.toggle('aside-open', !!container && container.classList.contains('show-toc'));
+      }, 0);
+    });
+  }
+
+  function initLive2DRuntime() {
+    // 模型没有 HitArea,点击画布时手动触发随机动作与表情
+    const TAP_MOTIONS = ['Hammer', 'BubbleGum', 'SprayWater', 'OpenCase', 'Selfie', 'SelfieQuick', 'Ketchup'];
+    document.addEventListener('click', e => {
+      if (e.target.id !== 'live2d') return;
+      const model = getLive2DModel();
+      if (!model) return;
+      try {
+        if (typeof model.startRandomMotion === 'function') {
+          model.startRandomMotion(TAP_MOTIONS[Math.floor(Math.random() * TAP_MOTIONS.length)], 3);
+        }
+        if (typeof model.setRandomExpression === 'function') model.setRandomExpression();
+      } catch (err) {}
+    });
+
+    attachWaifuVisibilityObserver();
+
+    // 标签页隐藏时停止渲染,回到前台且未被滚动暂停时恢复
+    document.addEventListener('visibilitychange', () => {
+      if (!window.__l2dApp) return;
+      if (document.hidden) {
+        try { window.__l2dApp.stop(); } catch (e) {}
+        return;
+      }
+      if (window.__l2dPaused || window.__l2dReducedMotion) return;
+      const waifu = document.querySelector('#waifu');
+      if (!waifu || !waifu.classList.contains('waifu-active')) return;
+      if (window.__l2dApp._drawFrameId == null) {
+        try { window.__l2dApp.run(); } catch (e) {}
+      }
+    });
+
+    // 系统“减少动态效果”切换时同步暂停/恢复
+    const mq = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (!mq) return;
+    const apply = () => {
+      window.__l2dReducedMotion = mq.matches;
+      if (mq.matches) {
+        try { window.__l2dApp?.stop(); } catch (e) {}
+      } else if (window.__l2dApp && !window.__l2dPaused && !document.hidden && window.__l2dApp._drawFrameId == null) {
+        try { window.__l2dApp.run(); } catch (e) {}
+      }
+    };
+    apply();
+    if (mq.addEventListener) mq.addEventListener('change', apply);
+    else if (mq.addListener) mq.addListener(apply);
   }
 
   function initReadingProgress() {
@@ -338,8 +425,12 @@
     if (btn) btn.textContent = season === 'auto' ? '🍀' : SEASON_ICONS[season];
   }
 
-  // 预加载全部季节 banner,避免手动切换时闪烁(旧版 initDynamicBanners)
+  // 预加载全部季节 banner:只在首页、且用户打开季节菜单时才触发
+  let seasonBannersPreloaded = false;
   function preloadSeasonBanners() {
+    if (seasonBannersPreloaded) return;
+    if (!document.querySelector('.home-banner-background')) return;
+    seasonBannersPreloaded = true;
     const loaded = {};
     Object.values(SEASON_BANNERS).forEach(url => {
       if (loaded[url]) return;
@@ -351,8 +442,6 @@
 
   function initSeason() {
     applySeason(effectiveSeason());
-    // 页面加载后延迟预加载,不抢占首屏
-    setTimeout(preloadSeasonBanners, 2000);
   }
 
   // ============================
@@ -395,8 +484,10 @@
     };
     themeBtn.addEventListener('click', e => {
       e.stopPropagation();
+      preloadSeasonBanners();
       setDropdown(!dropdown.classList.contains('show'));
     });
+    themeBtn.addEventListener('pointerenter', preloadSeasonBanners);
     controls.querySelectorAll('.nb-opt').forEach(opt => {
       opt.addEventListener('click', e => {
         e.stopPropagation();
@@ -806,7 +897,6 @@
   function init() {
     // 全局监听在整个会话只注册一次(脚本每次换页都会重新执行)
     onceGlobal('smoothScroll', initSmoothScroll);
-    initTocHighlight();
     onceGlobal('keyboard', initKeyboardShortcuts);
     initExternalLinks();
     onceGlobal('readingProgress', initReadingProgress);
@@ -817,6 +907,9 @@
     initThemeSwitcher();
     initReveal();
     onceGlobal('themeToggle', initThemeToggle);
+    onceGlobal('live2dRuntime', initLive2DRuntime);
+    onceGlobal('asideState', initAsideState);
+    onceGlobal('navA11y', initNavA11y);
     initMouseFollower();
     initArticleStats();
     initPostStats();

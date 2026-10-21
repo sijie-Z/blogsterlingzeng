@@ -140,6 +140,8 @@ npm test                    # 22 项端到端检查
 npm run test:l2d            # Live2D 加载诊断(模型 / Core / 404)
 npm run test:smooth         # 滚动与动效平滑度回归
 npm run perf                # 滚动性能探针(帧间隔 / 长任务 / 布局)
+npm run test:vitals         # CLS / LCP 与最大位移来源
+npm run build:fonts         # 新增 FontAwesome 图标后重新生成字体子集
 
 # 写作
 hexo new "文章标题"          # 新建文章
@@ -598,7 +600,9 @@ comment:
 
 ## 许可证
 
-本项目采用 [MIT License](LICENSE) 开源协议。
+本站自有代码与内容采用 [MIT License](LICENSE)。第三方组件的许可见
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)：Live2D 组件为 GPL-3.0-or-later，
+DeepSeek 大肥鱼模型为 CC BY-NC-SA 4.0，Live2D Cubism Core 为 Live2D Inc. 专有软件。
 
 ---
 

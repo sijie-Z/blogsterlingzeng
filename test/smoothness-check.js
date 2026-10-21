@@ -2,6 +2,8 @@
 const puppeteer = require('puppeteer-core');
 const { startServer } = require('./static-server');
 const CHROME = process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
+const PORT = Number(process.env.PORT || 4140);
+const BASE = `http://127.0.0.1:${PORT}`;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 let pass = 0, fail = 0;
 function check(name, cond, extra) {
@@ -10,7 +12,7 @@ function check(name, cond, extra) {
 }
 
 (async () => {
-  const server = await startServer();
+  const server = await startServer(PORT);
   const browser = await puppeteer.launch({
     executablePath: CHROME,
     headless: true,
@@ -21,7 +23,7 @@ function check(name, cond, extra) {
   const errors = [];
   page.on('pageerror', e => errors.push(e.message.slice(0, 160)));
 
-  await page.goto('http://127.0.0.1:4140/', { waitUntil: 'networkidle2', timeout: 30000 });
+  await page.goto(`${BASE}/`, { waitUntil: 'networkidle2', timeout: 30000 });
   await sleep(3000);
 
   console.log('=== 1. 合成层与过渡配置 ===');
@@ -99,9 +101,72 @@ function check(name, cond, extra) {
     const resumed = await page.evaluate(() => ({ flag: !!window.__l2dPaused, frame: window.__l2dApp._drawFrameId }));
     check('滚动时暂停渲染', paused.flag === true && paused.frame === null, JSON.stringify(paused));
     check('停止滚动后恢复', resumed.flag === false && typeof resumed.frame === 'number', JSON.stringify(resumed));
+
+    const tap = await page.evaluate(() => {
+      const app = window.__l2dApp;
+      const model = app.subdelegates.at(0).getLive2DManager()._models.at(0);
+      let motions = 0, exprs = 0;
+      const om = model.startRandomMotion && model.startRandomMotion.bind(model);
+      const oe = model.setRandomExpression && model.setRandomExpression.bind(model);
+      if (om) model.startRandomMotion = (...a) => { motions++; return om(...a); };
+      if (oe) model.setRandomExpression = (...a) => { exprs++; return oe(...a); };
+      document.getElementById('live2d').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      return { motions, exprs };
+    });
+    check('点击宠物触发动作', tap.motions > 0, JSON.stringify(tap));
+
+    const hidden = await page.evaluate(async () => {
+      const w = document.getElementById('waifu');
+      w.classList.remove('waifu-active');
+      w.classList.add('waifu-hidden');
+      await new Promise(r => setTimeout(r, 350));
+      const stopped = window.__l2dApp._drawFrameId === null;
+      w.classList.add('waifu-active');
+      w.classList.remove('waifu-hidden');
+      await new Promise(r => setTimeout(r, 1000));
+      const resumed = typeof window.__l2dApp._drawFrameId === 'number';
+      return { stopped, resumed };
+    });
+    check('隐藏宠物时停止渲染', hidden.stopped, JSON.stringify(hidden));
+    check('恢复显示后继续渲染', hidden.resumed, JSON.stringify(hidden));
   }
 
-  console.log('=== 6. 页面错误 ===');
+  console.log('=== 6. 移动端 ===');
+  const mPage = await browser.newPage();
+  await mPage.setViewport({ width: 390, height: 844 });
+  await mPage.goto(`${BASE}/`, { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(1500);
+  const mobile = await mPage.evaluate(() => {
+    const info = document.querySelector('footer.footer .info-container');
+    return {
+      overflow: document.documentElement.scrollWidth - innerWidth,
+      waifu: !!document.getElementById('waifu'),
+      footerW: Math.round(info ? info.getBoundingClientRect().width : 0),
+      footerScrollW: Math.round(info ? info.scrollWidth : 0),
+      innerWidth,
+      heavyRequests: performance.getEntriesByType('resource').filter(e => /live2d\/(model|waifu-tips|live2dcubismcore|chunk)/.test(e.name)).length,
+    };
+  });
+  check('移动端无横向溢出', mobile.overflow <= 1, JSON.stringify(mobile));
+  check('移动端不加载 Live2D 资源', !mobile.waifu && mobile.heavyRequests === 0, JSON.stringify(mobile));
+  check('移动端页脚不超宽', mobile.footerW <= mobile.innerWidth + 1 && mobile.footerScrollW <= mobile.innerWidth + 1, JSON.stringify(mobile));
+  await mPage.close();
+
+  console.log('=== 7. 减少动态效果 ===');
+  const rmPage = await browser.newPage();
+  await rmPage.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+  await rmPage.setViewport({ width: 1440, height: 900 });
+  await rmPage.goto(`${BASE}/`, { waitUntil: 'networkidle2', timeout: 30000 });
+  const rmReady = await rmPage.waitForFunction(() => !!window.__l2dApp, { timeout: 15000 }).then(() => true).catch(() => false);
+  await sleep(600);
+  const rm = await rmPage.evaluate(() => ({
+    flag: !!window.__l2dReducedMotion,
+    frame: window.__l2dApp ? window.__l2dApp._drawFrameId : 'no-app',
+  }));
+  check('reduced-motion 下不持续渲染', rmReady && rm.flag === true && rm.frame === null, JSON.stringify(rm));
+  await rmPage.close();
+
+  console.log('=== 8. 页面错误 ===');
   check('零页面错误', errors.length === 0, errors.slice(0, 2).join(' | '));
 
   console.log(`\n结果: ${pass} 通过, ${fail} 失败`);

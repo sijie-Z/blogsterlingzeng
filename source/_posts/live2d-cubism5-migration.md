@@ -149,7 +149,17 @@ Live2D 的入场原来是 `bottom: -500px` 到 `0`，3 秒。改成 `transform` 
 
 这些改完，滚动路径上不再有每帧的布局写入和整卡模糊。
 
-Live2D 的 Cubism 循环也一并处理了：滚动时调用 `stop()`，`scrollend` 或 1.2 秒空闲后 `run()`；空闲帧率限制到 30fps，`deltaTime` 上限钳到 50ms，避免暂停恢复后动作跳变。用无头 Chrome 开真实 GPU（AMD 核显）连续滚 6 秒：有宠物时 p50 8ms、p95 17ms，关掉宠物 p95 9ms。滚动时不再和宠物抢主线程。
+Live2D 的 Cubism 循环也一并处理了：滚动时调用 `stop()`，`scrollend` 或 1.2 秒空闲后 `run()`；空闲帧率限制到 30fps，`deltaTime` 上限钳到 50ms，避免暂停恢复后动作跳变。用无头 Chrome 开真实 GPU（AMD 核显）连续滚 6 秒：有宠物时 p50 8ms、p95 17ms，关掉宠物 p95 9ms。滚动时不再和宠物抢主线程。模型本身没有 HitArea，点击画布原本没有任何反应；现在绑了随机动作和表情，7 个动作、44 个表情终于能用到。
+
+## 第三遍：字体、图片和移动端
+
+- FontAwesome 全量字体 805KB，全站实际只用到 64 个码点。用 fonttools 裁成三个子集，合计 13KB；整页字体从 971KB 降到 179KB。新增图标后跑 `npm run build:fonts` 重新生成。
+- 构建期给所有站内图片写入 `width`/`height`、`decoding="async"`；首屏 banner 和文章头图 `loading="eager"` + `fetchpriority="high"`，其余懒加载。
+- 文章目录的展开状态在 `<body>` 解析前从 localStorage 预置到 `html` 上，CSS 提前按展开布局排版。文章首屏 CLS 从 0.486 降到 0.058。
+- 主题在滚动时会改 `--navbar-height`，正文跟着位移 20px。把变量固定在 70px，视觉收缩交给自定义胶囊动画。
+- 900px 以下不加载 4.6MB 的 Live2D；移动端页脚改为可换行、隐藏次要项并提高小字对比度；移动导航的搜索/菜单补上键盘焦点，关闭的抽屉设为 `inert`。
+
+当前首屏 CLS：首页 0.077、文章 0.058、归档 0.092、关于 0.0002；LCP 0.4–1.1 秒。
 
 ## 收尾
 

@@ -5,6 +5,7 @@
   "description": "Sterling Zeng 的个人技术博客",
   "scripts": {
     "build": "hexo generate",
+    "build:fonts": "node scripts/build-fontawesome-subset.js",
     "clean": "hexo clean",
     "deploy": "bash deploy.sh",
     "server": "hexo server",
@@ -14,6 +15,7 @@
     "test:l2d": "node test/l2d-debug.js",
     "test:smooth": "node test/smoothness-check.js",
     "perf": "node test/perf-probe.js",
+    "test:vitals": "node test/vitals-check.js",
     "postinstall": "node scripts/theme-patch.js"
   },
   "hexo": {
@@ -34,7 +36,8 @@
     "hexo-renderer-stylus": "^3.0.1",
     "hexo-server": "^3.0.0",
     "hexo-theme-redefine": "^2.9.0",
-    "hexo-wordcount": "^6.0.1"
+    "hexo-wordcount": "^6.0.1",
+    "image-size": "^1.1.1"
   },
   "keywords": [
     "hexo",

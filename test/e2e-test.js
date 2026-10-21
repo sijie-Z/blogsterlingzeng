@@ -4,7 +4,8 @@ const { startServer } = require('./static-server');
 let server;
 
 const CHROME = process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-const BASE = process.env.BASE || 'http://127.0.0.1:4140';
+const PORT = Number(process.env.PORT || 4140);
+const BASE = process.env.BASE || `http://127.0.0.1:${PORT}`;
 
 let pass = 0, fail = 0;
 function check(name, cond, extra) {
@@ -12,7 +13,7 @@ function check(name, cond, extra) {
   else { fail++; console.log('  FAIL', name, extra || ''); }
 }
 
-(async () => { server = await startServer();
+(async () => { server = await startServer(PORT);
   console.log('启动 Chrome...');
   const browser = await puppeteer.launch({
     executablePath: CHROME,

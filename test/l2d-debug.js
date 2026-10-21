@@ -2,9 +2,10 @@
 const puppeteer = require('puppeteer-core');
 const { startServer } = require('./static-server');
 const CHROME = process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
+const PORT = Number(process.env.PORT || 4140);
 
 (async () => {
-  const server = await startServer();
+  const server = await startServer(PORT);
   const browser = await puppeteer.launch({
     executablePath: CHROME,
     headless: true,
@@ -17,7 +18,7 @@ const CHROME = process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Applic
   page.on('requestfailed', r => logs.push('[REQFAIL] ' + r.url().slice(0, 150)));
   page.on('response', r => { if (r.status() === 404) logs.push('[HTTP404] ' + r.url().slice(0, 200)); });
 
-  await page.goto('http://127.0.0.1:4140/', { waitUntil: 'domcontentloaded', timeout: 30000 });
+  await page.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'domcontentloaded', timeout: 30000 });
   await new Promise(r => setTimeout(r, 15000));
 
   const state = await page.evaluate(() => {

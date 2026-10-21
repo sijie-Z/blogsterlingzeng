@@ -11,6 +11,8 @@
   window.__live2dAutoloaded = true;
 
   const live2d_path = '/live2d/';
+  // 系统开启“减少动态效果”时,模型只渲染一帧静态图,不持续动画
+  window.__l2dReducedMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 // const live2d_path = '/dist/';
 
 // Method to encapsulate asynchronous resource loading
@@ -41,6 +43,11 @@ function loadExternalResource(url, type) {
   // If you are concerned about display issues on mobile devices, you can use screen.width to determine whether to load
   // 如果担心手机上显示效果不佳，可以根据屏幕宽度来判断是否加载
   // if (screen.width < 768) return;
+  // 省流模式下不加载 4MB 的模型
+  const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  if (connection && connection.saveData) return;
+  // 手机/平板不加载模型:遮挡内容且流量成本高
+  if (window.matchMedia && window.matchMedia('(max-width: 900px)').matches) return;
 
   // Avoid cross-origin issues with image resources
   // 避免图片资源跨域问题
@@ -55,11 +62,11 @@ function loadExternalResource(url, type) {
   // 加载 waifu.css 和 waifu-tips.js
   await Promise.all([
     loadExternalResource(live2d_path + 'waifu.css?v=20261021b', 'css'),
-    loadExternalResource(live2d_path + 'waifu-tips.js?v=20261021d', 'js')
+    loadExternalResource(live2d_path + 'waifu-tips.js?v=20261022a', 'js')
   ]);
   // For detailed usage of configuration options, see README.en.md
   // 配置选项的具体用法见 README.md
-  initWidget({
+  const boot = () => initWidget({
     waifuPath: live2d_path + 'waifu-tips.json?v=20261021',
     cdnPath: '/live2d/',
     // cdnPath: 'https://fastly.jsdelivr.net/gh/fghrsh/live2d_api/',
@@ -70,6 +77,15 @@ function loadExternalResource(url, type) {
     logLevel: 'warn',
     drag: false,
   });
+  // 等页面 load 后空闲再初始化,避免 4MB 模型抢首屏带宽
+  if (document.readyState === 'complete') {
+    boot();
+  } else {
+    window.addEventListener('load', () => {
+      if ('requestIdleCallback' in window) requestIdleCallback(boot, { timeout: 2000 });
+      else setTimeout(boot, 300);
+    }, { once: true });
+  }
 })();
 
 console.log(`\n%cLive2D%cWidget%c\n`, 'padding: 8px; background: #cd3e45; font-weight: bold; font-size: large; color: white;', 'padding: 8px; background: #ff5450; font-size: large; color: #eee;', '');

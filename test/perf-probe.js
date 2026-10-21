@@ -3,10 +3,11 @@ const puppeteer = require('puppeteer-core');
 const { startServer } = require('./static-server');
 const CHROME = process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const URL = process.env.PROBE_URL || 'http://127.0.0.1:4140/';
+const PORT = Number(process.env.PORT || 4140);
+const URL = process.env.PROBE_URL || `http://127.0.0.1:${PORT}/`;
 
 (async () => {
-  const server = await startServer(4140);
+  const server = await startServer(PORT);
   const gpu = process.env.PROBE_GPU === '1';
   const browser = await puppeteer.launch({
     executablePath: CHROME,

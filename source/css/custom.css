@@ -2054,6 +2054,111 @@ html.dark .nb-timer-btns button {
 }
 
 /* ========================================
+   PREPAINT TOC — 首屏前预置目录布局,消除正文宽度 CLS
+   ======================================== */
+html.aside-open .page-container .main-content-container .main-content-body .main-content {
+  max-width: 1200px !important;
+}
+
+html.aside-open .post-page-container {
+  gap: 30px;
+}
+
+html.aside-open .post-page-container .toc-content-container {
+  display: block;
+  opacity: 1;
+  width: 220px;
+}
+
+html.aside-open .post-page-container .article-content-container {
+  width: calc(100% - 210px) !important;
+}
+
+@media (max-width: 768px) {
+  html.aside-open .post-page-container .article-content-container {
+    width: 100% !important;
+  }
+  html.aside-open .post-page-container .toc-content-container {
+    display: none;
+  }
+}
+
+/* ========================================
+   NAVBAR HEIGHT — 固定高度,避免主题收缩时正文位移
+   ======================================== */
+html.navbar-shrink,
+body.navbar-shrink {
+  --navbar-height: 70px !important;
+}
+
+/* ========================================
+   MOBILE FOOTER — 允许换行并提高小字对比度
+   ======================================== */
+footer.footer .info-container {
+  color: var(--text-secondary);
+}
+
+footer.footer .info-container .customize-info {
+  opacity: 1;
+  color: inherit;
+}
+
+@media (max-width: 768px) {
+  footer.footer .info-container {
+    left: 0;
+    right: 0;
+    transform: none;
+    width: 100%;
+    max-width: 100vw;
+    padding: 8px 12px !important;
+    border-radius: 14px 14px 0 0;
+    flex-wrap: wrap;
+    row-gap: 2px;
+    white-space: normal;
+  }
+
+  footer.footer .info-container > div,
+  footer.footer .info-container .text-center,
+  footer.footer .info-container .icp-info,
+  footer.footer .info-container .post-count {
+    white-space: normal !important;
+  }
+
+  footer.footer .info-container .customize-info,
+  .footer-extra-icons {
+    display: none !important;
+  }
+
+  .mobile .icon-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .social-contacts a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    min-height: 32px;
+  }
+}
+
+/* 社交按钮/下滑箭头抬高,避开固定页脚与宠物 */
+.home-banner-container .absolute.bottom-0\.5 {
+  bottom: 4.5rem !important;
+}
+
+/* 搜索输入框保留可见焦点 */
+.search-popup .search-input:focus,
+.search-popup .search-input:focus-visible {
+  outline: 2px solid var(--primary-color) !important;
+  outline-offset: 2px;
+}
+
+/* ========================================
    ACCESSIBILITY — 焦点 / 触控 / 锚点
    ======================================== */
 .nb-controls button,

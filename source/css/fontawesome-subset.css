@@ -1,0 +1,24 @@
+/* FontAwesome 子集:只包含全站实际用到的 64 个图标,替代 805KB 全量字体 */
+@font-face {
+  font-family: "Font Awesome 6 Pro";
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url("/fontawesome/webfonts/fa-solid-900.subset.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Font Awesome 6 Pro";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fontawesome/webfonts/fa-regular-400.subset.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Font Awesome 6 Brands";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fontawesome/webfonts/fa-brands-400.subset.woff2") format("woff2");
+}

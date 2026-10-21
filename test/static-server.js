@@ -3,7 +3,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-function startServer(port = 4140, root = path.join(__dirname, '..', 'public')) {
+function startServer(port = Number(process.env.PORT) || 4140, root = path.join(__dirname, '..', 'public')) {
   const MIME = {
     '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css',
     '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg',
