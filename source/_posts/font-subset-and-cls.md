@@ -37,9 +37,9 @@ FontAwesome 的 CSS 里，每个图标都有一条 `.fa-name:before{content:"\fX
 
 | 字体 | 原始 | 子集 |
 |------|------|------|
-| solid | 320KB | 5.2KB |
-| regular | 395KB | 6.8KB |
-| brands | 109KB | 1.4KB |
+| solid | 313KB | 5.2KB |
+| regular | 386KB | 6.8KB |
+| brands | 106KB | 1.4KB |
 
 在 `<head>` 末尾追加一组 `@font-face`，把 "Font Awesome 6 Pro" 和 "Brands" 指向子集文件。浏览器只下载子集，原来的 805KB 不再请求。
 
@@ -54,7 +54,7 @@ FontAwesome 的 CSS 里，每个图标都有一条 `.fa-name:before{content:"\fX
 - 首页 banner、文章头图：`loading="eager"` + `fetchpriority="high"`
 - 其余图片：`loading="lazy"` + `decoding="async"`
 
-首页 14 张图里，13 张拿到了尺寸（剩下 1 张是空 src 的灯箱占位）。图片的尺寸信息在交付 HTML 里就有，不用等运行时。
+站内图片在交付 HTML 里就带尺寸，只有空 src 的灯箱占位没有。不用等运行时再测量。
 
 ## CLS：两个具体来源
 
