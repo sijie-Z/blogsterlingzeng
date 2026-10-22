@@ -2749,3 +2749,122 @@ a.post-side-name {
 a.post-side-name:hover {
   color: var(--primary-color);
 }
+
+/* 归档页写作足迹热力图 */
+.writing-heatmap {
+  margin-bottom: 20px;
+  padding: 16px 18px;
+  border: 1px solid var(--shadow-color-1);
+  border-radius: 14px;
+  background: var(--background-color);
+  box-shadow: 0 3px 12px rgba(15, 35, 70, 0.035);
+}
+
+.writing-heatmap-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.writing-heatmap-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--default-text-color);
+}
+
+.writing-heatmap-sub {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--third-text-color);
+}
+
+.writing-heatmap-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex: none;
+}
+
+.writing-heatmap-stats strong {
+  font-size: 18px;
+  color: var(--primary-color);
+  font-variant-numeric: tabular-nums;
+}
+
+.writing-heatmap-stats span {
+  font-size: 11px;
+  color: var(--third-text-color);
+}
+
+.writing-heatmap-scroll {
+  overflow-x: auto;
+  padding-bottom: 2px;
+  overscroll-behavior-x: contain;
+}
+
+.writing-heatmap-svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.wh-l0 {
+  fill: var(--shadow-color-1);
+  opacity: 0.55;
+}
+
+.wh-l1 {
+  fill: var(--primary-color);
+  opacity: 0.25;
+}
+
+.wh-l2 {
+  fill: var(--primary-color);
+  opacity: 0.45;
+}
+
+.wh-l3 {
+  fill: var(--primary-color);
+  opacity: 0.7;
+}
+
+.wh-l4 {
+  fill: var(--primary-color);
+  opacity: 1;
+}
+
+.wh-month,
+.wh-day,
+.wh-legend text {
+  fill: var(--third-text-color);
+  font-size: 9px;
+  font-family: inherit;
+}
+
+@media (max-width: 768px) {
+  .writing-heatmap {
+    padding: 14px;
+  }
+
+  .writing-heatmap-title {
+    font-size: 15px;
+  }
+
+  .writing-heatmap-stats strong {
+    font-size: 16px;
+  }
+}
+
+/* 写作足迹：限宽居中，避免在大屏上铺成一条细线 */
+.writing-heatmap {
+  max-width: 620px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.writing-heatmap-svg {
+  margin: 0 auto;
+}

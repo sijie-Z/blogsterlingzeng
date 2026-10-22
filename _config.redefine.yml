@@ -320,7 +320,7 @@ footer:
 inject:
   enable: true
   head:
-    - <link rel="stylesheet" href="/css/custom.css?v=20261022l">
+    - <link rel="stylesheet" href="/css/custom.css?v=20261022m">
   footer:
     - <script src="/live2d/autoload.js?v=20261022f"></script>
     - <div class="footer-extra-icons">

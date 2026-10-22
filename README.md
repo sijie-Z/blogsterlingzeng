@@ -58,6 +58,7 @@
 | 文章侧栏 | 作者卡 + 阅读进度环 + 标签 + 同分类 + 目录卡片（构建期渲染，无 CLS） | `scripts/post-sidebar.js` |
 | 阅读体验 | 阅读位置记忆 + “继续阅读”胶囊、标题锚点复制、宽表格横向滚动 | `source/js/custom.js` |
 | 开放内容 | 每篇文章生成 `index.md` 原文，站点级 `llms.txt` 索引 | `scripts/markdown-route.js` |
+| 归档页 | 构建期写作足迹热力图（内联 SVG，零运行时） | `scripts/archive-heatmap.js` |
 
 ### 自定义页面
 
@@ -146,6 +147,7 @@ npm run test:content        # 文章 front matter / 站内链接 / 图片 / 文�
 npm run test:transitions    # 32 项 SPA 跳转 / 连点 / 前后退 / 内容先到预算
 npm run test:sidebar        # 24 项文章侧栏 / 进度 / 锚点 / 表格 / Markdown
 npm run test:resume         # 6 项阅读位置记忆与“继续阅读”
+npm run test:archive        # 11 项归档写作热力图与移动端
 npm run profile:nav         # 第一次跳转的 CPU 采样诊断
 npm run perf                # 滚动性能探针(帧间隔 / 长任务 / 布局)
 npm run test:vitals         # CLS / LCP 与最大位移来源
