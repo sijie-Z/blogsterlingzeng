@@ -64,7 +64,7 @@ alice();    // "Hello, I'm Alice"
 
 ### 场景一：数据私有化
 
-JavaScript 没有 `private` 关键字（ES2022 之前）。闭包是实现私有变量的经典方式：
+ES2022 之前没有 `#` 私有字段，闭包是实现私有变量的经典方式：
 
 ```javascript
 function createBankAccount(initialBalance) {
@@ -202,4 +202,4 @@ console.log(counter.getCount()); // 2
 
 ---
 
-*写完这篇文章，我又重新理解了一遍闭包。这就是写博客的意义吧。*
+*写完这篇文章，我把 createBankAccount 的例子改成了用 `#balance` 的版本。两种写法都能跑，区别是闭包版本在 DevTools 里看不到 balance。*

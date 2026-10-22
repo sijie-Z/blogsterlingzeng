@@ -118,7 +118,7 @@ Elasticsearch 的向量检索（dense_vector）在数据量大时非常吃内存
 ## 成果
 
 - 支持 PDF/Word/PPT/TXT 文档上传和解析
-- 混合检索（BM25 + 向量 + RRF 融合 + BGE Reranker）
+- 混合检索（BM25 + 向量 + RRF 融合）
 - SSE 流式对话，实时展示生成过程
 - 引用溯源，每个回答都能追溯到原文
 - Docker Compose 一键部署

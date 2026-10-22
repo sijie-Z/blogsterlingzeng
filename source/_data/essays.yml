@@ -1,3 +1,9 @@
+- date: 2026-10-22
+  content: |
+    博客左下角换成了 DeepSeek 大肥鱼。Cubism 5 模型 4.1MB，滚动时暂停渲染，空闲限制 30fps。
+    顺手把 FontAwesome 从 805KB 裁到 13KB，文章首屏 CLS 从 0.486 降到 0.058。
+    宠物现在可以拖动，双击回到左下角。
+
 - date: 2026-08-28
   content: |
     博客更新了。四篇新文章,从 MiQroGate 的凭证虚拟化,到 A 股反转研究的执行之痛。

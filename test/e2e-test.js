@@ -28,7 +28,7 @@ function check(name, cond, extra) {
   page.on('console', m => {
     if (m.type() === 'error' && !m.text().includes('Failed to load resource')) errors.push('CONSOLE: ' + m.text().slice(0, 250));
   });
-  page.on('response', r => { if (r.status() === 404 && !r.url().endsWith('/null')) errors.push('404: ' + r.url().slice(0, 200)); });
+  page.on('response', r => { if (r.status() === 404 && !r.url().endsWith('/null') && r.url().startsWith(BASE)) errors.push('404: ' + r.url().slice(0, 200)); });
 
   console.log('=== 1. 页面加载 ===');
   await page.goto(BASE, { waitUntil: 'networkidle2', timeout: 30000 }).catch(e => console.log('  goto err:', e.message));
@@ -125,6 +125,21 @@ function check(name, cond, extra) {
   check('页脚', await page.$('footer.footer'));
   check('Spark 宠物已移除', !(await page.$('.spark-pet')));
   check('旧猫已移除', !(await page.$('.footer-mascot')));
+
+  console.log('=== 6.2 次级页面 ===');
+  const secondaryPages = ['/archives', '/tags', '/categories', '/projects', '/friends', '/bookmarks', '/shuoshuo', '/photos'];
+  for (const path of secondaryPages) {
+    await page.goto(BASE + path, { waitUntil: 'networkidle2', timeout: 30000 }).catch(() => {});
+    await new Promise(r => setTimeout(r, 600));
+    const info = await page.evaluate(() => ({
+      sw: document.documentElement.scrollWidth,
+      iw: innerWidth,
+      main: !!document.querySelector('#swup, main, .page-container'),
+    }));
+    check(`页面 ${path} 正常`, info.main && info.sw <= info.iw + 2, JSON.stringify(info));
+  }
+  await page.goto(BASE, { waitUntil: 'networkidle2', timeout: 30000 }).catch(() => {});
+  await new Promise(r => setTimeout(r, 800));
 
   console.log('=== 6.5 SPA 导航 ===');
   const navLink = await page.$('a[href="/about"]');

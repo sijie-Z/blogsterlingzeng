@@ -132,6 +132,8 @@ EIP-712 签名授权铸造，每个签名绑定 nonce，用过即废。防止签
 | Factory Clone | 13 |
 | **总计** | **82** |
 
+这是 v1.0.0 发布前的快照。发布冲刺时以实测为准，测试数增加到 96 个；后续补齐到 204 个，详见[发布冲刺记录](/2026/08/28/nft-launchpad-release-sprint/)。
+
 ## 前端
 
 Next.js 14 + viem + wagmi + TailwindCSS。管理后台支持：

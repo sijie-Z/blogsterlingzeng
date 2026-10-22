@@ -2091,6 +2091,13 @@ body.navbar-shrink {
   --navbar-height: 70px !important;
 }
 
+/* 桌面端隐藏移动抽屉:抽屉以 translateX(100%) 挂在视口外,会撑宽页面 */
+@media (min-width: 769px) {
+  .navbar-drawer {
+    display: none !important;
+  }
+}
+
 /* ========================================
    MOBILE FOOTER — 允许换行并提高小字对比度
    ======================================== */

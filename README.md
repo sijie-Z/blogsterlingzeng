@@ -29,7 +29,7 @@
 
 这是一个完整的技术博客项目，不是简单的 Hexo 模板。包含：
 
-- **18 篇原创技术文章** — 每篇从个人经历出发，不是教科书式教程
+- **19 篇原创技术文章** — 每篇从个人经历出发，不是教科书式教程
 - **自定义 UI 设计** — 蓝色主题、磨砂导航栏、卡片浮动效果、阅读进度条
 - **多个自定义页面** — 关于、友链、书签、说说、照片墙、项目
 - **完整的部署方案** — 宝塔面板 scp 上传 / GitHub Actions
@@ -90,9 +90,9 @@
 |------|------|------|
 | 框架 | Hexo | 7.3.0 |
 | 主题 | hexo-theme-redefine | 2.9.0 |
-| 样式 | 自定义 CSS | 750+ 行 |
-| 脚本 | 自定义 JS | 100+ 行 |
-| CDN | jsDelivr | - |
+| 样式 | 自定义 CSS | 2000+ 行 |
+| 脚本 | 自定义 JS | 500+ 行 |
+| 静态资源 | 本地自托管 | - |
 | 搜索 | hexo-generator-searchdb | - |
 | 字数 | hexo-wordcount | - |
 | RSS | hexo-generator-feed | - |
@@ -110,7 +110,7 @@
 
 ```bash
 # 克隆仓库
-git clone https://github.com/sterlingzeng/blogsterlingzeng.git
+git clone https://github.com/sijie-Z/blogsterlingzeng.git
 cd blogsterlingzeng
 
 # 安装依赖
@@ -136,9 +136,10 @@ npm run clean               # 清理缓存和构建产物
 npm run serve               # http://127.0.0.1:4140
 
 # 测试(需要 puppeteer-core 与本机 Chrome)
-npm test                    # 22 项端到端检查
+npm test                    # 33 项端到端检查(含 8 个次级页面)
 npm run test:l2d            # Live2D 加载诊断(模型 / Core / 404)
 npm run test:smooth         # 滚动与动效平滑度回归
+npm run test:content        # 文章 front matter / 站内链接 / 图片 / 文风检查
 npm run perf                # 滚动性能探针(帧间隔 / 长任务 / 布局)
 npm run test:vitals         # CLS / LCP 与最大位移来源
 npm run build:fonts         # 新增 FontAwesome 图标后重新生成字体子集
@@ -162,14 +163,7 @@ bash deploy.sh              # 构建并上传到服务器
 blogsterlingzeng/
 │
 ├── source/                          # 源文件目录
-│   ├── _posts/                      # 文章目录 (7 篇)
-│   │   ├── hexo-blog-setup-guide.md
-│   │   ├── javascript-closure-deep-dive.md
-│   │   ├── react-hooks-guide.md
-│   │   ├── git-workflow-best-practices.md
-│   │   ├── docker-getting-started.md
-│   │   ├── css-modern-layout.md
-│   │   └── algorithm-binary-search.md
+│   ├── _posts/                      # 文章目录 (19 篇)
 │   │
 │   ├── _data/                       # 页面数据文件
 │   │   ├── links.yml                # 友链数据
@@ -187,13 +181,18 @@ blogsterlingzeng/
 │   ├── tags/index.md                # 标签页面
 │   ├── robots.txt                   # 爬虫规则
 │   │
-│   ├── css/custom.css               # 自定义样式 (1200+ 行)
+│   ├── css/custom.css               # 自定义样式 (2000+ 行)
 │   ├── js/custom.js                 # 自定义脚本
 │   ├── live2d/                      # Live2D 组件 + DeepSeek 大肥鱼模型
+│   ├── fontawesome/webfonts/        # FontAwesome 子集字体
 │   └── images/                      # 图片资源
 │       ├── avatar.jpg               # 头像 (75KB)
-│       ├── banner-light.jpg         # 亮色横幅 (466KB)
-│       ├── banner-dark.jpg          # 暗色横幅 (475KB)
+│       ├── banner-light.webp        # 太空站横幅（亮色/太空站模式）
+│       ├── banner-dark.webp         # 赛博雨夜横幅（暗色）
+│       ├── banner-spring.webp       # 春季横幅
+│       ├── banner-summer.webp       # 夏季横幅
+│       ├── banner-autumn.webp       # 秋季横幅
+│       ├── banner-winter.webp       # 冬季横幅
 │       ├── og-banner.jpg            # 社交分享图 (118KB)
 │       ├── cover-tech.jpg           # 文章封面 (53KB)
 │       ├── cover-code.jpg           # 文章封面 (73KB)
@@ -259,15 +258,15 @@ colors:
 home_banner:
   style: fixed             # 固定背景
   image:
-    light: /images/banner-light.jpg
-    dark: /images/banner-dark.jpg
+    light: /images/banner-light.webp
+    dark: /images/banner-dark.webp
   title: Sterling Zeng
   subtitle:
     hitokoto: true         # 启用一言 API 随机句子
   social_links:
     links:
       - icon: fa-brands fa-github
-        url: https://github.com/sterlingzeng
+        url: https://github.com/sijie-Z
 ```
 
 **导航栏**
@@ -328,6 +327,7 @@ inject:
 
 | 文章 | 文件 | 分类 | 核心观点 |
 |------|------|------|----------|
+| 从 971KB 到 179KB | `font-subset-and-cls.md` | 前端开发 | 字体子集化、图片尺寸与首屏 CLS 的工程化处理 |
 | 博客左下角的大肥鱼 | `live2d-cubism5-migration.md` | 项目实战 | 从 Cubism 2 到 Cubism 5：换模型顺带修掉 Swup 重复执行、监听器叠加与中文锚点 |
 | 把 API Key 关进网关 | `miqro-gate-virtual-key-design.md` | 项目实战 | 凭证虚拟化：把真实 Key 变成可轮换、吊销、计量的 Virtual Key |
 | 同一个信号,0.45 和 -0.27 | `quant-reversal-execution-gap.md` | 项目实战 | 信号存在不等于策略可投资：执行吃掉了 Alpha |
@@ -501,15 +501,16 @@ cover: /images/cover.jpg
 
 ### 修改横幅图片
 
-1. 把图片放到 `source/images/`
+1. 把图片放到 `source/images/`，建议转成 WebP
 2. 修改 `_config.redefine.yml`:
    ```yaml
    home_banner:
      image:
-       light: /images/你的亮色图.jpg
-       dark: /images/你的暗色图.jpg
+       light: /images/你的亮色图.webp
+       dark: /images/你的暗色图.webp
    ```
 3. 推荐尺寸：1920x1080px，文件大小 500KB 以内
+4. 四季与太空站模式在 `source/js/custom.js` 的 `SEASON_BANNERS` 中配置，导航栏 🍀 菜单可切换
 
 ### 修改头像
 
@@ -594,7 +595,7 @@ comment:
 |------|------|----------|
 | ~~推荐系统不工作~~ | ~~依赖 `nodejieba`，Windows 编译失败~~ | 已用 `scripts/related-posts.js` 生成数据 + 前端渲染替代 |
 | ~~页脚统计信息~~ | ~~vercount / 主题模板强制渲染~~ | 已关闭统计；"Powered by Hexo / Theme" 已通过 postinstall patch 从模板删除 |
-| HTTPS 证书签发慢 | GitHub Pages 自定义域名证书排队 | 无需操作，DNS 已正确，等待签发（HTTP 始终可用） |
+| ~~HTTPS 证书签发慢~~ | GitHub Pages 自定义域名证书排队 | 已切换 Cloudflare，证书正常 |
 
 ---
 
@@ -608,7 +609,7 @@ DeepSeek 大肥鱼模型为 CC BY-NC-SA 4.0，Live2D Cubism Core 为 Live2D Inc.
 
 ## 联系方式
 
-- **GitHub**: [github.com/sterlingzeng](https://github.com/sterlingzeng)
+- **GitHub**: [github.com/sijie-Z](https://github.com/sijie-Z)
 - **Email**: 1683039482@qq.com（优先）/ 19150649985@163.com（备用）
 - **QQ**: 1683039482
 - **Blog**: [sterlingzeng.cn](https://sterlingzeng.cn)

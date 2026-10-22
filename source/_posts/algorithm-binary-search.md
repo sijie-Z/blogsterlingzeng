@@ -1,5 +1,5 @@
 ---
-title: 二分查找：一个简单算法教会我的思维方式
+title: 二分查找：从背模板到理解边界
 date: 2026-04-25 09:30:00
 categories:
   - 算法与数据结构
@@ -7,7 +7,7 @@ tags:
   - 算法
   - 编程思维
   - 二分查找
-description: 二分查找不只是一个算法，它教会了我"分治"的思维方式。这篇文章记录了我对二分查找从"背模板"到"理解本质"的过程。
+description: 二分查找不只是一个算法，它留下了一套处理边界的方式。这篇文章记录了我从"背模板"到"理解本质"的过程。
 cover: /images/cover-algorithm.jpg
 ---
 
@@ -33,7 +33,7 @@ def search(nums, target):
 
 `left = mid` 而不是 `left = mid + 1`，当 `left` 和 `right` 相邻的时候，`mid` 永远等于 `left`，循环永远不会结束。
 
-这个 bug 教会我一件事：**简单的算法不等于容易写对的算法。**
+这个 bug 说明了一件事：**简单的算法不等于容易写对的算法。**
 
 <!-- more -->
 
@@ -100,7 +100,7 @@ right = mid      # 保留 mid
 
 这个效率差异来自一个简单的前提：**数据是有序的。** 有序意味着你可以通过一次比较，排除一半的元素。
 
-**二分查找教会我的思维方式：**
+**二分查找留下的三条规则：**
 
 1. **分治** — 大问题拆成小问题，每次缩小一半
 2. **边界意识** — 搜索区间的边界必须明确定义
@@ -166,14 +166,21 @@ def search(nums, target):
 这是我学到的最有价值的变体。不是在数组中查找，而是在**答案空间**中二分。
 
 ```python
-# 问题：把 n 个物品分成 k 组，使最大组的和最小
+# 问题：把 n 个物品按顺序分成 k 组，使最大组的和最小
 def minimize_max(nums, k):
     def can_divide(max_val):
-        # 判断是否能用 max_val 作为上限分成 k 组
-        count = 0
+        # 判断能否按顺序连续分成不超过 k 组,每组的和不超过 max_val
+        groups = 1
+        current = 0
         for num in nums:
-            count += (num - 1) // max_val + 1
-        return count <= k
+            if num > max_val:
+                return False
+            if current + num > max_val:
+                groups += 1
+                current = num
+            else:
+                current += num
+        return groups <= k
 
     left, right = 1, max(nums)
     while left < right:
@@ -200,7 +207,7 @@ def minimize_max(nums, k):
 
 ## 总结
 
-二分查找教会我的，不只是一个算法，而是一种思维方式：
+二分查找留下的不只是一个算法，还有一套处理边界的方式：
 
 1. **有序是前提** — 没有有序性，二分查找不成立
 2. **边界是关键** — 明确定义搜索区间，保持一致性
@@ -211,4 +218,4 @@ def minimize_max(nums, k):
 
 ---
 
-*写完这篇文章，我又重新做了一遍二分查找的经典题目。每次做都有新的体会。这就是算法的魅力——它不是死的知识，而是活的思维。*
+*写完这篇文章，我又做了一遍二分查找的经典题目。同样的边界，还是写错了一次。*

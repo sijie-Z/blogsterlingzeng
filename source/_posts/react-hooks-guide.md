@@ -143,7 +143,7 @@ useEffect(() => {
     });
 
   return () => {
-    cancelled = true; // 取消之前的请求
+    cancelled = true; // 忽略过期响应
   };
 }, [userId]);
 ```

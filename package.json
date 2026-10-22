@@ -16,6 +16,7 @@
     "test:smooth": "node test/smoothness-check.js",
     "perf": "node test/perf-probe.js",
     "test:vitals": "node test/vitals-check.js",
+    "test:content": "node test/content-check.js",
     "postinstall": "node scripts/theme-patch.js"
   },
   "hexo": {
