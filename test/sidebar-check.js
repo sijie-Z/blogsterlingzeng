@@ -57,6 +57,7 @@ function check(name, cond, extra) {
     toc: !!document.querySelector('.post-toc'),
     headingAnchors: document.querySelectorAll('.article-content h2 .heading-anchor').length,
     markdownLink: !!document.querySelector('.post-side-author-links a[aria-label="查看 Markdown 原文"]'),
+    codeFullscreen: !!document.querySelector('.code-fullscreen-btn'),
     overflow: document.documentElement.scrollWidth - innerWidth,
     cls: window.__cls,
   }));
@@ -78,6 +79,25 @@ function check(name, cond, extra) {
     return { status: res.status, text: (await res.text()).slice(0, 120) };
   });
   check('llms.txt 可访问', llms.status === 200 && llms.text.includes('#'), JSON.stringify(llms).slice(0, 200));
+  check('代码块全屏按钮存在', first.codeFullscreen);
+  if (first.codeFullscreen) {
+    await page.evaluate(() => document.querySelector('.code-fullscreen-btn').click());
+    await sleep(200);
+    const on = await page.evaluate(() => ({
+      full: !!document.querySelector('.code-container.code-fullscreen'),
+      backdrop: !!document.querySelector('.code-fullscreen-backdrop'),
+      locked: document.body.classList.contains('code-fullscreen-open'),
+    }));
+    check('代码块可全屏', on.full && on.backdrop && on.locked, JSON.stringify(on));
+    await page.keyboard.press('Escape');
+    await sleep(200);
+    const off = await page.evaluate(() => ({
+      full: !!document.querySelector('.code-container.code-fullscreen'),
+      backdrop: !!document.querySelector('.code-fullscreen-backdrop'),
+      locked: document.body.classList.contains('code-fullscreen-open'),
+    }));
+    check('Esc 退出代码全屏', !off.full && !off.backdrop && !off.locked, JSON.stringify(off));
+  }
   check('无横向溢出', first.overflow <= 2, String(first.overflow));
   check('首屏 CLS < 0.12', first.cls < 0.12, first.cls.toFixed(4));
   console.log('  CLS', first.cls.toFixed(4));

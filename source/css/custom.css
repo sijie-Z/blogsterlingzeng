@@ -2868,3 +2868,89 @@ a.post-side-name:hover {
 .writing-heatmap-svg {
   margin: 0 auto;
 }
+
+/* 代码块全屏 */
+.code-fullscreen-btn {
+  position: absolute;
+  top: 0;
+  right: 80px;
+  padding: 6px 15px;
+  border: 0;
+  background: var(--scond-background-color);
+  color: var(--default-text-color);
+  font-size: 1rem;
+  line-height: 1.8;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.code-container:hover .code-fullscreen-btn,
+.code-fullscreen-btn:focus-visible {
+  opacity: 1;
+}
+
+.code-container.code-fullscreen {
+  position: fixed;
+  inset: auto;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(94vw, 1280px);
+  max-height: 88vh;
+  z-index: 10000;
+  margin: 0;
+  padding: 46px 18px 18px;
+  overflow: auto;
+  background: var(--background-color);
+  border: 1px solid var(--shadow-color-1);
+  border-radius: 14px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+}
+
+.code-container.code-fullscreen .highlight-container {
+  max-height: none;
+}
+
+.code-container.code-fullscreen .code {
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.code-container.code-fullscreen .code-fullscreen-btn {
+  opacity: 1;
+}
+
+.code-fullscreen-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+body.code-fullscreen-open {
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .code-container.code-fullscreen {
+    width: 94vw;
+    max-height: 90vh;
+    padding: 46px 10px 12px;
+  }
+}
+
+.code-fullscreen-hint {
+  position: fixed;
+  left: 50%;
+  bottom: 12px;
+  z-index: 10001;
+  transform: translateX(-50%);
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.4;
+  pointer-events: none;
+}

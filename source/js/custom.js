@@ -203,7 +203,10 @@
     const attach = swup => {
       if (!swup || !swup.hooks || swup.__cjNavPause) return;
       swup.__cjNavPause = true;
-      swup.hooks.on('visit:start', pauseLive2DForNav);
+      swup.hooks.on('visit:start', () => {
+        closeCodeFullscreen();
+        pauseLive2DForNav();
+      });
       swup.hooks.on('page:view', resumeLive2DAfterNav);
     };
     if (window.swup && window.swup.hooks) {
@@ -616,6 +619,72 @@
       });
       heading.appendChild(anchor);
     });
+  }
+
+  // ============================
+  // Code fullscreen — 代码块全屏阅读
+  // ============================
+  function closeCodeFullscreen() {
+    document.querySelectorAll('.code-container.code-fullscreen').forEach(el => {
+      el.classList.remove('code-fullscreen');
+      const parent = el.__cjOriginalParent;
+      if (parent && parent.isConnected) {
+        const next = el.__cjOriginalNext && el.__cjOriginalNext.isConnected ? el.__cjOriginalNext : null;
+        parent.insertBefore(el, next);
+      } else {
+        el.remove();
+      }
+      delete el.__cjOriginalParent;
+      delete el.__cjOriginalNext;
+    });
+    document.body.classList.remove('code-fullscreen-open');
+    const backdrop = document.querySelector('.code-fullscreen-backdrop');
+    if (backdrop) backdrop.remove();
+    const hint = document.querySelector('.code-fullscreen-hint');
+    if (hint) hint.remove();
+    document.querySelectorAll('.code-fullscreen-btn i').forEach(icon => {
+      icon.className = 'fa-solid fa-expand';
+    });
+  }
+
+  function initCodeFullscreen() {
+    document.querySelectorAll('.highlight-container').forEach(container => {
+      if (container.querySelector('.code-fullscreen-btn')) return;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'code-fullscreen-btn';
+      btn.setAttribute('aria-label', '全屏查看代码');
+      btn.innerHTML = '<i class="fa-solid fa-expand" aria-hidden="true"></i>';
+      btn.addEventListener('click', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        const code = container.closest('.code-container') || container;
+        const on = code.classList.toggle('code-fullscreen');
+        if (!on) { closeCodeFullscreen(); return; }
+        // 文章容器有 transform,position:fixed 会被限制在内容区;
+        // 全屏时临时移到 body,关闭时原位插回。
+        code.__cjOriginalParent = code.parentNode;
+        code.__cjOriginalNext = code.nextSibling;
+        document.body.appendChild(code);
+        document.body.classList.add('code-fullscreen-open');
+        const backdrop = document.createElement('div');
+        backdrop.className = 'code-fullscreen-backdrop';
+        backdrop.addEventListener('click', closeCodeFullscreen);
+        document.body.appendChild(backdrop);
+        const hint = document.createElement('div');
+        hint.className = 'code-fullscreen-hint';
+        hint.textContent = 'Esc 退出全屏';
+        document.body.appendChild(hint);
+        btn.querySelector('i').className = 'fa-solid fa-compress';
+      });
+      container.appendChild(btn);
+    });
+    if (!window.__cjCodeFullscreenKeys) {
+      window.__cjCodeFullscreenKeys = true;
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') closeCodeFullscreen();
+      });
+    }
   }
 
   // ============================
@@ -1278,6 +1347,7 @@
   // Initialize all features
   // ============================
   function init() {
+    closeCodeFullscreen();
     // 全局监听在整个会话只注册一次(脚本每次换页都会重新执行)
     onceGlobal('smoothScroll', initSmoothScroll);
     onceGlobal('keyboard', initKeyboardShortcuts);
@@ -1298,6 +1368,7 @@
       setTimeout(() => {
         initTableScroll();
         initHeadingAnchors();
+        initCodeFullscreen();
       }, 60);
     });
     onceGlobal('themeToggle', initThemeToggle);
