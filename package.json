@@ -18,6 +18,7 @@
     "test:vitals": "node test/vitals-check.js",
     "test:content": "node test/content-check.js",
     "test:transitions": "node test/transitions-check.js",
+    "test:sidebar": "node test/sidebar-check.js",
     "profile:nav": "node test/nav-profile.js",
     "postinstall": "node scripts/theme-patch.js"
   },

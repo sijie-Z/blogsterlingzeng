@@ -70,8 +70,9 @@ html:root {
 }
 
 body {
-  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
-  text-rendering: optimizeLegibility;
+  /* 不用 optimizeLegibility / font-feature-settings 强制 kern+liga:
+     它会让浏览器在首次排版时对全文做昂贵的字形整形,
+     文章页首跳的整页 Layout 有很大一部分来自这里。 */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -2037,8 +2038,8 @@ html.dark .nb-timer-btns button {
   opacity: 0;
   transform: translateY(20px);
   transition:
-    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .reveal.reveal-visible {
@@ -2050,7 +2051,7 @@ html.dark .nb-timer-btns button {
 .article-content h2.reveal::before {
   transform: scaleY(0);
   transform-origin: top;
-  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.1s;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1) 0.05s;
 }
 
 .article-content h2.reveal.reveal-visible::before {
@@ -2247,3 +2248,319 @@ html[data-theme-switching]::view-transition-new(root) {
   mix-blend-mode: normal;
 }
 
+
+/* ========================================
+   POST SIDEBAR — 文章右侧信息卡
+   构建期渲染,避免前端插入造成 CLS
+   ======================================== */
+.post-side-stack {
+  white-space: normal;
+  margin-bottom: 12px;
+}
+
+.post-side-card {
+  background: var(--background-color);
+  border: 1px solid var(--shadow-color-1);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+  box-shadow: 0 3px 12px rgba(15, 35, 70, 0.035);
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.post-side-card:hover {
+  border-color: color-mix(in srgb, var(--primary-color) 28%, var(--shadow-color-1));
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(15, 35, 70, 0.06);
+}
+
+.post-side-author-card {
+  display: block;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.post-side-author-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.post-side-avatar-wrap {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  flex: none;
+}
+
+.post-side-ring {
+  position: absolute;
+  inset: 0;
+  width: 48px;
+  height: 48px;
+  transform: rotate(-90deg);
+}
+
+.post-side-ring-bg {
+  fill: none;
+  stroke: var(--shadow-color-1);
+  stroke-width: 2.5;
+}
+
+.post-side-ring-fill {
+  fill: none;
+  stroke: var(--primary-color);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.12s linear;
+}
+
+.post-side-avatar {
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.post-side-author-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.post-side-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--default-text-color);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.post-side-bio {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--third-text-color);
+  line-height: 1.5;
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.post-side-progress-line {
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--third-text-color);
+  font-variant-numeric: tabular-nums;
+}
+
+.post-side-progress-num {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.post-side-author-links {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.post-side-author-links a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 4px;
+  border-radius: 7px;
+  color: var(--third-text-color);
+  font-size: 11px;
+  text-decoration: none;
+  transition: color 0.18s ease, background-color 0.18s ease;
+}
+
+.post-side-author-links a:hover {
+  color: var(--primary-color);
+  background: color-mix(in srgb, var(--primary-color) 10%, transparent);
+}
+
+.post-side-card-title {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--third-text-color);
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+
+.post-side-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.post-side-tag {
+  display: inline-block;
+  padding: 3px 7px;
+  border-radius: 6px;
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--primary-color);
+  background: rgba(37, 99, 235, 0.08);
+  background: color-mix(in srgb, var(--primary-color) 10%, transparent);
+  text-decoration: none;
+  transition: background-color 0.18s ease, transform 0.18s ease;
+}
+
+.post-side-tag:hover {
+  background: color-mix(in srgb, var(--primary-color) 18%, transparent);
+  transform: translateY(-1px);
+}
+
+.post-side-cat-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.post-side-cat-list li + li {
+  margin-top: 6px;
+}
+
+.post-side-cat-list a {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--second-text-color);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.18s ease;
+}
+
+.post-side-cat-list a::before {
+  content: '';
+  width: 4px;
+  height: 4px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--primary-color);
+  opacity: 0.55;
+  transform: translateY(-2px);
+}
+
+.post-side-cat-list a:hover {
+  color: var(--primary-color);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .post-side-card,
+  .post-side-tag,
+  .post-side-author-links a,
+  .post-side-ring-fill {
+    transition: none;
+  }
+}
+
+/* 目录卡片化 + 当前章节计数 */
+.post-toc-wrap {
+  background: var(--background-color);
+  border: 1px solid var(--shadow-color-1);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 3px 12px rgba(15, 35, 70, 0.035);
+}
+
+.post-toc .toc-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.post-toc-count {
+  flex: none;
+  font-size: 10px;
+  line-height: 1;
+  padding: 3px 6px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.08);
+  background: color-mix(in srgb, var(--primary-color) 10%, transparent);
+  color: var(--primary-color);
+  font-variant-numeric: tabular-nums;
+}
+
+.post-toc-progress {
+  height: 2px;
+  margin: 2px 0 10px;
+  border-radius: 2px;
+  background: var(--shadow-color-1);
+  overflow: hidden;
+}
+
+.post-toc-progress span {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--primary-color);
+  transition: width 0.12s linear;
+}
+
+.post-side-author-links button.post-side-share {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  padding: 0 4px;
+}
+
+/* Swup:内容先到,新页 0.28s 入场(旧页不再播退出动画) */
+.main-content-body.transition-fade-up {
+  transition:
+    transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.28s ease;
+}
+
+/* 导航栏收缩时保持头部占位高度不变:
+   否则 header 70→50px,正文整体上移 20px,滚动时产生 0.15 CLS。 */
+.main-content-header {
+  height: 70px;
+  flex: none;
+}
+
+@media (max-width: 768px) {
+  .main-content-header {
+    height: 60px;
+  }
+}
+
+/* 导航收缩时主题会把 .main-content-container 的 padding-top 从 70 改到 50,
+   正文整体上移 20px(实测 0.15 CLS)。这里把占位固定在未收缩高度,
+   只让胶囊本身在 header 内收缩。 */
+.main-content-container {
+  padding-top: 70px !important;
+  transition: none !important;
+}
+
+body.navbar-shrink .main-content-container {
+  padding-top: 70px !important;
+}
+
+@media (max-width: 768px) {
+  .main-content-container,
+  body.navbar-shrink .main-content-container {
+    padding-top: 60px !important;
+  }
+}

@@ -17,7 +17,7 @@ function check(name, cond, extra) {
 
 async function installMetrics(page) {
   await page.evaluate(() => {
-    window.__tm = { frames: [], longtasks: [], start: performance.now(), stopped: false };
+    window.__tm = { frames: [], longtasks: [], loaf: [], start: performance.now(), stopped: false };
     let last = performance.now();
     const loop = now => {
       window.__tm.frames.push(now - last);
@@ -29,6 +29,11 @@ async function installMetrics(page) {
       new PerformanceObserver(list => {
         for (const e of list.getEntries()) window.__tm.longtasks.push(Math.round(e.duration));
       }).observe({ entryTypes: ['longtask'] });
+    } catch (_) {}
+    try {
+      new PerformanceObserver(list => {
+        for (const e of list.getEntries()) window.__tm.loaf.push(Math.round(e.duration));
+      }).observe({ type: 'long-animation-frame', buffered: true });
     } catch (_) {}
   });
 }
@@ -44,6 +49,7 @@ async function readMetrics(page) {
       p95: p(0.95),
       max: Math.round(f[f.length - 1] || 0),
       longtasks: (window.__tm?.longtasks || []).slice(0, 6),
+      loafMax: Math.max(0, ...(window.__tm?.loaf || [])),
     };
   });
 }
@@ -85,9 +91,17 @@ async function waitIdle(page, timeout = 8000) {
   if (articleLink) {
     articleHref = await articleLink.evaluate(a => a.getAttribute('href'));
     await installMetrics(page);
+    await page.evaluate(() => {
+      window.__navMarks = { click: 0, start: 0, replace: 0, end: 0 };
+      const mark = key => () => { window.__navMarks[key] = performance.now(); };
+      window.swup.hooks.on('visit:start', mark('start'));
+      window.swup.hooks.on('content:replace', mark('replace'));
+      window.swup.hooks.on('visit:end', mark('end'));
+    });
     await page.evaluate(() => window.scrollTo(0, 0));
     await sleep(300);
     await page.evaluate(h => {
+      window.__navMarks.click = performance.now();
       const a = [...document.querySelectorAll('a')].find(x => x.getAttribute('href') === h);
       if (a) a.click();
     }, articleHref);
@@ -101,12 +115,24 @@ async function waitIdle(page, timeout = 8000) {
       overflow: document.documentElement.scrollWidth - innerWidth,
     }));
     const metrics = await readMetrics(page);
+    const navMarks = await page.evaluate(() => {
+      const m = window.__navMarks;
+      return {
+        start: Math.round(m.start - m.click),
+        replace: Math.round(m.replace - m.click),
+        end: Math.round(m.end - m.click),
+      };
+    });
     check('导航完成', state.path === articleHref, JSON.stringify(state));
     check('内容已渲染', state.text > 500, JSON.stringify(state));
     check('滚动已回到顶部', state.scrollY < 80, JSON.stringify(state));
     check('无横向溢出', state.overflow <= 2, JSON.stringify(state));
     check('过渡类已清理', idle === true, JSON.stringify(state));
+    check('内容替换 < 150ms', navMarks.replace > 0 && navMarks.replace < 150, JSON.stringify(navMarks));
+    check('导航完成 < 800ms', navMarks.end > 0 && navMarks.end < 800, JSON.stringify(navMarks));
+    check('最长长任务 < 300ms', Math.max(0, ...(metrics.longtasks || [])) < 300, JSON.stringify(metrics));
     console.log('  帧指标', JSON.stringify(metrics));
+    console.log('  导航耗时', JSON.stringify(navMarks));
   }
 
   console.log('=== 2. 文章 → 关于 ===');

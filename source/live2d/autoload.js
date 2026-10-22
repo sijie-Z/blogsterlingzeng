@@ -13,6 +13,9 @@
   const live2d_path = '/live2d/';
   // 系统开启“减少动态效果”时,模型只渲染一帧静态图,不持续动画
   window.__l2dReducedMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  // 记录最后一次滚动时间:模型初始化(解码 4MB moc3 + 贴图)不要在用户
+  // 正在滚动时插进来,等滚动停下再加载,避免首屏滚动被长任务打断。
+  window.addEventListener('scroll', () => { window.__lastScrollAt = Date.now(); }, { passive: true });
 // const live2d_path = '/dist/';
 
 // Method to encapsulate asynchronous resource loading
@@ -70,6 +73,11 @@ function loadExternalResource(url, type) {
     // 如果正好在一次 SPA 换页过渡中,等过渡结束再初始化模型
     if (document.documentElement.classList.contains('is-animating')) {
       setTimeout(boot, 300);
+      return;
+    }
+    // 用户正在滚动时先不加载,等滚动停止 1.2s 后再初始化
+    if (Date.now() - (window.__lastScrollAt || 0) < 1200) {
+      setTimeout(boot, 600);
       return;
     }
     initWidget({

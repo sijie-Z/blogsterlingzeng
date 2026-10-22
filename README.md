@@ -54,7 +54,8 @@
 | 文章置顶 | `sticky: 1` 字段置顶 | `hexo-generator-index` |
 | Sitemap | `sitemap.xml` + `robots.txt` | `hexo-generator-sitemap` |
 | 复制链接 | 文章页工具条复制当前链接 | `source/js/custom.js` |
-| Live2D 宠物 | DeepSeek 大肥鱼（Cubism 5，本地 Core，8 动作 / 44 表情） | `source/live2d/` |
+| Live2D 宠物 | DeepSeek 大肥鱼（Cubism 4.2 模型 / Cubism 5 Core 运行时，8 动作 / 44 表情） | `source/live2d/` |
+| 文章侧栏 | 作者卡 + 阅读进度环 + 标签 + 同分类 + 目录卡片（构建期渲染，无 CLS） | `scripts/post-sidebar.js` |
 
 ### 自定义页面
 
@@ -138,9 +139,10 @@ npm run serve               # http://127.0.0.1:4140
 # 测试(需要 puppeteer-core 与本机 Chrome)
 npm test                    # 33 项端到端检查(含 8 个次级页面)
 npm run test:l2d            # Live2D 加载诊断(模型 / Core / 404)
-npm run test:smooth         # 滚动与动效平滑度回归
+npm run test:smooth         # 26 项滚动与动效平滑度回归
 npm run test:content        # 文章 front matter / 站内链接 / 图片 / 文风检查
-npm run test:transitions    # SPA 跳转 / 快速连点 / 前进后退 / 交互过渡
+npm run test:transitions    # 32 项 SPA 跳转 / 连点 / 前后退 / 内容先到预算
+npm run test:sidebar        # 18 项文章侧栏 / 阅读进度 / CLS 检查
 npm run profile:nav         # 第一次跳转的 CPU 采样诊断
 npm run perf                # 滚动性能探针(帧间隔 / 长任务 / 布局)
 npm run test:vitals         # CLS / LCP 与最大位移来源
@@ -330,7 +332,7 @@ inject:
 | 文章 | 文件 | 分类 | 核心观点 |
 |------|------|------|----------|
 | 从 971KB 到 179KB | `font-subset-and-cls.md` | 前端开发 | 字体子集化、图片尺寸与首屏 CLS 的工程化处理 |
-| 博客左下角的大肥鱼 | `live2d-cubism5-migration.md` | 项目实战 | 从 Cubism 2 到 Cubism 5：换模型顺带修掉 Swup 重复执行、监听器叠加与中文锚点 |
+| 博客左下角的大肥鱼 | `live2d-cubism5-migration.md` | 项目实战 | 从 Cubism 2 运行时到 Cubism 5 Core：换模型顺带修掉 Swup 重复执行、监听器叠加与中文锚点 |
 | 把 API Key 关进网关 | `miqro-gate-virtual-key-design.md` | 项目实战 | 凭证虚拟化：把真实 Key 变成可轮换、吊销、计量的 Virtual Key |
 | 同一个信号,0.45 和 -0.27 | `quant-reversal-execution-gap.md` | 项目实战 | 信号存在不等于策略可投资：执行吃掉了 Alpha |
 | 我的 CI 从来没有跑过 | `nft-launchpad-release-sprint.md` | 项目实战 | 发布前用 15 个 issue 还工程债，把"我不知道"变成"我知道" |

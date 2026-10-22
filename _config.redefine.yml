@@ -231,7 +231,7 @@ articles:
     enable: true
     max_depth: 4
     number: true
-    expand: true
+    expand: false
     init_open: true
   copyright:
     enable: true
@@ -245,6 +245,13 @@ articles:
     mobile_limit: 2
     placeholder: /images/cover-tech.jpg
     skip_dirs: []
+
+# 文章页右侧信息卡(构建期渲染,不产生 CLS)
+post_sidebar:
+  enable: true
+  author_bio: "大四 · 地信（GIS）· 用代码解决问题"
+  github: "https://github.com/sijie-Z"
+  email: "1683039482@qq.com"
 # ARTICLE <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
 
 
@@ -313,15 +320,15 @@ footer:
 inject:
   enable: true
   head:
-    - <link rel="stylesheet" href="/css/custom.css?v=20261022e">
+    - <link rel="stylesheet" href="/css/custom.css?v=20261022f">
   footer:
-    - <script src="/live2d/autoload.js?v=20261022e"></script>
+    - <script src="/live2d/autoload.js?v=20261022f"></script>
     - <div class="footer-extra-icons">
         <a href="/atom.xml" title="RSS 订阅" aria-label="RSS 订阅" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-rss" aria-hidden="true"></i></a>
         <a href="https://github.com/sijie-Z" title="GitHub" aria-label="GitHub" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-github" aria-hidden="true"></i></a>
         <a href="mailto:1683039482@qq.com" title="邮件联系" aria-label="邮件联系"><i class="fa-regular fa-envelope" aria-hidden="true"></i></a>
       </div>
-    - <script src="/js/custom.js?v=20261022h" data-swup-reload-script></script>
+    - <script src="/js/custom.js?v=20261022i" data-swup-reload-script></script>
 # INJECT <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
 
 

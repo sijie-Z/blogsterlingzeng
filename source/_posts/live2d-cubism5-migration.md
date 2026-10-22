@@ -1,5 +1,5 @@
 ---
-title: 博客左下角的大肥鱼——一次 Cubism 5 迁移和四个顺带修掉的 bug
+title: 博客左下角的大肥鱼——一次 Cubism 5 运行时迁移和四个顺带修掉的 bug
 date: 2026-10-21 21:40:00
 categories:
   - 项目实战
@@ -8,13 +8,15 @@ tags:
   - Hexo
   - Swup
   - 前端
-description: 站点只装了 Cubism 2 运行时，找到的大肥鱼模型却是 Cubism 5。迁移用了一个晚上，顺带修掉了 Swup 重复执行、监听器叠加、中文锚点失效和一条脆弱的测试等待。
+description: 站点只装了 Cubism 2 运行时，找到的大肥鱼模型却是 Cubism 4.2 格式。迁移到 Cubism 5 Core 用了一个晚上，顺带修掉了 Swup 重复执行、监听器叠加、中文锚点失效和一条脆弱的测试等待。
 cover: /images/cover-design.jpg
 ---
 
 博客左下角原来站着 bilibili 的 22 娘。
 
-我想换成 DeepSeek 的大肥鱼。模型在 GitHub 上找到了，作者把 8 个动作、44 个表情和两张贴图一起打包，[A8Chann/dsh-pet-live2d](https://github.com/A8Chann/dsh-pet-live2d)，CC BY-NC-SA 4.0。文件下下来，第一眼就不对：`c_0120.moc3`，Cubism 5。
+我想换成 DeepSeek 的大肥鱼。模型在 GitHub 上找到了，作者把 8 个动作、44 个表情和两张贴图一起打包，[A8Chann/dsh-pet-live2d](https://github.com/A8Chann/dsh-pet-live2d)，CC BY-NC-SA 4.0。文件下下来，第一眼就不对：`c_0120.moc3` 文件头的版本字节是 4——Cubism 4.2 格式，不是我以为的 5。
+
+这里要先分清两件事：`.moc3` 文件头的版本字节是模型格式版本，`model3.json` 里的 `Version: 3` 是设置文件格式，两者都不是“Cubism 5”。4.2 格式的模型用 Cubism 5 Core 加载完全兼容，所以迁移本身没问题，只是标题里的“5”指的是运行时。
 
 站点的 Live2D 组件是 [stevenjoezhang/live2d-widget](https://github.com/stevenjoezhang/live2d-widget)，只认 Cubism 2 的 `.moc`。`moc3` 没有公开的降级工具。换模型这件事，变成了换运行时。
 
@@ -26,7 +28,7 @@ cover: /images/cover-design.jpg
 
 模型选择逻辑是固定的：读 `model_list.json`，取 `models[0]`，拼出 `model/<目录>/index.json`，再按 `Version` 字段判断运行时。当前模型是 bilibili-live/22，Cubism 2，目录 2.8MB。
 
-仓库里其实还有 `chunk/index2.js`，208,996 字节，Cubism 5 的加载封装。它一直躺着，因为 `cubism5Path` 在之前的提交里被删掉了。当时这个路径指向一个国内加载失败的外部 CDN。
+仓库里其实还有 `chunk/index2.js`，208,996 字节，Cubism 5 Core 的加载封装。它一直躺着，因为 `cubism5Path` 在之前的提交里被删掉了。当时这个路径指向一个国内加载失败的外部 CDN。
 
 ## 迁移做了什么
 
@@ -36,7 +38,7 @@ cover: /images/cover-design.jpg
 cubism5Path: live2d_path + 'live2dcubismcore.min.js',
 ```
 
-第二步，处理模型入口。组件只认 `index.json`，而标准 Cubism 5 模型的文件名是 `c_0120.model3.json`。在同目录复制一份改名为 `index.json`，文件内容里的相对路径不用动。
+第二步，处理模型入口。组件只认 `index.json`，而标准 Cubism 模型的文件名是 `c_0120.model3.json`。在同目录复制一份改名为 `index.json`，文件内容里的相对路径不用动。
 
 第三步，把 `model_list.json` 从 `bilibili-live/22` 改成 `ds-whale-girl`。旧目录删掉，仓库里少 2.8MB，新模型 4.1MB，加上 Core，模型资源净增约 1.5MB。
 
@@ -114,7 +116,7 @@ const target = document.getElementById(targetId.slice(1));
 
 E2E 里判断明暗切换，原来是点击后 `await new Promise(r => setTimeout(r, 1500))`，再看 `html.dark`。
 
-换成 Cubism 5 之后，这项开始稳定失败。单独测发现切换本身是好的，点击后约 100ms class 就翻转了。问题在无头 Chrome 的 SwiftShader：2.1MB 的 moc3 和 1.8MB 的贴图在软件渲染下会阻塞主线程数秒，固定 1.5 秒的等待正好落在阻塞里。
+换成 Cubism 5 Core 之后，这项开始稳定失败。单独测发现切换本身是好的，点击后约 100ms class 就翻转了。问题在无头 Chrome 的 SwiftShader：2.1MB 的 moc3 和 1.8MB 的贴图在软件渲染下会阻塞主线程数秒，固定 1.5 秒的等待正好落在阻塞里。
 
 把固定等待换成等待状态真正翻转：
 

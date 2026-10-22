@@ -345,6 +345,9 @@
     // 进度条由主题的 updateScrollStyle 维护,这里只处理导航与页脚状态
     const update = (fromScroll = false) => {
       const scrollTop = window.scrollY;
+      // 页脚的“触底”判定需要当前真实高度:缓存可能因为滚动条/字体/图片
+      // 变化差 20px,差一点就会让 at-bottom 不触发。这里读一次真实值,
+      // 读取发生在滚动 rAF 里,布局已经是干净的,成本很低。
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
 
       // Dynamic Island 导航栏:进入用 100px、退出用 40px,避免阈值附近反复抖动
@@ -368,7 +371,9 @@
     };
 
     let ticking = false;
+    let lastScrollAt = 0;
     window.addEventListener('scroll', () => {
+      lastScrollAt = performance.now();
       // 同步暂停,不等 rAF:scrollend 恢复后新的 scroll 会再次暂停
       const l2d = window.__l2dApp;
       const waifu = document.querySelector('#waifu');
@@ -388,8 +393,109 @@
         ticking = true;
       }
     }, { passive: true });
-    document.addEventListener('scrollend', resumeLive2D, { passive: true });
+    // 连续滚动时 scrollend 可能每帧都触发(尤其程序化 scrollTo),
+    // 直接 resume 会让 Live2D 在“暂停-恢复”之间反复空转。
+    document.addEventListener('scrollend', () => {
+      if (performance.now() - lastScrollAt > 180) resumeLive2D();
+    }, { passive: true });
     update();
+  }
+
+  // ============================
+  // Scroll height cache — 主题的阅读进度/侧栏工具需要文档高度,
+  // 旧实现每次滚动都读 scrollHeight,会强制同步布局。这里在
+  // load / resize / 换页空闲时更新一次,滚动期间直接用缓存。
+  // ============================
+  function updateScrollHeightCache() {
+    window.__cjScrollHeight = document.documentElement.scrollHeight;
+  }
+
+  function initScrollHeightCache() {
+    if (window.__cjScrollHeightInit) return;
+    window.__cjScrollHeightInit = true;
+    const schedule = () => {
+      if (window.__cjScrollHeightRaf) return;
+      window.__cjScrollHeightRaf = requestAnimationFrame(() => {
+        window.__cjScrollHeightRaf = 0;
+        updateScrollHeightCache();
+      });
+    };
+    window.addEventListener('load', () => setTimeout(updateScrollHeightCache, 0), { once: true });
+    window.addEventListener('resize', schedule, { passive: true });
+    if ('ResizeObserver' in window) {
+      try { new ResizeObserver(schedule).observe(document.body); } catch (e) {}
+    }
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(schedule);
+    const afterNav = () => {
+      if ('requestIdleCallback' in window) requestIdleCallback(updateScrollHeightCache, { timeout: 1200 });
+      else setTimeout(updateScrollHeightCache, 300);
+    };
+    const attach = swup => {
+      if (!swup || !swup.hooks || swup.__cjHeightHook) return;
+      swup.__cjHeightHook = true;
+      swup.hooks.on('page:view', afterNav);
+    };
+    if (window.swup && window.swup.hooks) attach(window.swup);
+    else window.addEventListener('redefine:swup:ready', e => attach(e.detail && e.detail.swup), { once: true });
+    schedule();
+  }
+
+  // ============================
+  // Post sidebar — 更新作者卡上的阅读进度环。
+  // 卡片本身由构建期脚本写入 HTML,这里只改 SVG 偏移和数字,
+  // 不创建/移动任何节点,避免目录区域 CLS。
+  // ============================
+  function initPostSidebar() {
+    if (window.__cjPostSidebar) return;
+    window.__cjPostSidebar = true;
+    const RING = 2 * Math.PI * 20;
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const fill = document.querySelector('.post-side-ring-fill');
+      const num = document.querySelector('.post-side-progress-num');
+      if (fill) {
+        const docH = window.__cjScrollHeight || document.documentElement.scrollHeight;
+        const max = docH - window.innerHeight;
+        const percent = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+        fill.style.strokeDashoffset = (RING * (1 - percent)).toFixed(2);
+        if (num) num.textContent = String(Math.round(percent * 100));
+      }
+      const count = document.querySelector('.post-toc-count');
+      const bar = document.querySelector('.post-toc-progress span');
+      if (count || bar) {
+        const items = [...document.querySelectorAll('.post-toc li.nav-item')];
+        const active = document.querySelector('.post-toc li.active-current');
+        const total = items.length;
+        const index = active ? items.indexOf(active) : -1;
+        const current = total ? Math.max(1, index + 1) : 0;
+        if (count) count.textContent = total ? `${current}/${total}` : '';
+        if (bar) bar.style.width = total ? `${(current / total * 100).toFixed(1)}%` : '0%';
+      }
+    };
+    const schedule = () => { if (!raf) raf = requestAnimationFrame(update); };
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule, { passive: true });
+    document.addEventListener('click', e => {
+      const btn = e.target.closest('.post-side-share');
+      if (!btn) return;
+      const url = window.location.href;
+      if (navigator.share) {
+        navigator.share({ title: document.title, url }).catch(() => {});
+      } else if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(url).then(() => showToast('链接已复制')).catch(() => showToast('请复制地址栏链接'));
+      } else {
+        showToast('请复制地址栏链接');
+      }
+    }, true);
+    const attach = swup => {
+      if (!swup || !swup.hooks || swup.__cjSidebarHook) return;
+      swup.__cjSidebarHook = true;
+      swup.hooks.on('page:view', () => requestAnimationFrame(update));
+    };
+    if (window.swup && window.swup.hooks) attach(window.swup);
+    else window.addEventListener('redefine:swup:ready', e => attach(e.detail && e.detail.swup), { once: true });
+    schedule();
   }
 
   // ============================
@@ -726,7 +832,14 @@
     targets.forEach(el => {
       if (el.dataset.reveal) return;
       el.dataset.reveal = '1';
-      el.classList.add('reveal');
+      // 首屏内已经可见的元素直接显示,不要再等 0.3s 入场——
+      // 否则进文章页时标题/首段会先空白一下,观感像“慢半拍”。
+      const rect = el.getBoundingClientRect();
+      if (rect.top < window.innerHeight && rect.bottom > 0) {
+        el.classList.add('reveal', 'reveal-visible');
+      } else {
+        el.classList.add('reveal');
+      }
     });
 
     if (window.__cjRevealObserver) window.__cjRevealObserver.disconnect();
@@ -739,7 +852,9 @@
       });
     }, { threshold: 0.06, rootMargin: '0px 0px -36px 0px' });
 
-    targets.forEach(el => obs.observe(el));
+    targets.forEach(el => {
+      if (!el.classList.contains('reveal-visible')) obs.observe(el);
+    });
     window.__cjRevealObserver = obs;
   }
 
@@ -1032,6 +1147,8 @@
     onceGlobal('keyboard', initKeyboardShortcuts);
     initExternalLinks();
     onceGlobal('readingProgress', initReadingProgress);
+    onceGlobal('scrollHeightCache', initScrollHeightCache);
+    onceGlobal('postSidebar', initPostSidebar);
     initGithubProjects();
     initCopyLink();
     initRelatedPosts();
