@@ -68,8 +68,102 @@
       if (link.hostname !== window.location.hostname) {
         link.setAttribute('target', '_blank');
         link.setAttribute('rel', 'noopener noreferrer');
+        link.classList.add('external-link');
       }
     });
+  }
+
+  // ============================
+  // Reading position — 记住每篇文章读到哪，下次给一个“继续阅读”胶囊
+  // ============================
+  const READING_POS_KEY = 'cj-reading-positions';
+  const READING_POS_TTL = 30 * 24 * 60 * 60 * 1000;
+
+  function readReadingPositions() {
+    try { return JSON.parse(localStorage.getItem(READING_POS_KEY) || '{}') || {}; } catch (e) { return {}; }
+  }
+
+  function writeReadingPositions(map) {
+    try { localStorage.setItem(READING_POS_KEY, JSON.stringify(map)); } catch (e) {}
+  }
+
+  function hideResumePill() {
+    const pill = document.querySelector('.reading-resume');
+    if (pill) pill.classList.remove('show');
+  }
+
+  function saveReadingPosition() {
+    if (!document.querySelector('.post-page-container .article-content')) return;
+    const max = (window.__cjScrollHeight || document.documentElement.scrollHeight) - window.innerHeight;
+    if (max <= 0) return;
+    const percent = window.scrollY / max;
+    const path = window.location.pathname;
+    const map = readReadingPositions();
+    if (percent > 0.95) {
+      delete map[path];
+      writeReadingPositions(map);
+      return;
+    }
+    if (window.scrollY < 300 || percent < 0.03) return;
+    map[path] = {
+      y: Math.round(window.scrollY),
+      percent: Number(percent.toFixed(3)),
+      ts: Date.now(),
+    };
+    const cutoff = Date.now() - READING_POS_TTL;
+    for (const key of Object.keys(map)) {
+      if (!map[key] || map[key].ts < cutoff) delete map[key];
+    }
+    writeReadingPositions(map);
+  }
+
+  function showResumePill() {
+    if (!document.querySelector('.post-page-container .article-content')) return;
+    const saved = readReadingPositions()[window.location.pathname];
+    if (!saved || !Number.isFinite(saved.y)) return;
+    if (Date.now() - saved.ts > READING_POS_TTL) return;
+    if (saved.percent < 0.05 || saved.percent > 0.92 || saved.y < 300) return;
+    if (document.querySelector('.reading-resume')) return;
+
+    const pill = document.createElement('button');
+    pill.type = 'button';
+    pill.className = 'reading-resume';
+    pill.setAttribute('aria-label', '继续上次阅读');
+    pill.innerHTML = `<span class="reading-resume-dot" aria-hidden="true"></span>
+      <span class="reading-resume-text">上次读到 <b>${Math.round(saved.percent * 100)}%</b> · 继续</span>
+      <span class="reading-resume-close" role="button" aria-label="关闭">×</span>`;
+    document.body.appendChild(pill);
+
+    const dismiss = () => hideResumePill();
+    pill.addEventListener('click', e => {
+      if (e.target.closest('.reading-resume-close')) { dismiss(); return; }
+      const reduced = window.__l2dReducedMotion || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+      window.scrollTo({ top: saved.y, behavior: reduced ? 'auto' : 'smooth' });
+      dismiss();
+    });
+    requestAnimationFrame(() => pill.classList.add('show'));
+    setTimeout(dismiss, 15000);
+  }
+
+  function initReadingResume() {
+    if (window.__cjReadingResume) return;
+    window.__cjReadingResume = true;
+    let saveTimer = 0;
+    window.addEventListener('scroll', () => {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(saveReadingPosition, 500);
+    }, { passive: true });
+    const attach = swup => {
+      if (!swup || !swup.hooks || swup.__cjResumeHook) return;
+      swup.__cjResumeHook = true;
+      swup.hooks.on('page:view', () => {
+        hideResumePill();
+        setTimeout(showResumePill, 800);
+      });
+    };
+    if (window.swup && window.swup.hooks) attach(window.swup);
+    else window.addEventListener('redefine:swup:ready', e => attach(e.detail && e.detail.swup), { once: true });
+    setTimeout(showResumePill, 900);
   }
 
   // ============================
@@ -464,10 +558,11 @@
       const count = document.querySelector('.post-toc-count');
       const bar = document.querySelector('.post-toc-progress span');
       if (count || bar) {
-        const items = [...document.querySelectorAll('.post-toc li.nav-item')];
-        const active = document.querySelector('.post-toc li.active-current');
-        const total = items.length;
-        const index = active ? items.indexOf(active) : -1;
+        const links = [...document.querySelectorAll('.post-toc a.nav-link')];
+        const active = document.querySelector('.post-toc a.nav-link.active-current') ||
+          document.querySelector('.post-toc .active-current');
+        const total = links.length;
+        const index = active ? links.indexOf(active) : -1;
         const current = total ? Math.max(1, index + 1) : 0;
         if (count) count.textContent = total ? `${current}/${total}` : '';
         if (bar) bar.style.width = total ? `${(current / total * 100).toFixed(1)}%` : '0%';
@@ -496,6 +591,47 @@
     if (window.swup && window.swup.hooks) attach(window.swup);
     else window.addEventListener('redefine:swup:ready', e => attach(e.detail && e.detail.swup), { once: true });
     schedule();
+  }
+
+  // ============================
+  // Heading anchors — 标题旁复制本节链接
+  // ============================
+  function initHeadingAnchors() {
+    document.querySelectorAll('.article-content h2[id], .article-content h3[id], .article-content h4[id]').forEach(heading => {
+      if (heading.querySelector(':scope > .heading-anchor')) return;
+      const anchor = document.createElement('a');
+      anchor.className = 'heading-anchor';
+      anchor.href = '#' + heading.id;
+      anchor.title = '复制本节链接';
+      anchor.setAttribute('aria-label', '复制本节链接');
+      anchor.innerHTML = '<i class="fa-solid fa-link" aria-hidden="true"></i>';
+      anchor.addEventListener('click', () => {
+        const url = window.location.origin + window.location.pathname + '#' + encodeURIComponent(heading.id);
+        const done = () => showToast('本节链接已复制');
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(url).then(done).catch(() => fallbackCopy(url, done));
+        } else {
+          fallbackCopy(url, done);
+        }
+      });
+      heading.appendChild(anchor);
+    });
+  }
+
+  // ============================
+  // Tables — 宽表格放进横向滚动容器,避免移动端撑破正文
+  // ============================
+  function initTableScroll() {
+    document.querySelectorAll('.article-content table').forEach(table => {
+      if (table.closest('.table-scroll')) return;
+      const wrap = document.createElement('div');
+      wrap.className = 'table-scroll';
+      wrap.setAttribute('role', 'region');
+      wrap.setAttribute('aria-label', '表格，可横向滚动');
+      wrap.tabIndex = 0;
+      table.parentNode.insertBefore(wrap, table);
+      wrap.appendChild(table);
+    });
   }
 
   // ============================
@@ -1147,6 +1283,7 @@
     onceGlobal('keyboard', initKeyboardShortcuts);
     initExternalLinks();
     onceGlobal('readingProgress', initReadingProgress);
+    onceGlobal('readingResume', initReadingResume);
     onceGlobal('scrollHeightCache', initScrollHeightCache);
     onceGlobal('postSidebar', initPostSidebar);
     initGithubProjects();
@@ -1155,6 +1292,14 @@
     initSeason();
     initThemeSwitcher();
     initReveal();
+    // 表格包裹和标题锚点不需要赶在内容替换的同一个任务里完成:
+    // 延后到入场动画开始后再改 DOM,避免把 click→content:replace 拖长。
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        initTableScroll();
+        initHeadingAnchors();
+      }, 60);
+    });
     onceGlobal('themeToggle', initThemeToggle);
     onceGlobal('live2dRuntime', initLive2DRuntime);
     onceGlobal('asideState', initAsideState);

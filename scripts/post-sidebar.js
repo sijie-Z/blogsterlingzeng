@@ -47,12 +47,13 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
   const bio = sideCfg.author_bio || '大四 · 地信（GIS）· 用代码解决问题';
   const github = sideCfg.github || 'https://github.com/sijie-Z';
   const email = sideCfg.email || '1683039482@qq.com';
+  const absUrl = p => '/' + String(p || '').replace(/^\/+/, '');
   const editUrl = 'https://github.com/sijie-Z/blogsterlingzeng/edit/main/source/' +
     encodeURI(String(page.source || '')).replace(/#/g, '%23');
+  const markdownUrl = absUrl(String(page.path || '') + 'index.md');
   const minutes = readingMinutes(page.content);
 
   const tags = page.tags && page.tags.toArray ? page.tags.toArray() : [];
-  const absUrl = p => '/' + String(p || '').replace(/^\/+/, '');
   const tagHtml = tags.map(tag =>
     `<a class="post-side-tag" href="${escapeHtml(absUrl(tag.path))}">#${escapeHtml(tag.name)}</a>`
   ).join('');
@@ -85,7 +86,7 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
         <img class="post-side-avatar" src="${escapeHtml(avatar)}" alt="${escapeHtml(author)}" width="40" height="40" loading="lazy" decoding="async">
       </div>
       <div class="post-side-author-main">
-        <div class="post-side-name">${escapeHtml(author)}</div>
+        <a class="post-side-name" href="/about/">${escapeHtml(author)}</a>
         <div class="post-side-bio">${escapeHtml(bio)}</div>
         <div class="post-side-progress-line"><span class="post-side-progress-num">0</span>% · 约 ${minutes} 分钟</div>
       </div>
@@ -95,7 +96,7 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
       <a href="mailto:${escapeHtml(email)}" aria-label="Email"><i class="fa-regular fa-envelope" aria-hidden="true"></i></a>
       <button type="button" class="post-side-share" aria-label="分享本文"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i></button>
       <a href="${escapeHtml(editUrl)}" target="_blank" rel="noopener noreferrer" aria-label="在 GitHub 编辑本文"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i></a>
-      <a href="/about/" aria-label="关于我">关于我</a>
+      <a href="${escapeHtml(markdownUrl)}" target="_blank" rel="noopener noreferrer" aria-label="查看 Markdown 原文"><i class="fa-solid fa-file-lines" aria-hidden="true"></i></a>
     </div>
   </section>
   ${tagHtml ? `<section class="post-side-card post-side-tags-card" aria-label="本文标签">

@@ -55,6 +55,8 @@ function check(name, cond, extra) {
     tags: document.querySelectorAll('.post-side-tag').length,
     cat: !!document.querySelector('.post-side-cat-card'),
     toc: !!document.querySelector('.post-toc'),
+    headingAnchors: document.querySelectorAll('.article-content h2 .heading-anchor').length,
+    markdownLink: !!document.querySelector('.post-side-author-links a[aria-label="查看 Markdown 原文"]'),
     overflow: document.documentElement.scrollWidth - innerWidth,
     cls: window.__cls,
   }));
@@ -64,6 +66,18 @@ function check(name, cond, extra) {
   check('标签卡有标签', first.tags >= 2, String(first.tags));
   check('同分类卡存在', first.cat);
   check('目录仍在', first.toc);
+  check('标题锚点已生成', first.headingAnchors >= 3, String(first.headingAnchors));
+  check('Markdown 原文链接存在', first.markdownLink);
+  const md = await page.evaluate(async () => {
+    const res = await fetch(location.pathname + 'index.md');
+    return { status: res.status, text: (await res.text()).slice(0, 300) };
+  });
+  check('Markdown 原文可访问', md.status === 200 && md.text.length > 50 && md.text.includes('Docker'), JSON.stringify(md).slice(0, 200));
+  const llms = await page.evaluate(async () => {
+    const res = await fetch('/llms.txt');
+    return { status: res.status, text: (await res.text()).slice(0, 120) };
+  });
+  check('llms.txt 可访问', llms.status === 200 && llms.text.includes('#'), JSON.stringify(llms).slice(0, 200));
   check('无横向溢出', first.overflow <= 2, String(first.overflow));
   check('首屏 CLS < 0.12', first.cls < 0.12, first.cls.toFixed(4));
   console.log('  CLS', first.cls.toFixed(4));
@@ -80,11 +94,14 @@ function check(name, cond, extra) {
       offset: parseFloat(document.querySelector('.post-side-ring-fill')?.style.strokeDashoffset || '0'),
       cardTop: card ? card.getBoundingClientRect().top : null,
       tocTop: toc ? toc.getBoundingClientRect().top : null,
+      tocCount: document.querySelector('.post-toc-count')?.textContent || '',
     };
   });
   check('进度数字更新', mid.num >= 35 && mid.num <= 65, String(mid.num));
   check('进度环更新', mid.offset < before - 10, `${before} -> ${mid.offset}`);
   check('作者卡滚动时吸顶', mid.cardTop !== null && Math.abs(mid.cardTop - mid.tocTop) < 24, JSON.stringify(mid));
+  const tocCurrent = parseInt(String(mid.tocCount).split('/')[0], 10) || 0;
+  check('目录章节计数随滚动更新', tocCurrent > 1, mid.tocCount);
 
   console.log('=== 3. SPA 换页 ===');
   await page.evaluate(h => {
@@ -99,10 +116,12 @@ function check(name, cond, extra) {
     tags: [...document.querySelectorAll('.post-side-tag')].map(x => x.textContent),
     progress: document.querySelector('.post-side-progress-num')?.textContent,
     overflow: document.documentElement.scrollWidth - innerWidth,
+    tableScroll: !!document.querySelector('.article-content .table-scroll table'),
   }));
   check('换页后信息卡仍在', next.stack);
   check('换页后标签已更新', next.tags.some(t => t.includes('Hexo')), JSON.stringify(next.tags));
   check('换页后无横向溢出', next.overflow <= 2, String(next.overflow));
+  check('宽表格已包进横向滚动容器', next.tableScroll);
 
   console.log('=== 4. 移动端 ===');
   const mobile = await browser.newPage();

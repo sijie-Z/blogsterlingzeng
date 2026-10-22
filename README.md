@@ -56,6 +56,8 @@
 | 复制链接 | 文章页工具条复制当前链接 | `source/js/custom.js` |
 | Live2D 宠物 | DeepSeek 大肥鱼（Cubism 4.2 模型 / Cubism 5 Core 运行时，8 动作 / 44 表情） | `source/live2d/` |
 | 文章侧栏 | 作者卡 + 阅读进度环 + 标签 + 同分类 + 目录卡片（构建期渲染，无 CLS） | `scripts/post-sidebar.js` |
+| 阅读体验 | 阅读位置记忆 + “继续阅读”胶囊、标题锚点复制、宽表格横向滚动 | `source/js/custom.js` |
+| 开放内容 | 每篇文章生成 `index.md` 原文，站点级 `llms.txt` 索引 | `scripts/markdown-route.js` |
 
 ### 自定义页面
 
@@ -142,7 +144,8 @@ npm run test:l2d            # Live2D 加载诊断(模型 / Core / 404)
 npm run test:smooth         # 26 项滚动与动效平滑度回归
 npm run test:content        # 文章 front matter / 站内链接 / 图片 / 文风检查
 npm run test:transitions    # 32 项 SPA 跳转 / 连点 / 前后退 / 内容先到预算
-npm run test:sidebar        # 18 项文章侧栏 / 阅读进度 / CLS 检查
+npm run test:sidebar        # 24 项文章侧栏 / 进度 / 锚点 / 表格 / Markdown
+npm run test:resume         # 6 项阅读位置记忆与“继续阅读”
 npm run profile:nav         # 第一次跳转的 CPU 采样诊断
 npm run perf                # 滚动性能探针(帧间隔 / 长任务 / 布局)
 npm run test:vitals         # CLS / LCP 与最大位移来源
