@@ -54,6 +54,7 @@ html.dark {
 /* SwupScrollPlugin 自己用 rAF 逐帧滚动;CSS smooth 会和它互相打断 */
 html {
   scroll-behavior: auto;
+  scrollbar-gutter: stable;
 }
 
 /* SwupSlideTheme 默认 60px / 0.4s 的滑动偏重,收小到 16px / 0.32s */
@@ -1715,7 +1716,10 @@ html.dark .nb-timer-btn:hover {
   opacity: 0;
   visibility: hidden;
   transform: translateY(-6px) scale(0.97);
-  transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  transition:
+    opacity 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0.22s,
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
   z-index: 9999;
 }
 
@@ -2098,6 +2102,26 @@ body.navbar-shrink {
   }
 }
 
+/* 侧边隐藏工具栏关闭时移出布局,避免 translateX(250%) 撑出横向滚动 */
+.side-tools-container .hidden-tools-list:not(.show) {
+  display: none;
+}
+
+.side-tools-container .hidden-tools-list.show {
+  animation: cjToolsSlideIn 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes cjToolsSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(250%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 /* ========================================
    MOBILE FOOTER — 允许换行并提高小字对比度
    ======================================== */
@@ -2163,6 +2187,11 @@ footer.footer .info-container .customize-info {
 .search-popup .search-input:focus-visible {
   outline: 2px solid var(--primary-color) !important;
   outline-offset: 2px;
+}
+
+.search-popup,
+.navbar-drawer {
+  overscroll-behavior: contain;
 }
 
 /* ========================================

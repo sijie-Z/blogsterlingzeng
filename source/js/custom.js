@@ -78,10 +78,45 @@
   function resumeLive2D() {
     if (!window.__l2dPaused) return;
     window.__l2dPaused = false;
-    if (document.hidden || window.__l2dReducedMotion) return;
+    if (document.hidden || window.__l2dReducedMotion || window.__l2dNavPaused) return;
     const waifu = document.querySelector('#waifu');
     if (!waifu || !waifu.classList.contains('waifu-active')) return;
     try { window.__l2dApp.run(); } catch (e) {}
+  }
+
+  function pauseLive2DForNav() {
+    clearTimeout(window.__l2dNavResumeTimer);
+    if (!window.__l2dApp) return;
+    window.__l2dNavPaused = true;
+    try { window.__l2dApp.stop(); } catch (e) {}
+  }
+
+  function resumeLive2DAfterNav() {
+    // 换页动画结束后再等一下,避免宠物恢复渲染和内容首帧抢主线程
+    clearTimeout(window.__l2dNavResumeTimer);
+    window.__l2dNavResumeTimer = setTimeout(() => {
+      window.__l2dNavPaused = false;
+      if (window.__l2dPaused || window.__l2dReducedMotion || document.hidden) return;
+      const waifu = document.querySelector('#waifu');
+      if (!waifu || !waifu.classList.contains('waifu-active')) return;
+      if (window.__l2dApp && window.__l2dApp._drawFrameId == null) {
+        try { window.__l2dApp.run(); } catch (e) {}
+      }
+    }, 700);
+  }
+
+  function initSwupNavPause() {
+    const attach = swup => {
+      if (!swup || !swup.hooks || swup.__cjNavPause) return;
+      swup.__cjNavPause = true;
+      swup.hooks.on('visit:start', pauseLive2DForNav);
+      swup.hooks.on('page:view', resumeLive2DAfterNav);
+    };
+    if (window.swup && window.swup.hooks) {
+      attach(window.swup);
+    } else {
+      window.addEventListener('redefine:swup:ready', e => attach(e.detail && e.detail.swup), { once: true });
+    }
   }
 
   function getLive2DModel() {
@@ -185,10 +220,31 @@
       const active = waifu.classList.contains('waifu-active') && !waifu.classList.contains('waifu-hidden');
       if (!active) {
         try { app.stop(); } catch (e) {}
-      } else if (!window.__l2dPaused && !window.__l2dReducedMotion && !document.hidden && app._drawFrameId == null) {
+      } else if (!window.__l2dPaused && !window.__l2dReducedMotion && !window.__l2dNavPaused && !document.hidden && app._drawFrameId == null) {
         try { app.run(); } catch (e) {}
       }
     }).observe(waifu, { attributes: true, attributeFilter: ['class'] });
+  }
+
+  function initSearchFocus() {
+    // 主题延迟 500ms 才聚焦,这里点开立即聚焦,并在 80ms 后再确认一次
+    const focusInput = () => {
+      const input = document.querySelector('.search-pop-overlay.active .search-input');
+      if (input && document.activeElement !== input) input.focus({ preventScroll: true });
+    };
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.search-popup-trigger')) return;
+      requestAnimationFrame(focusInput);
+      setTimeout(focusInput, 80);
+    }, true);
+    const overlay = document.querySelector('.search-pop-overlay');
+    if (overlay) {
+      new MutationObserver(() => {
+        if (!overlay.classList.contains('active')) return;
+        requestAnimationFrame(focusInput);
+        setTimeout(focusInput, 80);
+      }).observe(overlay, { attributes: true, attributeFilter: ['class'] });
+    }
   }
 
   function initNavA11y() {
@@ -261,7 +317,7 @@
         try { window.__l2dApp.stop(); } catch (e) {}
         return;
       }
-      if (window.__l2dPaused || window.__l2dReducedMotion) return;
+      if (window.__l2dPaused || window.__l2dReducedMotion || window.__l2dNavPaused) return;
       const waifu = document.querySelector('#waifu');
       if (!waifu || !waifu.classList.contains('waifu-active')) return;
       if (window.__l2dApp._drawFrameId == null) {
@@ -276,7 +332,7 @@
       window.__l2dReducedMotion = mq.matches;
       if (mq.matches) {
         try { window.__l2dApp?.stop(); } catch (e) {}
-      } else if (window.__l2dApp && !window.__l2dPaused && !document.hidden && window.__l2dApp._drawFrameId == null) {
+      } else if (window.__l2dApp && !window.__l2dPaused && !window.__l2dNavPaused && !document.hidden && window.__l2dApp._drawFrameId == null) {
         try { window.__l2dApp.run(); } catch (e) {}
       }
     };
@@ -347,6 +403,9 @@
     if (!window.Odometer) return;
     // 阻止库的 DOMContentLoaded 自动初始化(它在 ready 时检查 options.auto)
     window.Odometer.options.auto = false;
+    // 只在首屏初始化;换页后的页脚由主题 runtime 直接写文本,避免重复动画长任务
+    if (window.__odometerReady) return;
+    window.__odometerReady = true;
 
     const start = () => {
       document.querySelectorAll('.odometer').forEach(el => {
@@ -983,6 +1042,8 @@
     onceGlobal('live2dRuntime', initLive2DRuntime);
     onceGlobal('asideState', initAsideState);
     onceGlobal('navA11y', initNavA11y);
+    onceGlobal('searchFocus', initSearchFocus);
+    onceGlobal('swupNavPause', initSwupNavPause);
     initMouseFollower();
     initArticleStats();
     initPostStats();

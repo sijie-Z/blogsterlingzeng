@@ -66,7 +66,13 @@ function loadExternalResource(url, type) {
   ]);
   // For detailed usage of configuration options, see README.en.md
   // 配置选项的具体用法见 README.md
-  const boot = () => initWidget({
+  const boot = () => {
+    // 如果正好在一次 SPA 换页过渡中,等过渡结束再初始化模型
+    if (document.documentElement.classList.contains('is-animating')) {
+      setTimeout(boot, 300);
+      return;
+    }
+    initWidget({
     waifuPath: live2d_path + 'waifu-tips.json?v=20261021',
     cdnPath: '/live2d/',
     // cdnPath: 'https://fastly.jsdelivr.net/gh/fghrsh/live2d_api/',
@@ -77,6 +83,7 @@ function loadExternalResource(url, type) {
     logLevel: 'warn',
     drag: true,
   });
+  };
   // 等页面 load 后空闲再初始化,避免 4MB 模型抢首屏带宽
   if (document.readyState === 'complete') {
     boot();

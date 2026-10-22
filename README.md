@@ -140,6 +140,8 @@ npm test                    # 33 项端到端检查(含 8 个次级页面)
 npm run test:l2d            # Live2D 加载诊断(模型 / Core / 404)
 npm run test:smooth         # 滚动与动效平滑度回归
 npm run test:content        # 文章 front matter / 站内链接 / 图片 / 文风检查
+npm run test:transitions    # SPA 跳转 / 快速连点 / 前进后退 / 交互过渡
+npm run profile:nav         # 第一次跳转的 CPU 采样诊断
 npm run perf                # 滚动性能探针(帧间隔 / 长任务 / 布局)
 npm run test:vitals         # CLS / LCP 与最大位移来源
 npm run build:fonts         # 新增 FontAwesome 图标后重新生成字体子集
