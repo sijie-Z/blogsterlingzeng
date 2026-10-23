@@ -58,9 +58,26 @@ function check(name, cond, extra) {
     check('点击后胶囊收起', !after.visible);
   }
 
+  console.log('=== SPA 换页后的胶囊 ===');
+  const NEXT = '/2026/05/08/hexo-blog-setup-guide/';
+  await page.evaluate(next => {
+    const key = 'cj-reading-positions';
+    const map = JSON.parse(localStorage.getItem(key) || '{}');
+    map[next] = { y: 1200, percent: 0.3, ts: Date.now() };
+    localStorage.setItem(key, JSON.stringify(map));
+    window.swup.navigate(next);
+  }, NEXT);
+  await page.waitForFunction(next => location.pathname === next, { timeout: 10000 }, NEXT).catch(() => {});
+  await sleep(1600);
+  const nextPill = await page.evaluate(() => {
+    const el = document.querySelector('.reading-resume');
+    return el ? { show: el.classList.contains('show'), text: el.textContent } : null;
+  });
+  check('SPA 换页后胶囊更新', !!nextPill && nextPill.show && /30%/.test(nextPill.text), JSON.stringify(nextPill));
+
   // 读到底部应清除记录
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-  await sleep(900);
+  await sleep(1200);
   const cleared = await page.evaluate(() => {
     const map = JSON.parse(localStorage.getItem('cj-reading-positions') || '{}');
     return map[location.pathname] || null;

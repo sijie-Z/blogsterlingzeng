@@ -88,6 +88,7 @@
   }
 
   function hideResumePill() {
+    clearTimeout(window.__cjResumeTimer);
     const pill = document.querySelector('.reading-resume');
     if (pill) pill.classList.remove('show');
   }
@@ -123,7 +124,10 @@
     if (!saved || !Number.isFinite(saved.y)) return;
     if (Date.now() - saved.ts > READING_POS_TTL) return;
     if (saved.percent < 0.05 || saved.percent > 0.92 || saved.y < 300) return;
-    if (document.querySelector('.reading-resume')) return;
+    // Swup 换页后旧胶囊还在 DOM 里,不清掉就不会为新文章生成
+    const oldPill = document.querySelector('.reading-resume');
+    if (oldPill) oldPill.remove();
+    clearTimeout(window.__cjResumeTimer);
 
     const pill = document.createElement('button');
     pill.type = 'button';
@@ -142,7 +146,7 @@
       dismiss();
     });
     requestAnimationFrame(() => pill.classList.add('show'));
-    setTimeout(dismiss, 15000);
+    window.__cjResumeTimer = setTimeout(dismiss, 15000);
   }
 
   function initReadingResume() {

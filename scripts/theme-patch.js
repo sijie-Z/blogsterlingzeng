@@ -137,6 +137,18 @@ patchText('layout/components/swup.ejs', [
     'swup remove slide theme plugin',
   ],
   [
+    `            new SwupScrollPlugin({
+                offset: 80,
+            }),`,
+    `            new SwupScrollPlugin({
+                offset: 80,
+                // 换页后直接回到顶部;默认的 smooth 滚动会持续约 1s,
+                // 用户这时往下滚会被它拽回去,也拖慢“内容先到”的观感。
+                animateScroll: false,
+            }),`,
+    'swup instant scroll between pages',
+  ],
+  [
     '        containers: ["#swup"],\n    });',
     '        containers: ["#swup"],\n        animationSelector: false,\n    });',
     'swup disable animation selector',
