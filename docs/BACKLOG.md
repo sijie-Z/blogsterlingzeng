@@ -10,7 +10,7 @@
 - 性能：FontAwesome 全量 CSS 换成 65KB 类名子集；移除 375KB 的 moment（essays 页改用 Intl）；移除 8.4MB 未引用的全量 webfonts；移除 Google Fonts 无用 preconnect；暗色横幅改懒加载；pangu 不再改整页标题（文章首屏 CLS 回到 0.0001）；APlayer 改为 12 秒或首次 pointerdown 才加载，无歌词时不再请求 LRC；关闭 odometer 数字滚动动画，避免首屏约 300ms 长任务。
 - SEO：`max-image-preview:large`；sitemap 去掉 `index.html`；28 张 1200×630 OG 分享卡（文章 / 系列 / 首页 / 项目 / 关于 / 简历），补齐 `og:image:width/height/alt`；站点级和系列级 JSON Feed 1.1。
 - 无障碍：首次 SPA 跳转也会播报并聚焦新页 h1；图片查看器 Tab 限制在弹层内、背景 inert；TOC 加 navigation landmark；代码复制/折叠改为原生按钮并播报结果；标题锚点名称带标题文本；skip 落点补 scroll-margin 与焦点样式。
-- 测试：334 项浏览器检查 + 22 篇内容检查全部通过；axe-core 桌面/移动端 9 类页面（含项目、简历）0 违规。
+- 测试：335 项浏览器检查 + 22 篇内容检查全部通过；axe-core 桌面/移动端 9 类页面（含项目、简历）0 违规。
 - 后续补强：文章页可见面包屑（与 BreadcrumbList 对齐）；图片查看器显示 figcaption/alt 并接 `aria-describedby`；`timeline` Hexo 标签替换关于页时间线；站内搜索改为 `field: all`，简历/项目/关于也能被搜到；构建期脚注（`[^id]` → doc-noteref / doc-endnotes）；首页加“项目 / 简历 / 系列”三张快速入口卡；代码块支持 `{% codeblock %}` 文件名标题与 `mark:` 行高亮；修复 APlayer 无歌词时请求 LRC 的 404；修复系列页 JSON-LD 图片回退问题；补充 Nginx 缓存头文档。
 
 ## 验证数字
@@ -26,7 +26,7 @@
 1. **线上缓存头**：给 Nginx / Cloudflare 的带版本号静态资源加 `Cache-Control: public, max-age=31536000, immutable`，HTML 短缓存。这是首屏之外最大的重复访问收益，本次只写进了文档，没有服务器权限落地。
 2. **边注**：脚注已支持；Maggie Appleton 式的右侧边注需要 ≥1440px 布局和额外的 hover/focus 预览，暂不做。
 3. **代码块文档化**：`{% codeblock %}` 文件名标题、`mark:` 行高亮和行号永久链接（`#cb1-L3`）都已落地；剩下的是跨代码块的全局 `#L3` 语义（需要处理重复 id）。
-4. **图片查看器**：补双指缩放（说明文字和 aria 关联已完成）。
+4. **图片查看器**：双指缩放、说明文字和 aria 关联均已完成；如果以后要支持旋转/平移手势，再扩展 Pointer Events。
 5. **`content-visibility: auto`**：已实测给 `#giscus-container` 加会让文章页 final CLS 升到 0.0998（评论高度估算不准），已回退；如果要做，需要给评论容器固定高度或改用 IntersectionObserver 懒加载 iframe。
 6. **数学公式**：若要写算法/GIS 公式，优先构建期渲染（KaTeX/MathJax SVG），不引客户端大包；mermaid 目前刻意关闭，重新启用前先评估包体与 Swup 重初始化。
 7. **主题标签**：timeline 已落地；gallery 可作为 Hexo tag plugin 补上，用在项目复盘与照片页；主题已有 callout / tabs / folding。

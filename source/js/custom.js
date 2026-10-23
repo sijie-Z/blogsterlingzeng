@@ -1191,6 +1191,44 @@
       }, { passive: true });
     }
 
+    // 双指缩放:换算成主题已有的 wheel 缩放,避免另写一套 transform 状态
+    if (!mask.__cjPinch) {
+      mask.__cjPinch = true;
+      let pinch = null;
+      const distance = touches => Math.hypot(
+        touches[0].clientX - touches[1].clientX,
+        touches[0].clientY - touches[1].clientY
+      );
+      const scaleOf = img => {
+        const match = (img.style.transform || '').match(/scale\(([\d.]+)\)/);
+        return match ? parseFloat(match[1]) : 1;
+      };
+      mask.addEventListener('touchstart', e => {
+        if (e.touches.length !== 2) return;
+        const img = mask.querySelector('.image-viewer-frame img');
+        if (!img) return;
+        pinch = { startDistance: distance(e.touches), startScale: scaleOf(img), img };
+      }, { passive: true, capture: true });
+      mask.addEventListener('touchmove', e => {
+        if (!pinch || e.touches.length !== 2) return;
+        e.preventDefault();
+        const target = Math.min(8, Math.max(0.3, pinch.startScale * (distance(e.touches) / pinch.startDistance)));
+        const current = scaleOf(pinch.img);
+        if (Math.abs(target - current) < 0.02) return;
+        pinch.img.dispatchEvent(new WheelEvent('wheel', {
+          deltaY: (current - target) * 1000,
+          clientX: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+          clientY: (e.touches[0].clientY + e.touches[1].clientY) / 2,
+          bubbles: true,
+          cancelable: true,
+          ctrlKey: true,
+        }));
+      }, { passive: false, capture: true });
+      mask.addEventListener('touchend', e => {
+        if (e.touches.length < 2) pinch = null;
+      }, { passive: true, capture: true });
+    }
+
     // 弹层打开时把 Tab 限制在对话框内,并让背景暂时 inert
     if (!mask.__cjTabTrap) {
       mask.__cjTabTrap = true;

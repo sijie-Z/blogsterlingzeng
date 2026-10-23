@@ -181,7 +181,7 @@ npm run test:sidebar        # 38 项文章侧栏 / 进度 / 锚点 / 表格 / �
 npm run test:series         # 53 项系列页 / 徽章 / 系列卡 / SPA / 移动端
 npm run test:assets         # 40 项响应式横幅 / WebP 纹理 / JSON Feed / 图标子集 / JSON-LD
 npm run test:search         # 18 项搜索 combobox / 方向键 / Enter / 空态 / IME
-npm run test:a11y           # 63 项无障碍:名称 / alt / 列表语义 / 标题 / 地标 / 脚注
+npm run test:a11y           # 64 项无障碍:名称 / alt / 列表语义 / 标题 / 地标 / 脚注
 npm run test:resume         # 7 项阅读位置记忆与“继续阅读”
 npm run test:archive        # 12 项归档写作热力图与移动端
 npm run profile:nav         # 第一次跳转的 CPU 采样诊断

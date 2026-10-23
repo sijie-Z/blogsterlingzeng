@@ -143,6 +143,29 @@ async function audit(page) {
   });
   check('代码按钮可键盘操作', !codeBtn.missing && (codeBtn.tag === 'BUTTON' || codeBtn.role === 'button') && codeBtn.tab === 0, JSON.stringify(codeBtn));
 
+  await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+  await page.goto(BASE + '/2026/10/23/hexo-series-reading-path/', { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(800);
+  await page.evaluate(() => document.querySelector('.markdown-body img')?.click());
+  await sleep(500);
+  const pinch = await page.evaluate(async () => {
+    const mask = document.querySelector('.image-viewer-container.active');
+    const img = mask?.querySelector('.image-viewer-frame img');
+    if (!img) return { missing: true };
+    const touch = (id, x, y) => new Touch({ identifier: id, target: mask, clientX: x, clientY: y, pageX: x, pageY: y, screenX: x, screenY: y });
+    const fire = (type, dist) => {
+      const touches = [touch(1, 195 - dist / 2, 420), touch(2, 195 + dist / 2, 420)];
+      mask.dispatchEvent(new TouchEvent(type, { touches, targetTouches: touches, changedTouches: touches, bubbles: true, cancelable: true }));
+    };
+    fire('touchstart', 80);
+    fire('touchmove', 240);
+    fire('touchend', 240);
+    await new Promise(r => setTimeout(r, 300));
+    const scale = Number((img.style.transform.match(/scale\(([\d.]+)\)/) || [])[1] || 1);
+    return { missing: false, scale };
+  });
+  check('双指缩放放大图片', !pinch.missing && pinch.scale > 1.2, JSON.stringify(pinch));
+
   check('零页面错误', errors.length === 0, errors.slice(0, 2).join(' | '));
 
   console.log(`\n结果: ${pass} 通过, ${fail} 失败`);

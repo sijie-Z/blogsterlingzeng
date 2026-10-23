@@ -104,7 +104,7 @@ test/                    11 套 Puppeteer / Node 检查
 | `test:sidebar` | 38 | 侧栏卡片、进度环、锚点、表格、Markdown、代码全屏、面包屑、移动目录 |
 | `test:series` | 53 | 系列页、徽章/系列卡、Atom、归档入口、SPA、移动端 |
 | `test:assets` | 40 | 响应式横幅、WebP 纹理、sitemap/llms、JSON-LD、JSON Feed、图标子集、OG 元数据、APlayer |
-| `test:a11y` | 63 | 名称、alt、列表语义、标题、地标、图片查看器键盘、脚注、项目/简历页 |
+| `test:a11y` | 64 | 名称、alt、列表语义、标题、地标、图片查看器键盘/双指缩放、脚注、项目/简历页 |
 | `test:search` | 18 | combobox/listbox、方向键、Enter、空态、IME、SPA |
 | `test:smooth` | 26 | 滚动、Live2D 暂停、reduced-motion、移动端溢出 |
 | `test` | 33 | 端到端页面、主题切换、Live2D、次级页面 |
@@ -112,14 +112,14 @@ test/                    11 套 Puppeteer / Node 检查
 | `test:archive` | 12 | 归档热力图与移动端 |
 | `test:content` | 22 篇 | front matter、站内链接、图片、文风硬规则 |
 
-合计 334 项浏览器检查和 22 篇文章的内容检查。所有套件在本机通过；CI 目前只跑不依赖浏览器的 `test:content`。
+合计 335 项浏览器检查和 22 篇文章的内容检查。所有套件在本机通过；CI 目前只跑不依赖浏览器的 `test:content`。
 
 ## 7. 已知边界
 
 - **Swup 解析成本**：首跳时如果用户没有 hover 预取，Swup 需要解析整篇长文 HTML，单次 long task 约 120–190ms。真实用户悬停链接会提前预取，测试里的程序化点击没有 hover 阶段。
 - **全量字体仍在产物里**：FontAwesome 全量 webfonts 和主题库文件仍会部署，虽然页面只请求子集字体；彻底裁剪需要更细的资源清单。
 - **mermaid/waline**：当前配置未启用，构建时移除；重新启用会自动保留对应文件。
-- **图片查看器手势**：键盘、按钮和左右滑动已可用，触屏双指缩放尚未实现。
+- **图片查看器手势**：键盘、按钮、左右滑动和双指缩放已可用。
 - **Live2D 工具菜单**：画布可点击/拖拽，工具栏已改为原生按钮并支持键盘；暂停/恢复状态还没有常驻的可见控件。
 - **主题升级**：补丁目标是 2.9.0 的模板文本；版本已锁定，升级时需要重新核对 `theme-patch.js` 的标记。
 
