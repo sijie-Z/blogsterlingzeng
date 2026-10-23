@@ -123,7 +123,7 @@ Elasticsearch 的向量检索（dense_vector）在数据量大时非常吃内存
 - 混合检索（BM25 + 向量 + RRF 融合）
 - SSE 流式对话，实时展示生成过程
 - 引用溯源，每个回答都能追溯到原文
-- Docker Compose 一键部署
+- [Docker Compose](/2026/04/22/docker-getting-started/) 一键部署
 
 项目地址：[github.com/sijie-Z/DocMind-RAG](https://github.com/sijie-Z/DocMind-RAG)
 

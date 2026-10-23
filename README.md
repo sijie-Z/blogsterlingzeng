@@ -29,7 +29,7 @@
 
 这是一个完整的技术博客项目，不是简单的 Hexo 模板。包含：
 
-- **19 篇原创技术文章** — 每篇从个人经历出发，不是教科书式教程
+- **21 篇原创技术文章** — 每篇从个人经历出发，不是教科书式教程
 - **自定义 UI 设计** — 蓝色主题、磨砂导航栏、卡片浮动效果、阅读进度条
 - **多个自定义页面** — 关于、友链、书签、说说、照片墙、项目
 - **完整的部署方案** — 宝塔面板 scp 上传 / GitHub Actions
@@ -201,7 +201,7 @@ bash deploy.sh              # 构建并上传到服务器
 blogsterlingzeng/
 │
 ├── source/                          # 源文件目录
-│   ├── _posts/                      # 文章目录 (19 篇)
+│   ├── _posts/                      # 文章目录 (21 篇)
 │   │
 │   ├── _data/                       # 页面数据文件
 │   │   ├── links.yml                # 友链数据
@@ -394,6 +394,8 @@ inject:
 | 空间数据安全分发与溯源 | `geodata-security-traceability.md` | 项目实战 | 矢量数据分发后的溯源定责 |
 | 从零搭建 NFT 发行平台 | `nft-launchpad-kit-web3.md` | 项目实战 | 6 种铸造模式的全链路实践 |
 | A 股量化研究平台 | `quant-platform-a-share-research.md` | 项目实战 | 从因子到回测的完整流水线 |
+| 21 篇文章，8 篇在系列里 | `hexo-series-reading-path.md` | 前端开发 | 用 front matter、generator 和 Atom 把有顺序的文章串成系列 |
+| 按显示尺寸交付 | `responsive-banner-live2d-texture.md` | 前端开发 | 横幅 srcset 与 Live2D 纹理按实际显示尺寸交付 |
 
 ### 文章 Front Matter 格式
 

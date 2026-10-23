@@ -63,7 +63,7 @@ function Counter() {
 
 看起来没问题对吧？但如果 `increment` 被快速连续调用两次，`count` 只会增加 1，而不是 2。
 
-为什么？因为 `increment` 里的 `count` 是闭包捕获的值，不是"当前值"。两次调用用的是同一个 `count`（比如 0），所以两次都执行 `setCount(0 + 1)`。
+为什么？因为 `increment` 里的 `count` 是[闭包捕获的值](/2026/05/04/javascript-closure-deep-dive/)，不是"当前值"。两次调用用的是同一个 `count`（比如 0），所以两次都执行 `setCount(0 + 1)`。
 
 ### 正确的思维方式
 

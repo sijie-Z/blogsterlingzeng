@@ -157,7 +157,7 @@ Live2D 的 Cubism 循环也一并处理了：滚动时调用 `stop()`，`scrolle
 
 ## 第三遍：字体、图片和移动端
 
-- FontAwesome 全量字体 805KB，全站实际只用到 64 个码点。用 fonttools 裁成三个子集，合计 13KB；整页字体从 971KB 降到 179KB。新增图标后跑 `npm run build:fonts` 重新生成。
+- [FontAwesome 全量字体 805KB](https://fontawesome.com/)，全站实际只用到 64 个码点（完整过程见[字体子集与 CLS](/2026/10/22/font-subset-and-cls/)）。用 fonttools 裁成三个子集，合计 13KB；整页字体从 971KB 降到 179KB。新增图标后跑 `npm run build:fonts` 重新生成。
 - 构建期给所有站内图片写入 `width`/`height`、`decoding="async"`；首屏 banner 和文章头图 `loading="eager"` + `fetchpriority="high"`，其余懒加载。
 - 文章目录的展开状态在 `<body>` 解析前从 localStorage 预置到 `html` 上，CSS 提前按展开布局排版。文章首屏 CLS 从 0.486 降到 0.058。
 - 主题在滚动时会改 `--navbar-height`，正文跟着位移 20px。把变量固定在 70px，视觉收缩交给自定义胶囊动画。

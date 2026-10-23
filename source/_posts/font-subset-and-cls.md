@@ -88,7 +88,7 @@ FontAwesome 的 CSS 里，每个图标都有一条 `.fa-name:before{content:"\fX
 | 归档 | 0.092 | 0.4s |
 | 关于 | 0.0002 | 0.6s |
 
-测试由 33 项 E2E、26 项平滑度回归、19 篇文章的内容检查构成。复测命令：
+测试由 33 项 E2E、26 项平滑度回归、当时 19 篇文章的内容检查构成。复测命令：
 
 ```bash
 npm run test:vitals

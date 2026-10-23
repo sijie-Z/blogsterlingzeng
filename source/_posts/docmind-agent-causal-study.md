@@ -25,7 +25,7 @@ series_order: 3
 
 ## 为什么做消融
 
-DocMind 是我的 RAG Agent 系统。它用 PER 架构——Plan(规划)、Execute(执行)、Reflect(反思)三个阶段,内置 25 个以上的工具,能做到问答、对比、分析、研究。
+[DocMind](/2026/05/10/docmind-rag-knowledge-base/) 是我的 RAG Agent 系统。它用 PER 架构——Plan(规划)、Execute(执行)、Reflect(反思)三个阶段,内置 25 个以上的工具,能做到问答、对比、分析、研究。
 
 系统能用,但我不知道它为什么好用。
 

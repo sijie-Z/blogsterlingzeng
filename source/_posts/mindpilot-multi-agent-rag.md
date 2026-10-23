@@ -17,7 +17,7 @@ series_order: 2
 
 ## 从 DocMind 到 MindPilot
 
-在做了 DocMind（RAG 知识库）之后，我发现单 Agent 的 RAG 有几个局限：
+在做了 [DocMind（RAG 知识库）](/2026/05/10/docmind-rag-knowledge-base/) 之后，我发现单 Agent 的 RAG 有几个局限：
 
 1. **意图识别不够准** — 用户问的不一定是知识检索，可能是闲聊、翻译、总结
 2. **检索策略太单一** — 不同类型的问题应该用不同的检索策略
@@ -127,7 +127,7 @@ RAGAS 指标趋势、分数分布、延迟百分位、Token 用量分析。用�
 
 ## 部署
 
-Docker Compose 编排 8 个服务，网络隔离，健康检查，Nginx 安全头 + 限流。
+[Docker Compose](/2026/04/22/docker-getting-started/) 编排 8 个服务，网络隔离，健康检查，Nginx 安全头 + 限流。
 
 ## 总结
 

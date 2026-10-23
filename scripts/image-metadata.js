@@ -9,7 +9,8 @@ hexo.extend.filter.register('after_render:html', function (str) {
   if (!str || str.indexOf('<img') === -1) return str;
 
   return str.replace(/<img\b[^>]*>/gi, tag => {
-    const srcMatch = tag.match(/\bsrc="([^"]*)"/i);
+    // 主题懒加载会把真实地址放在 data-src,src 只是 loading 占位图
+    const srcMatch = tag.match(/\bdata-src="([^"]*)"/i) || tag.match(/\bsrc="([^"]*)"/i);
     if (!srcMatch) return tag;
     const src = srcMatch[1];
     if (!src || /^(?:[a-z]+:)?\/\//i.test(src) || src.startsWith('data:')) return tag;
