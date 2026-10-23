@@ -180,6 +180,16 @@ function check(name, cond, extra) {
   const searchJs = await page.evaluate(async () => (await fetch('/js/build/tools/localSearch.js')).text());
   check('搜索防抖补丁生效', searchJs.includes('__cjSearchTimer'), 'patch missing');
 
+  await page.goto(BASE + '/series/', { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(400);
+  const seriesIndexLd = await page.evaluate(() => {
+    try {
+      const data = JSON.parse(document.querySelector('script[type="application/ld+json"]').textContent);
+      return { ok: true, parts: (data['@graph'][0].hasPart || []).length };
+    } catch (e) { return { ok: false, parts: 0 }; }
+  });
+  check('系列总览 JSON-LD 列出 2 个系列', seriesIndexLd.ok && seriesIndexLd.parts === 2, JSON.stringify(seriesIndexLd));
+
   await page.goto(BASE + '/about/', { waitUntil: 'networkidle2', timeout: 30000 });
   await sleep(400);
   const aboutLd = await page.evaluate(() => document.querySelector('script[type="application/ld+json"]')?.textContent || '');

@@ -132,6 +132,17 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
           headline: String(entry.post.title || ''),
           url: root + '/' + String(entry.post.path || '').replace(/^\/+/, ''),
         }));
+      } else if (pagePath === 'series/' && hexo.__cjBuildSeries && hexo.__cjSeriesUrl) {
+        const built = hexo.__cjBuildSeries();
+        data['@graph'][0].hasPart = built.list.map(item => {
+          const seriesPath = hexo.__cjSeriesUrl(item.slug);
+          return {
+            '@type': 'CreativeWorkSeries',
+            '@id': root + seriesPath + '#series',
+            name: item.name,
+            url: root + seriesPath,
+          };
+        });
       }
       return str.replace('</head>', () => jsonLdScript(data));
     }

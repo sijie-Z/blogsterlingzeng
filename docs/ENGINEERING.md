@@ -126,4 +126,4 @@ test/                    11 套 Puppeteer / Node 检查
 2. 图片查看器补 Pointer Events 双指缩放和左右滑动。
 3. Live2D 工具栏改为原生按钮，并把暂停/恢复状态暴露成可见控件。
 4. 在 CI 里跑 `test:content` + 构建，浏览器套件留在本地或 self-hosted runner。
-5. 把系列 JSON-LD 的 `isPartOf` / `hasPart` 扩展到 `/series/` 总览页。
+5. 给每个系列增加 JSON Feed，覆盖只支持 JSON 的聚合器。
