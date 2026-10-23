@@ -58,6 +58,7 @@ function check(name, cond, extra) {
     headingAnchors: document.querySelectorAll('.article-content h2 .heading-anchor').length,
     markdownLink: !!document.querySelector('.post-side-author-links a[aria-label="查看 Markdown 原文"]'),
     codeFullscreen: !!document.querySelector('.code-fullscreen-btn'),
+    mobileTocDisplay: document.querySelector('.mobile-toc') ? getComputedStyle(document.querySelector('.mobile-toc')).display : 'missing',
     overflow: document.documentElement.scrollWidth - innerWidth,
     cls: window.__cls,
   }));
@@ -94,6 +95,7 @@ function check(name, cond, extra) {
   });
   check('llms.txt 可访问', llms.status === 200 && llms.text.includes('#'), JSON.stringify(llms).slice(0, 200));
   check('代码块全屏按钮存在', first.codeFullscreen);
+  check('桌面端隐藏移动目录', first.mobileTocDisplay === 'none', first.mobileTocDisplay);
   if (first.codeFullscreen) {
     await page.evaluate(() => document.querySelector('.code-fullscreen-btn').click());
     await sleep(200);
@@ -140,6 +142,7 @@ function check(name, cond, extra) {
       cardTop: card ? card.getBoundingClientRect().top : null,
       tocTop: toc ? toc.getBoundingClientRect().top : null,
       tocCount: document.querySelector('.post-toc-count')?.textContent || '',
+      tocCurrent: document.querySelector('.post-toc a.nav-link.active-current')?.getAttribute('aria-current') || '',
     };
   });
   check('进度数字更新', mid.num >= 35 && mid.num <= 65, String(mid.num));
@@ -147,6 +150,7 @@ function check(name, cond, extra) {
   check('作者卡滚动时吸顶', mid.cardTop !== null && Math.abs(mid.cardTop - mid.tocTop) < 24, JSON.stringify(mid));
   const tocCurrent = parseInt(String(mid.tocCount).split('/')[0], 10) || 0;
   check('目录章节计数随滚动更新', tocCurrent > 1, mid.tocCount);
+  check('目录当前项有 aria-current', mid.tocCurrent === 'location', mid.tocCurrent);
 
   console.log('=== 3. SPA 换页 ===');
   await page.evaluate(h => {
@@ -181,10 +185,18 @@ function check(name, cond, extra) {
     return {
       tocDisplay: toc ? getComputedStyle(toc).display : 'missing',
       stackVisible: stack ? stack.getBoundingClientRect().width > 0 && getComputedStyle(stack).visibility !== 'hidden' : false,
+      mobileToc: document.querySelector('.mobile-toc') ? getComputedStyle(document.querySelector('.mobile-toc')).display : 'missing',
+      mobileTocLinks: document.querySelectorAll('.mobile-toc .nav-link').length,
       overflow: document.documentElement.scrollWidth - innerWidth,
+      toolsBottom: document.querySelector('.page-container .right-side-tools-container')?.getBoundingClientRect().bottom || 0,
+      footerTop: document.querySelector('footer.footer')?.getBoundingClientRect().top || 0,
+      tocSummaryH: Math.round(document.querySelector('.mobile-toc summary')?.getBoundingClientRect().height || 0),
     };
   });
   check('移动端侧栏隐藏', m.tocDisplay === 'none' || !m.stackVisible, JSON.stringify(m));
+  check('移动端目录可访问', m.mobileToc === 'block' && m.mobileTocLinks >= 3, JSON.stringify(m));
+  check('移动端目录触控高度 >= 44px', m.tocSummaryH >= 44, String(m.tocSummaryH));
+  check('移动端工具不压住页脚', m.toolsBottom > 0 && m.toolsBottom <= m.footerTop + 1, JSON.stringify({ toolsBottom: m.toolsBottom, footerTop: m.footerTop }));
   check('移动端无横向溢出', m.overflow <= 2, String(m.overflow));
   check('移动端零错误', mErrors.length === 0, mErrors.slice(0, 2).join(' | '));
   await mobile.close();

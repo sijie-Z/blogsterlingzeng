@@ -20,16 +20,16 @@ echo ""
 # ============================================
 # 服务器配置（修改为你的实际信息）
 # ============================================
-SERVER_USER="root"
-SERVER_IP="120.55.163.198"
+SERVER_USER="${DEPLOY_USER:-root}"
+SERVER_IP="${DEPLOY_HOST:-YOUR_SERVER_IP}"
 SERVER_DIR="/www/wwwroot/sterlingzeng.cn"
 
 # ============================================
 # 检查配置
 # ============================================
-if [ "$SERVER_IP" = "你的服务器IP" ]; then
-  echo -e "${RED}错误: 请先修改 deploy.sh 中的 SERVER_IP${NC}"
-  echo -e "${YELLOW}将第 26 行的 '你的服务器IP' 改为你的实际服务器 IP${NC}"
+if [ "$SERVER_IP" = "YOUR_SERVER_IP" ]; then
+  echo -e "${RED}错误: 请设置 DEPLOY_HOST 环境变量${NC}"
+  echo -e "${YELLOW}例如: DEPLOY_HOST=1.2.3.4 bash deploy.sh${NC}"
   exit 1
 fi
 

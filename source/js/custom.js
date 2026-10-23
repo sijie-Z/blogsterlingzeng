@@ -145,7 +145,7 @@
     pill.setAttribute('aria-label', '继续上次阅读');
     pill.innerHTML = `<span class="reading-resume-dot" aria-hidden="true"></span>
       <span class="reading-resume-text">上次读到 <b>${Math.round(saved.percent * 100)}%</b> · 继续</span>
-      <span class="reading-resume-close" role="button" aria-label="关闭">×</span>`;
+      <span class="reading-resume-close" aria-hidden="true">×</span>`;
     document.body.appendChild(pill);
 
     const dismiss = () => hideResumePill();
@@ -369,11 +369,177 @@
   // 弹层随 Swup 换页重建,每次 init 给当前 overlay 挂关闭观察
   function observeSearchClose() {
     const overlay = document.querySelector('.search-pop-overlay');
-    if (!overlay || overlay.__cjFocusObserved) return;
+    if (!overlay) return;
+    bindSearchListObserver(overlay);
+    syncSearchA11y(overlay);
+    if (overlay.__cjFocusObserved) return;
     overlay.__cjFocusObserved = true;
     new MutationObserver(() => {
-      if (!overlay.classList.contains('active')) restoreSearchFocus();
+      if (!overlay.classList.contains('active')) {
+        setActiveSearchOption(overlay, -1);
+        syncSearchA11y(overlay);
+        restoreSearchFocus();
+      }
     }).observe(overlay, { attributes: true, attributeFilter: ['class'] });
+  }
+
+  // ============================
+  // Search keyboard navigation — combobox + listbox
+  // 主题只负责渲染结果;这里加 ↑/↓/Enter、ARIA 状态与空态播报
+  // ============================
+  function getSearchParts(overlay) {
+    const input = overlay.querySelector('.search-input');
+    const result = overlay.querySelector('#search-result');
+    const list = result && result.querySelector('ul.search-result-list');
+    const options = list ? [...list.children].filter(el => el.tagName === 'LI') : [];
+    if (result && !result.__cjPrefix) {
+      window.__cjSearchSeq = (window.__cjSearchSeq || 0) + 1;
+      result.__cjPrefix = 'cj-search-opt-' + window.__cjSearchSeq + '-';
+    }
+    return { input, result, list, options };
+  }
+
+  function updateSearchStatus(overlay) {
+    const { input, result, list, options } = getSearchParts(overlay);
+    if (!input || !result) return;
+    let live = overlay.querySelector('#cj-search-status');
+    if (!live) {
+      live = document.createElement('div');
+      live.id = 'cj-search-status';
+      live.className = 'sr-only';
+      live.setAttribute('role', 'status');
+      live.setAttribute('aria-live', 'polite');
+      live.setAttribute('aria-atomic', 'true');
+      (overlay.querySelector('.search-popup') || overlay).appendChild(live);
+    }
+    const noResult = result.querySelector('#no-result');
+    const hasQuery = input.value.trim().length > 0;
+    const loading = !list && hasQuery && noResult && !noResult.querySelector('.fa-box-open');
+    let text = '';
+    if (list && options.length) text = `找到 ${options.length} 个结果`;
+    else if (!hasQuery) text = '输入关键词开始搜索';
+    else if (loading) text = '正在加载搜索数据';
+    else text = '没有找到相关结果';
+    result.setAttribute('aria-busy', loading ? 'true' : 'false');
+    if (noResult) noResult.setAttribute('data-cj-empty', text);
+    if (live.textContent !== text) live.textContent = text;
+  }
+
+  function syncSearchA11y(overlay) {
+    const { input, result, list, options } = getSearchParts(overlay);
+    if (!input || !result) return;
+    input.setAttribute('role', 'combobox');
+    input.setAttribute('aria-autocomplete', 'list');
+    input.setAttribute('aria-controls', 'search-result');
+    input.setAttribute('aria-expanded', String(overlay.classList.contains('active')));
+    result.setAttribute('role', 'listbox');
+    result.setAttribute('aria-label', '搜索结果');
+    if (list) list.setAttribute('role', 'none');
+    options.forEach((li, i) => {
+      li.id = result.__cjPrefix + i;
+      li.setAttribute('role', 'option');
+      li.setAttribute('aria-selected', 'false');
+      const title = li.querySelector('.search-result-title');
+      if (title && !li.getAttribute('aria-label')) li.setAttribute('aria-label', title.textContent.trim());
+      li.querySelectorAll('a').forEach(a => { a.tabIndex = -1; });
+    });
+    // 结果重建时保留同一位置的选中项,避免防抖重渲染把高亮清掉
+    const activeIndex = Number(input.dataset.cjActive);
+    if (Number.isInteger(activeIndex) && activeIndex >= 0 && options[activeIndex]) {
+      options[activeIndex].setAttribute('aria-selected', 'true');
+      input.setAttribute('aria-activedescendant', options[activeIndex].id);
+    } else {
+      input.removeAttribute('aria-activedescendant');
+    }
+    updateSearchStatus(overlay);
+  }
+
+  function bindSearchListObserver(overlay) {
+    const result = overlay.querySelector('#search-result');
+    if (!result || result.__cjListObs) return;
+    result.__cjListObs = true;
+    new MutationObserver(() => syncSearchA11y(overlay))
+      .observe(result, { childList: true, subtree: true });
+  }
+
+  function revealSearchOption(container, option) {
+    if (!container || !option) return;
+    const c = container.getBoundingClientRect();
+    const o = option.getBoundingClientRect();
+    const pad = 6;
+    if (o.top < c.top + pad) container.scrollTop -= c.top + pad - o.top;
+    else if (o.bottom > c.bottom - pad) container.scrollTop += o.bottom - pad - c.bottom;
+  }
+
+  function setActiveSearchOption(overlay, index) {
+    const { input, result, options } = getSearchParts(overlay);
+    if (!input) return;
+    options.forEach((li, i) => li.setAttribute('aria-selected', i === index ? 'true' : 'false'));
+    if (index < 0 || !options[index]) {
+      delete input.dataset.cjActive;
+      input.removeAttribute('aria-activedescendant');
+      return;
+    }
+    input.dataset.cjActive = String(index);
+    input.setAttribute('aria-activedescendant', options[index].id);
+    revealSearchOption(result, options[index]);
+  }
+
+  function initSearchNavGlobals() {
+    if (window.__cjSearchNavGlobal) return;
+    window.__cjSearchNavGlobal = true;
+
+    document.addEventListener('keydown', e => {
+      const overlay = document.querySelector('.search-pop-overlay.active');
+      if (!overlay) return;
+      const input = overlay.querySelector('.search-input');
+      if (!input || document.activeElement !== input) return;
+      // 输入法组合期间的 Enter/方向键属于候选词操作
+      if (e.isComposing || e.keyCode === 229 || e.key === 'Process') return;
+      const { options } = getSearchParts(overlay);
+      if (!options.length) return;
+      const current = options.findIndex(li => li.getAttribute('aria-selected') === 'true');
+      const len = options.length;
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        e.stopPropagation();
+        setActiveSearchOption(overlay, current < 0 ? 0 : (current + 1) % len);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        e.stopPropagation();
+        setActiveSearchOption(overlay, current < 0 ? len - 1 : (current - 1 + len) % len);
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        setActiveSearchOption(overlay, 0);
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        setActiveSearchOption(overlay, len - 1);
+      } else if (e.key === 'Enter' && current >= 0) {
+        const link = options[current].querySelector('a[href]');
+        if (link) {
+          e.preventDefault();
+          e.stopPropagation();
+          link.click();
+        }
+      }
+    }, true);
+
+    document.addEventListener('input', e => {
+      if (!e.target.matches('.search-input')) return;
+      delete e.target.dataset.cjActive;
+      const overlay = e.target.closest('.search-pop-overlay');
+      if (overlay) setActiveSearchOption(overlay, -1);
+    }, true);
+
+    // 点击结果先收起弹层、解除滚动锁,再交给 Swup 导航
+    document.addEventListener('click', e => {
+      const link = e.target.closest('#search-result a[href]');
+      if (!link) return;
+      const overlay = link.closest('.search-pop-overlay');
+      if (!overlay) return;
+      overlay.classList.remove('active');
+      document.body.style.overflow = '';
+    }, true);
   }
 
   function initSearchFocus() {
@@ -405,6 +571,24 @@
           });
         }
       }
+      const clear = overlay.querySelector('.search-input-field-pre');
+      if (clear) {
+        clear.setAttribute('role', 'button');
+        clear.tabIndex = 0;
+        clear.setAttribute('aria-label', '清空搜索');
+        if (!clear.__cjKey) {
+          clear.__cjKey = true;
+          clear.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              clear.click();
+            }
+          });
+          clear.addEventListener('click', () => setActiveSearchOption(overlay, -1));
+        }
+      }
+      bindSearchListObserver(overlay);
+      syncSearchA11y(overlay);
     };
     document.addEventListener('click', e => {
       const trigger = e.target.closest('.search-popup-trigger');
@@ -421,7 +605,7 @@
         if (!overlay) return;
         if (e.key === 'Tab') {
           const focusables = [...overlay.querySelectorAll('a[href], button:not([disabled]), input, textarea, select, [tabindex]:not([tabindex="-1"])')]
-            .filter(el => el.getClientRects().length > 0);
+            .filter(el => el.getClientRects().length > 0 && el.tabIndex !== -1);
           if (!focusables.length) return;
           const first = focusables[0];
           const last = focusables[focusables.length - 1];
@@ -474,11 +658,13 @@
     document.querySelectorAll('.search-popup-trigger, .navbar-bar').forEach(el => {
       if (el.dataset.cjA11y) return;
       el.dataset.cjA11y = '1';
-      el.setAttribute('role', 'button');
-      el.setAttribute('tabindex', '0');
       if (!el.getAttribute('aria-label')) {
         el.setAttribute('aria-label', el.classList.contains('navbar-bar') ? '打开菜单' : '搜索');
       }
+      // 原生 button 已经有 Enter/Space 行为,不要再加 role/tabindex/keydown
+      if (el.tagName === 'BUTTON') return;
+      el.setAttribute('role', 'button');
+      el.setAttribute('tabindex', '0');
       el.addEventListener('keydown', e => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
@@ -489,6 +675,9 @@
 
     // Swup 换页会替换 DOM,这里每次都重新同步当前节点;
     // 全局 observer 只注册一次,避免每次换页叠加。
+    document.querySelectorAll('.navbar-list a.active, .drawer-navbar-list a.active').forEach(a => {
+      a.setAttribute('aria-current', 'page');
+    });
     syncDrawerA11y();
     if (!window.__cjDrawerA11yObserver) {
       window.__cjDrawerA11yObserver = new MutationObserver(syncDrawerA11y);
@@ -499,7 +688,11 @@
   function syncAsideA11y() {
     const toc = document.querySelector('.toc-content-container');
     if (!toc) return;
-    toc.toggleAttribute('inert', !document.documentElement.classList.contains('aside-open'));
+    const open = document.documentElement.classList.contains('aside-open');
+    toc.toggleAttribute('inert', !open);
+    const toggle = document.querySelector('.page-aside-toggle button') ||
+      document.querySelector('.page-aside-toggle');
+    if (toggle && toggle.tagName === 'BUTTON') toggle.setAttribute('aria-expanded', String(open));
   }
 
   function initAsideState() {
@@ -710,6 +903,10 @@
         const total = links.length;
         const index = active ? links.indexOf(active) : -1;
         const current = total ? Math.max(1, index + 1) : 0;
+        links.forEach(link => {
+          if (link === active) link.setAttribute('aria-current', 'location');
+          else link.removeAttribute('aria-current');
+        });
         if (count) count.textContent = total ? `${current}/${total}` : '';
         if (bar) bar.style.width = total ? `${(current / total * 100).toFixed(1)}%` : '0%';
       }
@@ -742,6 +939,26 @@
   // ============================
   // Heading anchors — 标题旁复制本节链接
   // ============================
+  // 移动端目录:桌面侧栏在手机上被隐藏,这里用原生 details 克隆一份
+  function initMobileToc() {
+    const content = document.querySelector('.post-page-container .article-content');
+    if (!content || document.querySelector('.mobile-toc')) return;
+    const nav = document.querySelector('.post-toc .nav');
+    if (!nav) return;
+    const details = document.createElement('details');
+    details.className = 'mobile-toc';
+    const summary = document.createElement('summary');
+    summary.textContent = '目录';
+    details.appendChild(summary);
+    const clone = nav.cloneNode(true);
+    clone.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+    details.appendChild(clone);
+    content.parentNode.insertBefore(details, content);
+    details.addEventListener('click', e => {
+      if (e.target.closest('a')) details.open = false;
+    });
+  }
+
   function initHeadingAnchors() {
     document.querySelectorAll('.article-content h2[id], .article-content h3[id], .article-content h4[id]').forEach(heading => {
       if (heading.querySelector(':scope > .heading-anchor')) return;
@@ -763,7 +980,7 @@
       heading.appendChild(anchor);
     });
     // Hexo 生成的空 headerlink 与我们的锚点重复,移出 Tab 顺序
-    document.querySelectorAll('.article-content a.headerlink').forEach(link => {
+    document.querySelectorAll('a.headerlink').forEach(link => {
       link.tabIndex = -1;
       link.setAttribute('aria-hidden', 'true');
     });
@@ -824,7 +1041,9 @@
         document.body.appendChild(backdrop);
         const hint = document.createElement('div');
         hint.className = 'code-fullscreen-hint';
-        hint.textContent = 'Esc 退出全屏';
+        hint.textContent = window.matchMedia && window.matchMedia('(hover: none)').matches
+          ? '点背景或按钮退出'
+          : 'Esc 退出全屏';
         document.body.appendChild(hint);
         btn.querySelector('i').className = 'fa-solid fa-compress';
       });
@@ -919,19 +1138,15 @@
     };
 
     const li = document.createElement('li');
-    li.className = 'copy-link-btn';
-    li.title = '复制文章链接';
-    li.setAttribute('role', 'button');
-    li.setAttribute('tabindex', '0');
-    li.setAttribute('aria-label', '复制文章链接');
-    li.innerHTML = '<i class="fa-solid fa-link" aria-hidden="true"></i>';
-    li.addEventListener('click', copy);
-    li.addEventListener('keydown', e => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        copy();
-      }
-    });
+    li.className = 'copy-link-item';
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'copy-link-btn cj-tool-btn';
+    btn.title = '复制文章链接';
+    btn.setAttribute('aria-label', '复制文章链接');
+    btn.innerHTML = '<i class="fa-solid fa-link" aria-hidden="true"></i>';
+    btn.addEventListener('click', copy);
+    li.appendChild(btn);
     list.appendChild(li);
   }
 
@@ -1627,9 +1842,11 @@
     onceGlobal('themeToggle', initThemeToggle);
     onceGlobal('live2dRuntime', initLive2DRuntime);
     initAsideState();
+    initMobileToc();
     initNavA11y();
     decorateSearchTriggers();
     observeSearchClose();
+    onceGlobal('searchNav', initSearchNavGlobals);
     onceGlobal('searchFocus', initSearchFocus);
     onceGlobal('swupNavPause', initSwupNavPause);
     initMouseFollower();

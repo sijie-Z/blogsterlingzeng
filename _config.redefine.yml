@@ -120,9 +120,11 @@ home_banner:
     enable: true
     style: default
     links:
-      - icon: fa-brands fa-github
+      - name: GitHub
+        icon: fa-brands fa-github
         url: https://github.com/sijie-Z
-      - icon: fa-regular fa-envelope
+      - name: email
+        icon: fa-regular fa-envelope
         url: mailto:1683039482@qq.com
     qrs: []
 # HOME BANNER <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end

@@ -134,6 +134,7 @@ async function waitIdle(page, timeout = 8000) {
     const a11y = await page.evaluate(() => {
       const trigger = document.querySelector('.search-popup-trigger');
       return {
+        tag: trigger?.tagName || null,
         role: trigger?.getAttribute('role') || null,
         tab: trigger?.getAttribute('tabindex') || null,
         label: trigger?.getAttribute('aria-label') || null,
@@ -142,7 +143,8 @@ async function waitIdle(page, timeout = 8000) {
         main: !!document.querySelector('#main-content'),
       };
     });
-    check('换页后搜索按钮仍可键盘操作', a11y.role === 'button' && a11y.tab === '0' && !!a11y.label && (a11y.keys || '').includes('K'), JSON.stringify(a11y));
+    const searchNative = a11y.tag === 'BUTTON';
+    check('换页后搜索按钮仍可键盘操作', (searchNative || (a11y.role === 'button' && a11y.tab === '0')) && !!a11y.label && (a11y.keys || '').includes('K'), JSON.stringify(a11y));
     check('skip link 与正文落点存在', a11y.skip && a11y.main, JSON.stringify(a11y));
     console.log('  帧指标', JSON.stringify(metrics));
     console.log('  导航耗时', JSON.stringify(navMarks));

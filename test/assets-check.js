@@ -65,6 +65,11 @@ function check(name, cond, extra) {
   check('移动端 DPR3 选 1280 变体', /banner-light-1280\.webp/.test(mobileImg.current), mobileImg.current);
   check('移动端不下载 1920 原图', !bannerRequests.includes('/images/banner-light.webp'), JSON.stringify(bannerRequests));
   check('移动端变体已解码', mobileImg.complete && mobileImg.width > 0, JSON.stringify(mobileImg));
+  const mobileBanner = await mobile.evaluate(() => {
+    const b = document.querySelector('.home-banner-container');
+    return b ? { h: b.getBoundingClientRect().height, vh: innerHeight } : { h: 0, vh: innerHeight };
+  });
+  check('移动端横幅不超过半屏', mobileBanner.h > 0 && mobileBanner.h <= mobileBanner.vh * 0.45, JSON.stringify(mobileBanner));
   await mobile.close();
 
   console.log('=== 3. 季节切换同步 srcset ===');

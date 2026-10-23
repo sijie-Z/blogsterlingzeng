@@ -106,7 +106,7 @@
 | SPA 整次导航 | **~134ms** | Swup 只替换 `#swup`，滚动即时归零 |
 | Live2D 主纹理 | **1.7MB → 308KB** | 2048 PNG 重采样为 1024 WebP |
 | 手机首屏横幅 | **63KB → 35KB**（亮色） | 960/1280/1920 srcset + DPR 选图 |
-| 自动化浏览器检查 | **230+ 项** | 跳转、侧栏、系列、阅读记忆、归档、平滑度、资源、内容 |
+| 自动化浏览器检查 | **280+ 项** | 跳转、侧栏、系列、阅读记忆、归档、平滑度、资源、内容 |
 
 **构建期优先**：系列页、写作热力图、文章侧栏、JSON-LD、Markdown 原文、llms.txt 全部在 `hexo generate` 阶段生成，运行时不发额外请求、不引入布局抖动。主题通过 `scripts/theme-patch.js` 做可审计的最小补丁（Swup、TOC、搜索防抖、APlayer 延迟加载等），补丁可重复执行。
 
@@ -169,9 +169,11 @@ npm run test:l2d            # Live2D 加载诊断(模型 / Core / 404)
 npm run test:smooth         # 26 项滚动与动效平滑度回归
 npm run test:content        # 文章 front matter / 站内链接 / 图片 / 文风检查
 npm run test:transitions    # 44 项 SPA 跳转 / 连点 / 前后退 / 搜索焦点 / 路由播报
-npm run test:sidebar        # 30 项文章侧栏 / 进度 / 锚点 / 表格 / Markdown / 代码全屏
+npm run test:sidebar        # 35 项文章侧栏 / 进度 / 锚点 / 表格 / Markdown / 代码全屏
 npm run test:series         # 53 项系列页 / 徽章 / 系列卡 / SPA / 移动端
-npm run test:assets         # 27 项响应式横幅 / WebP 纹理 / 系列收录 / JSON-LD
+npm run test:assets         # 28 项响应式横幅 / WebP 纹理 / 系列收录 / JSON-LD
+npm run test:search         # 17 项搜索 combobox / 方向键 / Enter / 空态 / IME
+npm run test:a11y           # 33 项无障碍:名称 / alt / 列表语义 / 标题 / 地标
 npm run test:resume         # 7 项阅读位置记忆与“继续阅读”
 npm run test:archive        # 12 项归档写作热力图与移动端
 npm run profile:nav         # 第一次跳转的 CPU 采样诊断
@@ -186,7 +188,8 @@ hexo publish "草稿标题"      # 发布草稿为正式文章
 hexo new page "页面名称"     # 新建页面
 
 # 部署
-npm run deploy              # 等同于 hexo clean && hexo generate
+npm run deploy              # 等同于 bash deploy.sh(clean + build + scp 上传)
+npm run clean && npm run build  # 只本地构建
 bash deploy.sh              # 构建并上传到服务器
 ```
 
@@ -237,8 +240,9 @@ blogsterlingzeng/
 │       ├── cover-algorithm.jpg      # 文章封面 (33KB)
 │       └── cover-git.jpg            # 文章封面 (84KB)
 │
-├── themes/                          # 主题目录
-│   └── redefine/                    # Redefine 主题
+├── node_modules/hexo-theme-redefine/ # Redefine 主题(npm 安装,postinstall 打补丁)
+├── scripts/                          # 构建期脚本(系列/侧栏/热力图/SEO)
+├── docs/                             # 运维与部署文档
 │
 ├── _config.yml                      # Hexo 站点配置
 ├── _config.redefine.yml             # Redefine 主题配置 (360+ 行)
@@ -270,7 +274,7 @@ title: Sterling Zeng                    # 站点标题
 subtitle: Keep Rolling, Keep Coding     # 副标题
 description: 个人技术博客                  # 站点描述
 author: Sterling Zeng                   # 作者
-language: zh-CN                         # 语言
+language: [zh-CN, en]                   # 语言
 url: https://sterlingzeng.cn            # 站点 URL
 theme: redefine                         # 主题
 per_page: 10                            # 每页文章数
@@ -286,7 +290,7 @@ post_asset_folder: true                 # 文章资源文件夹
 colors:
   primary: "#2563eb"       # 主色调 (蓝色)
   secondary: "#3b82f6"     # 辅助色
-  mode: auto               # 暗色模式: auto / light / dark
+  default_mode: auto       # 暗色模式: auto / light / dark
 ```
 
 **首页横幅**
@@ -296,12 +300,15 @@ home_banner:
   image:
     light: /images/banner-light.webp
     dark: /images/banner-dark.webp
-  title: Sterling Zeng
+  title: Sterling's Space
   subtitle:
-    hitokoto: true         # 启用一言 API 随机句子
+    text: ["用代码构建世界，用文字记录成长", "在这里，技术和思考相遇"]
+    hitokoto:
+      enable: false        # 一言 API 开关
   social_links:
     links:
-      - icon: fa-brands fa-github
+      - name: GitHub
+        icon: fa-brands fa-github
         url: https://github.com/sijie-Z
 ```
 
@@ -309,14 +316,18 @@ home_banner:
 ```yaml
 navbar:
   links:
-    - name: 首页
-      url: /
-    - name: 归档
-      url: /archives/
-    - name: 关于
-      url: /about/
-    - name: 友链
-      url: /friends/
+    Home:
+      path: /
+      icon: fa-regular fa-house
+    项目:
+      path: /projects
+      icon: fa-brands fa-github
+    归档:
+      path: /archives
+      icon: fa-regular fa-archive
+    系列:
+      path: /series
+      icon: fa-solid fa-layer-group
   search:
     enable: true           # 启用搜索
     preload: true          # 预加载搜索数据
@@ -325,9 +336,11 @@ navbar:
 **文章设置**
 ```yaml
 articles:
-  font_size: 16px
-  line_height: 1.8
-  word_count: true         # 显示字数
+  style:
+    font_size: 16px
+    line_height: 1.8
+  word_count:
+    enable: true           # 显示字数
   code_block:
     copy: true             # 代码复制按钮
     style: mac             # macOS 风格
@@ -343,9 +356,8 @@ articles:
 **页脚**
 ```yaml
 footer:
-  runtime:
-    enable: true           # 运行时间计数器
-    start_time: "2026-04-11 16:36:59"  # 博客启动时间
+  runtime: true            # 运行时间计数器
+  start: "2026/04/11 16:36:59"  # 博客启动时间
 ```
 
 **自定义注入**
@@ -353,7 +365,7 @@ footer:
 inject:
   head:
     - <link rel="stylesheet" href="/css/custom.css">
-  bottom:
+  footer:
     - <script src="/js/custom.js" data-swup-reload-script></script>
 ```
 
@@ -481,7 +493,7 @@ cover: /images/cover.jpg
 1. 编辑 `deploy.sh`，确认服务器信息：
    ```bash
    SERVER_USER="root"
-   SERVER_IP="120.55.163.198"          # 你的服务器 IP
+   SERVER_IP="YOUR_SERVER_IP"          # 服务器 IP,或用 DEPLOY_HOST 环境变量
    SERVER_DIR="/www/wwwroot/sterlingzeng.cn"
    ```
 
@@ -534,6 +546,8 @@ cover: /images/cover.jpg
      --primary-color-light: #你的辅助色;
    }
    ```
+3. 四季主题在 `custom.css` 的 `html[data-season="spring|summer|autumn|winter"]`
+   与 `html.dark[data-season=...]` 块中还有各自的 `--primary-color`，需要一起改。
 
 ### 修改横幅图片
 
@@ -566,13 +580,13 @@ hexo new "新文章标题"
 编辑 `source/_data/links.yml`：
 
 ```yaml
-- class_name: 分类名
-  class_desc: 分类描述
-  link_list:
+- links_category: 分类名
+  has_thumbnail: false
+  list:
     - name: 博客名
       link: https://example.com
       avatar: /images/avatar.png
-      descr: 一句话描述
+      description: 一句话描述
 ```
 
 ### 修改书签
@@ -596,23 +610,12 @@ hexo new "新文章标题"
 
 编辑 `_config.redefine.yml` 中的 `navbar.links`。
 
-### 启用评论系统
+### 评论系统
 
-需要额外部署评论服务器。推荐方案：
-
-1. **Waline** — 需要部署 Vercel/LeanCloud 服务
-2. **Twikoo** — 需要部署腾讯云/Netlify 服务
-3. **Giscus** — 基于 GitHub Discussions，免费
-
-在 `_config.redefine.yml` 中配置：
-
-```yaml
-comment:
-  enable: true
-  system: waline   # 或 twikoo / giscus
-  config:
-    server_url: https://你的评论服务地址
-```
+当前使用 **Giscus**(基于 GitHub Discussions),无需自建服务器。
+在 `_config.redefine.yml` 的 `comment.config.giscus` 中填入仓库、分类与
+`repoId` / `categoryId` 即可；Waline / Twikoo 仍可在 `comment.system` 中切换,
+但需要额外部署服务。
 
 ### 启用分析统计
 

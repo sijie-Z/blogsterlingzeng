@@ -395,18 +395,6 @@ patchText('layout/components/plugins/aplayer.ejs', [
 <script>
 (function () {
   var loaded = false;
-  function load() {
-    if (loaded) return;
-    loaded = true;
-    var core = document.createElement('script');
-    core.src = '/js/build/libs/APlayer.min.js';
-    core.onload = function () {
-      var init = document.createElement('script');
-      init.src = '/js/build/plugins/aplayer.js';
-      document.body.appendChild(init);
-    };
-    document.body.appendChild(core);
-  }
   var timer = setTimeout(load, 6000);
   function load() {
     if (loaded) return;
@@ -603,6 +591,47 @@ patchText('layout/components/header/head.ejs', [
     'googlebot noindex 404',
   ],
   [
+    `    <!--- Inject Part-->
+    <% if (theme.inject.enable == true) { %>
+        <% for (let i in theme.inject.head) { %>
+            <% if (theme.inject.head[i] !== null){ %>
+                <% if (theme.global.single_page == true) { %>
+                    <%- theme.inject.head[i].replace("<script", "<script data-swup-reload-script") %>
+                <% } else { %>
+                    <%- theme.inject.head[i] %>
+            <% } }%>
+    <% } }%>
+`,
+    '',
+    'move inject head after theme css',
+  ],
+  [
+    `    <% if (theme.developer && theme.developer.enable) {%>
+        <%- css('css/build/tailwind.css') %>
+    <% } else {%>
+        <%- renderCSS('css/build/tailwind.css') %>
+    <% } %>
+`,
+    `    <% if (theme.developer && theme.developer.enable) {%>
+        <%- css('css/build/tailwind.css') %>
+    <% } else {%>
+        <%- renderCSS('css/build/tailwind.css') %>
+    <% } %>
+
+    <!--- Inject Part-->
+    <% if (theme.inject.enable == true) { %>
+        <% for (let i in theme.inject.head) { %>
+            <% if (theme.inject.head[i] !== null){ %>
+                <% if (theme.global.single_page == true) { %>
+                    <%- theme.inject.head[i].replace("<script", "<script data-swup-reload-script") %>
+                <% } else { %>
+                    <%- theme.inject.head[i] %>
+            <% } }%>
+    <% } }%>
+`,
+    'inject head after tailwind',
+  ],
+  [
     "String(page.path || '').replace(/index\\.html$/, '')",
     "String(page.path || '').replace(/^\\/+/, '').replace(/index\\.html$/, '')",
     'path normalize for robots/og',
@@ -631,6 +660,225 @@ try {
 } catch (e) {
   console.warn('[theme-patch] og:url 归一失败:', e.message);
 }
+
+// 6.5 无障碍:把导航搜索项的 role=button 从 <li> 上移到真正的 <button>,
+//     既保留 <ul><li> 列表语义,又让 Enter/Space 原生可用。
+patchText('layout/components/header/navbar.ejs', [
+  [
+    `    <div class="navbar-content transition-navbar <%- (theme.home_banner.enable === true && is_home() && !page.prev) ? 'has-home-banner' : '' %>">`,
+    `    <div role="navigation" aria-label="主导航" class="navbar-content transition-navbar <%- (theme.home_banner.enable === true && is_home() && !page.prev) ? 'has-home-banner' : '' %>">`,
+    'navbar navigation landmark',
+  ],
+  [
+    `                        <li class="navbar-item search search-popup-trigger">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </li>`,
+    `                        <li class="navbar-item search">
+                            <button type="button" class="search-popup-trigger" aria-label="搜索文章">
+                                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                            </button>
+                        </li>`,
+    'navbar search native button',
+  ],
+]);
+
+// 6.6 文章工具条:li 保留布局,内部换成原生 button,避免 role=button
+//     直接挂在 <li> 上破坏列表语义。
+patchText('layout/pages/post/post-tools.ejs', [
+  [
+    `\t\t<li class="right-bottom-tools page-aside-toggle">
+\t\t\t<i class="fa-regular fa-outdent"></i>
+\t\t</li>`,
+    `\t\t<li class="right-bottom-tools page-aside-toggle">
+\t\t\t<button type="button" class="cj-tool-btn" aria-label="显示或隐藏目录" aria-expanded="false">
+\t\t\t\t<i class="fa-regular fa-outdent" aria-hidden="true"></i>
+\t\t\t</button>
+\t\t</li>`,
+    'post tools native button (toc)',
+  ],
+  [
+    `\t\t<li class="go-comment">
+\t\t\t<i class="fa-regular fa-comments"></i>
+\t\t</li>`,
+    `\t\t<li class="go-comment">
+\t\t\t<button type="button" class="cj-tool-btn" aria-label="跳转到评论">
+\t\t\t\t<i class="fa-regular fa-comments" aria-hidden="true"></i>
+\t\t\t</button>
+\t\t</li>`,
+    'post tools native button (comment)',
+  ],
+]);
+
+// 6.7 首页社交图标链接补 aria-label,避免只有图标的空链接
+patchText('layout/pages/home/home-banner.ejs', [
+  [
+    '<a href="<%- resolvedUrl %>">',
+    '<a href="<%- resolvedUrl %>" aria-label="邮件">',
+    'social email label',
+  ],
+  [
+    '<a target="_blank" href="<%- resolvedUrl %>">',
+    '<a target="_blank" href="<%- resolvedUrl %>" aria-label="<%= name || \'社交链接\' %>">',
+    'social icon label',
+  ],
+]);
+
+// 6.8 主题默认配置里的占位邮箱会合并进站点,生成一条 you@example.com 空链接
+patchText('_config.yml', [
+  [
+    `      - icon: email
+        url: you@example.com`,
+    `      - icon: email
+        url:`,
+    'remove placeholder social email',
+  ],
+]);
+
+// 6.9 分页的上一页/下一页只有图标,补屏幕阅读器文本
+patchText('layout/utils/paginator.ejs', [
+  [
+    `prev_text: '<i class="fa-regular fa-angle-left"></i>'`,
+    `prev_text: '<span class="sr-only">上一页</span><i class="fa-regular fa-angle-left" aria-hidden="true"></i>'`,
+    'paginator prev label',
+  ],
+  [
+    `next_text: '<i class="fa-regular fa-angle-right"></i>'`,
+    `next_text: '<span class="sr-only">下一页</span><i class="fa-regular fa-angle-right" aria-hidden="true"></i>'`,
+    'paginator next label',
+  ],
+]);
+
+// 6.10 语义结构:main 只包正文,header/footer 回到地标层级;
+//      首页/归档补标题层级,侧栏工具改原生按钮。
+patchText('layout/page.ejs', [
+  [
+    '<main class="page-container" id="swup">',
+    '<div class="page-container" id="swup">',
+    'page container to div',
+  ],
+  [
+    `			<div class="main-content">
+				<%- partial(getPagePartialPath(page)) %>
+			</div>`,
+    `			<main class="main-content" id="main-content" tabindex="-1">
+				<%- partial(getPagePartialPath(page)) %>
+			</main>`,
+    'main-content to main landmark',
+  ],
+  [
+    '</main>\n\n<% if (theme.global.single_page !== false) { %>',
+    '</div>\n\n<% if (theme.global.single_page !== false) { %>',
+    'close swup div',
+  ],
+]);
+
+patchText('layout/pages/archive/archive.ejs', []);
+
+patchText('layout/pages/home/home-content.ejs', [
+  [
+    `                    <h3 class="home-article-title">
+                        <a href="<%- url_for(post.path) %>">
+                            <%= post.title %>
+                        </a>
+                    </h3>`,
+    `                    <h2 class="home-article-title">
+                        <a href="<%- url_for(post.path) %>">
+                            <%= post.title %>
+                        </a>
+                    </h2>`,
+    'home card h2',
+  ],
+]);
+
+// 6.10.1 archive/home 的标题补丁是“插在锚点前”,from 仍包含锚点,
+//        重复执行会叠加;这里先清空重复项,再各插回一份。
+for (const [relPath, marker, block, anchor] of [
+  ['layout/pages/archive/archive.ejs', '<h1 class="sr-only">归档</h1>', '<h1 class="sr-only">归档</h1>\n', '<div class="archive-container'],
+  ['layout/pages/home/home-content.ejs', '<h2 class="sr-only">最新文章</h2>', '    <h2 class="sr-only">最新文章</h2>\n', '    <ul class="home-article-list">'],
+]) {
+  const file = path.join(themeRoot, relPath);
+  try {
+    let content = fs.readFileSync(file, 'utf8');
+    const before = content;
+    const duplicate = new RegExp(`(?:${block.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})+`, 'g');
+    content = content.replace(duplicate, '');
+    if (!content.includes(marker)) {
+      content = content.replace(anchor, block + anchor);
+    }
+    if (content !== before) {
+      fs.writeFileSync(file, content, 'utf8');
+      console.log('[theme-patch] 已归一标题补丁', relPath);
+    }
+  } catch (e) {
+    console.warn('[theme-patch] 标题补丁归一失败:', relPath, e.message);
+  }
+}
+
+patchText('layout/utils/side-tools.ejs', [
+  [
+    `		<li class="right-bottom-tools tool-font-adjust-plus flex justify-center items-center">
+			<i class="fa-regular fa-magnifying-glass-plus"></i>
+		</li>`,
+    `		<li class="right-bottom-tools tool-font-adjust-plus flex justify-center items-center">
+			<button type="button" class="cj-tool-btn" aria-label="放大字号"><i class="fa-regular fa-magnifying-glass-plus" aria-hidden="true"></i></button>
+		</li>`,
+    'side tool font plus',
+  ],
+  [
+    `		<li class="right-bottom-tools tool-font-adjust-minus flex justify-center items-center">
+			<i class="fa-regular fa-magnifying-glass-minus"></i>
+		</li>`,
+    `		<li class="right-bottom-tools tool-font-adjust-minus flex justify-center items-center">
+			<button type="button" class="cj-tool-btn" aria-label="缩小字号"><i class="fa-regular fa-magnifying-glass-minus" aria-hidden="true"></i></button>
+		</li>`,
+    'side tool font minus',
+  ],
+  [
+    `		<li class="right-bottom-tools tool-dark-light-toggle flex justify-center items-center">
+			<i class="fa-regular fa-moon"></i>
+		</li>`,
+    `		<li class="right-bottom-tools tool-dark-light-toggle flex justify-center items-center">
+			<button type="button" class="cj-tool-btn" aria-label="切换明暗模式"><i class="fa-regular fa-moon" aria-hidden="true"></i></button>
+		</li>`,
+    'side tool theme',
+  ],
+  [
+    `<a class="flex justify-center items-center" href="<%= '/' + config.feed.path %>" target="_blank">
+				<i class="fa-regular fa-rss"></i>
+			</a>`,
+    `<a class="flex justify-center items-center" href="<%= '/' + config.feed.path %>" target="_blank" aria-label="RSS 订阅">
+				<i class="fa-regular fa-rss" aria-hidden="true"></i>
+			</a>`,
+    'side tool rss label',
+  ],
+  [
+    `		<li class="right-bottom-tools tool-scroll-to-top flex justify-center items-center">
+			<i class="fa-regular fa-arrow-up"></i>
+		</li>`,
+    `		<li class="right-bottom-tools tool-scroll-to-top flex justify-center items-center">
+			<button type="button" class="cj-tool-btn" aria-label="回到顶部"><i class="fa-regular fa-arrow-up" aria-hidden="true"></i></button>
+		</li>`,
+    'side tool scroll top',
+  ],
+  [
+    `		<li class="right-bottom-tools tool-scroll-to-bottom flex justify-center items-center">
+			<i class="fa-regular fa-arrow-down"></i>
+		</li>`,
+    `		<li class="right-bottom-tools tool-scroll-to-bottom flex justify-center items-center">
+			<button type="button" class="cj-tool-btn" aria-label="回到底部"><i class="fa-regular fa-arrow-down" aria-hidden="true"></i></button>
+		</li>`,
+    'side tool scroll bottom',
+  ],
+  [
+    `		<li class="right-bottom-tools toggle-tools-list flex justify-center items-center">
+			<i class="fa-regular fa-cog <% if (theme.global.side_tools && theme.global.side_tools.gear_rotation !== false) { %>fa-spin<% } %>"></i>
+		</li>`,
+    `		<li class="right-bottom-tools toggle-tools-list flex justify-center items-center">
+			<button type="button" class="cj-tool-btn" aria-label="展开或收起工具栏" aria-expanded="false"><i class="fa-regular fa-cog <% if (theme.global.side_tools && theme.global.side_tools.gear_rotation !== false) { %>fa-spin<% } %>" aria-hidden="true"></i></button>
+		</li>`,
+    'side tool toggle',
+  ],
+]);
 
 const target = path.join(
   __dirname, '..', 'node_modules',

@@ -24,7 +24,9 @@
     "profile:nav": "node test/nav-profile.js",
     "postinstall": "node scripts/theme-patch.js",
     "test:series": "node test/series-check.js",
-    "test:assets": "node test/assets-check.js"
+    "test:assets": "node test/assets-check.js",
+    "test:search": "node test/search-nav-check.js",
+    "test:a11y": "node test/a11y-check.js"
   },
   "hexo": {
     "version": "7.3.0"
@@ -43,7 +45,7 @@
     "hexo-renderer-pug": "^3.0.0",
     "hexo-renderer-stylus": "^3.0.1",
     "hexo-server": "^3.0.0",
-    "hexo-theme-redefine": "^2.9.0",
+    "hexo-theme-redefine": "2.9.0",
     "hexo-wordcount": "^6.0.1",
     "image-size": "^1.1.1"
   },

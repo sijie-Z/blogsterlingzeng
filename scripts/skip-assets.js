@@ -15,6 +15,12 @@ const SKIP = process.env.CJ_SKIP_OLD_TEXTURES === '1'
   : [];
 
 hexo.extend.filter.register('after_generate', function () {
+  // 生产部署不需要 source map;主题的 10MB mermaid map 也在其中
+  for (const path of hexo.route.list()) {
+    if (path.endsWith('.map')) {
+      try { hexo.route.remove(path); } catch (e) {}
+    }
+  }
   for (const path of SKIP) {
     try {
       if (hexo.route.get(path)) {

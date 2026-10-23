@@ -1,7 +1,7 @@
 # 部署与运维手册
 
 > 本文档记录博客的完整架构、关键账号位置和日常维护操作。
-> 更新日期:2026-09-01
+> 更新日期:2026-10-23
 
 ## 架构总览
 
@@ -27,8 +27,8 @@ GitHub Actions(push 后自动构建部署)
 ## 关键账号
 
 - **域名**:阿里云,域名 `sterlingzeng.cn`(备案号:蜀ICP备2026016586号)
-- **Cloudflare**:邮箱 `Zsj1683039482@gmail.com`,站点 `sterlingzeng.cn`(Free 套餐)
-- **GitHub**:`sijie-Z`,邮箱 `zsj1683039482@gmail.com`(git 提交身份)
+- **Cloudflare**:邮箱见密码管理器,站点 `sterlingzeng.cn`(Free 套餐)
+- **GitHub**:`sijie-Z`,邮箱见密码管理器(git 提交身份)
 - **博客邮箱(展示用)**:`1683039482@qq.com`(优先)/ `19150649985@163.com`(备用)
 
 ## DNS 现状(重要)
@@ -80,17 +80,17 @@ Cloudflare **全自动**(Universal SSL),无需任何操作,自动续期。
 |------|------|------|
 | HTTPS 证书 80+ 小时不签发 | GitHub Pages 自定义域名证书排队卡死(免费账户) | **切换 Cloudflare 后几分钟签发**——以后遇到证书问题直接考虑 Cloudflare |
 | GitHub 直连失败 | 国内网络访问 GitHub 不稳定 | 用 VPN 代理 `127.0.0.1:7897`(端口以系统代理为准) |
-| 页面卡顿 | 大量 backdrop-filter 模糊 | 已降为 blur(6-8px) |
+| 页面卡顿 | 大量 backdrop-filter 模糊 | 卡片改为 6-8px,导航栏保留 16px |
 | 主题类名失效 | redefine 2.9.0 改类名 | 已审计,选择器全量对齐 |
 
 ## 技术备忘
 
-- **主题**:hexo-theme-redefine 2.9.0(npm 包),自定义通过 inject(custom.css/js),**不改主题源码**
-- **theme-patch.js**:postinstall 自动移除页脚"Powered by Hexo / Theme Redefine"
+- **主题**:hexo-theme-redefine 2.9.0(npm 包,版本已锁定);自定义样式/脚本通过 inject 注入
+- **theme-patch.js**:postinstall 对主题做可审计的最小补丁(Swup、TOC、搜索防抖、APlayer、无障碍语义、页脚清理等);补丁在 `scripts/theme-patch.js` 中集中维护
 - **季节主题**:html[data-season](auto/spring/summer/autumn/winter),导航栏 🍀 切换,localStorage 记忆
-- **banner 图**:`assets/banner/*.webp`(1920×1080),经 jsDelivr CDN 加载
+- **banner 图**:`source/images/banner-*.webp`(1920×1080),本地自托管;960/1280 变体由 `scripts/responsive-images.js` 注入 srcset
 - **文章图**:cover-*.jpg(本地)
-- **搜索**:hexo-generator-searchdb(search.xml),Ctrl+K 打开
+- **搜索**:hexo-generator-searchdb(search.xml),Ctrl/Cmd+K 或 `/` 打开,支持 ↑/↓/Enter
 - **评论**:giscus(GitHub Discussions)
 - **统计**:vercount 已关闭(用户要求不显示)
 
@@ -102,5 +102,5 @@ Cloudflare **全自动**(Universal SSL),无需任何操作,自动续期。
 | 改解析 | Cloudflare → DNS |
 | 续域名 | 阿里云 → 域名 |
 | 看部署状态 | 仓库 → Actions |
-| 换图 | 仓库 `assets/banner/`(CDN 自动同步) |
+| 换图 | 仓库 `source/images/banner-*`(需同时生成 960/1280 变体) |
 | 看流量 | Cloudflare → Analytics |
