@@ -90,6 +90,36 @@ async function audit(page) {
     console.log('  扫描:', JSON.stringify({ missingAlt: a.missingAlt, badLinks: a.badLinks.length, badButtons: a.badButtons.length, badLists: a.badLists.length }));
   }
 
+  console.log('=== 图片查看器键盘 ===');
+  await page.goto(BASE + '/2026/10/23/hexo-series-reading-path/', { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(900);
+  const imgA11y = await page.evaluate(() => {
+    const img = document.querySelector('.markdown-body img');
+    if (!img) return { missing: true };
+    img.focus();
+    return { missing: false, tab: img.tabIndex, role: img.getAttribute('role'), label: img.getAttribute('aria-label') || '' };
+  });
+  check('正文图片可聚焦且有名称', !imgA11y.missing && imgA11y.tab === 0 && imgA11y.role === 'button' && !!imgA11y.label, JSON.stringify(imgA11y));
+  await page.keyboard.press('Enter');
+  await sleep(500);
+  const viewerOpen = await page.evaluate(() => ({
+    active: !!document.querySelector('.image-viewer-container.active'),
+    focus: document.activeElement?.classList.contains('image-viewer-close') || false,
+  }));
+  check('Enter 打开图片查看器并聚焦关闭', viewerOpen.active && viewerOpen.focus, JSON.stringify(viewerOpen));
+  await page.keyboard.press('Escape');
+  await sleep(500);
+  const viewerClosed = await page.evaluate(() => ({
+    active: !!document.querySelector('.image-viewer-container.active'),
+    back: document.activeElement?.tagName === 'IMG',
+  }));
+  check('Esc 关闭后焦点回到图片', !viewerClosed.active && viewerClosed.back, JSON.stringify(viewerClosed));
+  const codeBtn = await page.evaluate(() => {
+    const btn = document.querySelector('.copy-button');
+    return btn ? { tag: btn.tagName, role: btn.getAttribute('role'), tab: btn.tabIndex } : { missing: true };
+  });
+  check('代码按钮可键盘操作', !codeBtn.missing && codeBtn.role === 'button' && codeBtn.tab === 0, JSON.stringify(codeBtn));
+
   check('零页面错误', errors.length === 0, errors.slice(0, 2).join(' | '));
 
   console.log(`\n结果: ${pass} 通过, ${fail} 失败`);

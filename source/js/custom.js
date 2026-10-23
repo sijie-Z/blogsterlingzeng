@@ -987,6 +987,85 @@
   }
 
   // ============================
+  // Image viewer / code buttons a11y
+  // 主题的图片查看器和复制/折叠按钮只有 click,这里补键盘入口
+  // ============================
+  function initImageA11y() {
+    const selector = '.markdown-body img, .masonry-item img, #shuoshuo-content img';
+    const decorate = () => {
+      document.querySelectorAll(selector).forEach(img => {
+        if (img.closest('.image-viewer-container') || img.dataset.cjA11y) return;
+        img.dataset.cjA11y = '1';
+        img.tabIndex = 0;
+        img.setAttribute('role', 'button');
+        const alt = (img.getAttribute('alt') || '图片').trim();
+        img.setAttribute('aria-label', '查看大图：' + alt);
+        img.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            img.click();
+          }
+        });
+      });
+    };
+    decorate();
+    setTimeout(decorate, 600);
+
+    if (!window.__cjImageClickTracked) {
+      window.__cjImageClickTracked = true;
+      document.addEventListener('click', e => {
+        const img = e.target.closest(selector);
+        if (!img || img.closest('.image-viewer-container')) return;
+        window.__cjLastImage = img;
+        // 主题在 click 里同步打开弹层,下一帧把焦点送到关闭按钮
+        setTimeout(() => {
+          const maskNow = document.querySelector('.image-viewer-container.active');
+          const btn = maskNow && maskNow.querySelector('.image-viewer-close');
+          if (btn) btn.focus({ preventScroll: true });
+        }, 80);
+      }, true);
+    }
+
+    const mask = document.querySelector('.image-viewer-container');
+    if (!mask || mask.__cjFocusObserver) return;
+    mask.__cjFocusObserver = true;
+    const close = mask.querySelector('.image-viewer-close');
+    if (close) {
+      close.tabIndex = 0;
+      close.setAttribute('role', 'button');
+      close.setAttribute('aria-label', '关闭图片查看器');
+    }
+    new MutationObserver(() => {
+      if (mask.classList.contains('active')) {
+        requestAnimationFrame(() => {
+          const btn = mask.querySelector('.image-viewer-close');
+          if (btn && mask.classList.contains('active')) btn.focus({ preventScroll: true });
+        });
+      } else if (window.__cjLastImage && window.__cjLastImage.isConnected) {
+        window.__cjLastImage.focus({ preventScroll: true });
+        window.__cjLastImage = null;
+      }
+    }).observe(mask, { attributes: true, attributeFilter: ['class'] });
+  }
+
+  function initCodeButtonsA11y() {
+    const labels = { 'copy-button': '复制代码', 'fold-button': '折叠代码' };
+    document.querySelectorAll('.copy-button, .fold-button').forEach(btn => {
+      if (btn.tagName === 'BUTTON' || btn.dataset.cjA11y) return;
+      btn.dataset.cjA11y = '1';
+      btn.tabIndex = 0;
+      btn.setAttribute('role', 'button');
+      btn.setAttribute('aria-label', labels[btn.classList[0]] || '代码操作');
+      btn.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          btn.click();
+        }
+      });
+    });
+  }
+
+  // ============================
   // Code fullscreen — 代码块全屏阅读
   // ============================
   function closeCodeFullscreen() {
@@ -1837,12 +1916,14 @@
         initTableScroll();
         initHeadingAnchors();
         initCodeFullscreen();
+        initCodeButtonsA11y();
       }, 60);
     });
     onceGlobal('themeToggle', initThemeToggle);
     onceGlobal('live2dRuntime', initLive2DRuntime);
     initAsideState();
     initMobileToc();
+    initImageA11y();
     initNavA11y();
     decorateSearchTriggers();
     observeSearchClose();

@@ -776,6 +776,11 @@ patchText('layout/pages/archive/archive.ejs', []);
 
 patchText('layout/pages/home/home-content.ejs', [
   [
+    '<div id="home-article-thumbnail" class="home-article-thumbnail',
+    '<div class="home-article-thumbnail',
+    'home thumbnail duplicate id',
+  ],
+  [
     `                    <h3 class="home-article-title">
                         <a href="<%- url_for(post.path) %>">
                             <%= post.title %>
