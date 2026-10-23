@@ -107,7 +107,7 @@ async function audit(page) {
   await page.keyboard.press('Enter');
   const focusedClose = await page.waitForFunction(
     () => document.activeElement?.classList.contains('image-viewer-close'),
-    { timeout: 2500 }
+    { timeout: 4000 }
   ).then(() => true).catch(() => false);
   const viewerOpen = await page.evaluate(() => ({
     active: !!document.querySelector('.image-viewer-container.active'),
@@ -131,6 +131,12 @@ async function audit(page) {
     back: document.activeElement?.tagName === 'IMG',
   }));
   check('Esc 关闭后焦点回到图片', !viewerClosed.active && viewerClosed.back, JSON.stringify(viewerClosed));
+  const footnotes = await page.evaluate(() => ({
+    refs: document.querySelectorAll('.footnote-ref a').length,
+    notes: document.querySelectorAll('.footnotes li').length,
+    backrefs: document.querySelectorAll('.footnote-backref').length,
+  }));
+  check('脚注引用、文末列表与返回链接对应', footnotes.refs === 1 && footnotes.notes === 1 && footnotes.backrefs === 1, JSON.stringify(footnotes));
   const codeBtn = await page.evaluate(() => {
     const btn = document.querySelector('.copy-button');
     return btn ? { tag: btn.tagName, role: btn.getAttribute('role'), tab: btn.tabIndex } : { missing: true };

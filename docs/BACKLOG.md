@@ -11,7 +11,7 @@
 - SEO：`max-image-preview:large`；sitemap 去掉 `index.html`；28 张 1200×630 OG 分享卡（文章 / 系列 / 首页 / 项目 / 关于 / 简历），补齐 `og:image:width/height/alt`；站点级和系列级 JSON Feed 1.1。
 - 无障碍：首次 SPA 跳转也会播报并聚焦新页 h1；图片查看器 Tab 限制在弹层内、背景 inert；TOC 加 navigation landmark；代码复制/折叠改为原生按钮并播报结果；标题锚点名称带标题文本；skip 落点补 scroll-margin 与焦点样式。
 - 测试：328 项浏览器检查 + 21 篇内容检查全部通过；axe-core 桌面/移动端 9 类页面（含项目、简历）0 违规。
-- 后续补强：文章页可见面包屑（与 BreadcrumbList 对齐）；图片查看器显示 figcaption/alt 并接 `aria-describedby`；`timeline` Hexo 标签替换关于页时间线；站内搜索改为 `field: all`，简历/项目/关于也能被搜到；修复系列页 JSON-LD 图片回退问题；补充 Nginx 缓存头文档。
+- 后续补强：文章页可见面包屑（与 BreadcrumbList 对齐）；图片查看器显示 figcaption/alt 并接 `aria-describedby`；`timeline` Hexo 标签替换关于页时间线；站内搜索改为 `field: all`，简历/项目/关于也能被搜到；构建期脚注（`[^id]` → doc-noteref / doc-endnotes）；修复系列页 JSON-LD 图片回退问题；补充 Nginx 缓存头文档。
 
 ## 验证数字
 
@@ -24,7 +24,7 @@
 ## 下次可以继续做（按价值排序）
 
 1. **线上缓存头**：给 Nginx / Cloudflare 的带版本号静态资源加 `Cache-Control: public, max-age=31536000, immutable`，HTML 短缓存。这是首屏之外最大的重复访问收益，本次只写进了文档，没有服务器权限落地。
-2. **脚注 / 边注**：marked 4.3 不支持 `[^1]`。可选方案：加 marked extension（中等成本），或在文章里继续用 callout；Maggie Appleton 式的边注需要 ≥1440px 布局。
+2. **边注**：脚注已支持；Maggie Appleton 式的右侧边注需要 ≥1440px 布局和额外的 hover/focus 预览，暂不做。
 3. **代码块文档化**：行号锚点（`#L3`）、`{% codeblock %}` 文件名 caption、`mark:` 行高亮。主题已支持部分能力，目前内容还没用起来。
 4. **图片查看器**：补双指缩放（说明文字和 aria 关联已完成）。
 5. **`content-visibility: auto`**：先给 `#giscus-container`、相关阅读等首屏外大块加，配 `contain-intrinsic-size`；需要复测滚动高度与锚点定位。

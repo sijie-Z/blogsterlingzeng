@@ -54,6 +54,7 @@
 | 分享卡片 | 每篇文章 / 系列 / 页面生成 1200×630 OG 图 | `tools/gen-og-images.js` |
 | 简历页 | 一页式 HTML 简历，可打印 / 存 PDF | `source/resume/` |
 | 复制 Markdown | 侧栏一键复制文章 Markdown 原文 | `scripts/post-sidebar.js` |
+| 脚注 | `[^id]` 语法，构建期生成 doc-noteref / doc-endnotes | `scripts/footnotes.js` |
 | 相关阅读 | 标签相似度推荐（前端渲染，无原生依赖） | `scripts/related-posts.js` |
 | 文章置顶 | `sticky: 1` 字段置顶 | `hexo-generator-index` |
 | Sitemap | `sitemap.xml` + `robots.txt` | `hexo-generator-sitemap` |
@@ -179,7 +180,7 @@ npm run test:sidebar        # 37 项文章侧栏 / 进度 / 锚点 / 表格 / �
 npm run test:series         # 53 项系列页 / 徽章 / 系列卡 / SPA / 移动端
 npm run test:assets         # 39 项响应式横幅 / WebP 纹理 / JSON Feed / 图标子集 / JSON-LD
 npm run test:search         # 17 项搜索 combobox / 方向键 / Enter / 空态 / IME
-npm run test:a11y           # 62 项无障碍:名称 / alt / 列表语义 / 标题 / 地标
+npm run test:a11y           # 63 项无障碍:名称 / alt / 列表语义 / 标题 / 地标 / 脚注
 npm run test:resume         # 7 项阅读位置记忆与“继续阅读”
 npm run test:archive        # 12 项归档写作热力图与移动端
 npm run profile:nav         # 第一次跳转的 CPU 采样诊断

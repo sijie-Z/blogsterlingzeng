@@ -3209,6 +3209,59 @@ a.post-side-name:hover {
 }
 
 /* ========================================
+   FOOTNOTES
+   ======================================== */
+.footnote-ref {
+  font-size: 0.72em;
+  line-height: 0;
+  vertical-align: super;
+}
+
+.footnote-ref a {
+  padding: 0 2px;
+  color: var(--primary-color);
+  text-decoration: none;
+  background: none !important;
+}
+
+.footnotes {
+  margin-top: 2.4rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--border-color);
+  color: var(--second-text-color);
+  font-size: 0.86rem;
+}
+
+.footnotes hr {
+  display: none;
+}
+
+.footnotes ol {
+  margin: 0;
+  padding-left: 1.3rem;
+}
+
+.footnotes li {
+  margin-bottom: 0.5rem;
+}
+
+.footnotes li p {
+  margin: 0;
+}
+
+.footnote-backref {
+  margin-left: 4px;
+  color: var(--primary-color);
+  text-decoration: none;
+  background: none !important;
+}
+
+/* 深色代码高亮的正则色在 #1e1e1e 上只有 2.9:1,提到 AA */
+.dark .article-content .highlight .regexp {
+  color: #ce9178;
+}
+
+/* ========================================
    BREADCRUMBS
    ======================================== */
 .cj-breadcrumbs {

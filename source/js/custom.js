@@ -1102,6 +1102,7 @@
         };
         setTimeout(() => { syncCaption(); focusClose(); }, 80);
         setTimeout(() => { syncCaption(); focusClose(); }, 320);
+        setTimeout(focusClose, 700);
       }, true);
     }
 
