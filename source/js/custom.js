@@ -1342,6 +1342,57 @@
   }
 
   // ============================
+  // Code line links — 点行号复制 #cb1-L3，打开链接定位并高亮
+  // ============================
+  function initCodeLineLinks() {
+    const blocks = [...document.querySelectorAll('.highlight-container')];
+    blocks.forEach((container, blockIndex) => {
+      const codeLines = [...container.querySelectorAll('.code .line')];
+      const gutterLines = [...container.querySelectorAll('.gutter .line')];
+      codeLines.forEach((line, i) => {
+        if (!line.id) line.id = `cb${blockIndex + 1}-L${i + 1}`;
+      });
+      gutterLines.forEach((gutter, i) => {
+        if (gutter.dataset.cjLineLink) return;
+        gutter.dataset.cjLineLink = '1';
+        gutter.title = `复制第 ${i + 1} 行链接`;
+        gutter.addEventListener('click', () => {
+          const hash = `#cb${blockIndex + 1}-L${i + 1}`;
+          const url = location.origin + location.pathname + hash;
+          try { history.replaceState(null, '', hash); } catch (e) {}
+          const target = document.getElementById(hash.slice(1));
+          if (target) {
+            target.classList.add('code-line-target');
+            setTimeout(() => target.classList.remove('code-line-target'), 1800);
+          }
+          const done = () => showToast(`第 ${i + 1} 行链接已复制`);
+          if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(url).then(done).catch(() => fallbackCopy(url, done));
+          } else {
+            fallbackCopy(url, done);
+          }
+        });
+      });
+    });
+
+    const applyHash = () => {
+      const match = location.hash.match(/^#cb\d+-L\d+$/);
+      if (!match) return;
+      const target = document.getElementById(location.hash.slice(1));
+      if (!target) return;
+      target.classList.add('code-line-target');
+      setTimeout(() => target.classList.remove('code-line-target'), 2200);
+      const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      target.scrollIntoView({ block: 'center', behavior: reduced ? 'auto' : 'smooth' });
+    };
+    applyHash();
+    if (!window.__cjCodeHashTracked) {
+      window.__cjCodeHashTracked = true;
+      window.addEventListener('hashchange', applyHash);
+    }
+  }
+
+  // ============================
   // Code fullscreen — 代码块全屏阅读
   // ============================
   function closeCodeFullscreen() {
@@ -2209,6 +2260,7 @@
         initCodeFullscreen();
         initCodeButtonsA11y();
         initCodeLangBadges();
+        initCodeLineLinks();
       }, 60);
     });
     onceGlobal('themeToggle', initThemeToggle);

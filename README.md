@@ -70,7 +70,7 @@
 | 开放内容 | 每篇文章生成 `index.md` 原文，站点级 `llms.txt` 索引 | `scripts/markdown-route.js` |
 | 归档页 | 构建期写作足迹热力图（内联 SVG，零运行时） | `scripts/archive-heatmap.js` |
 | SEO | 每篇文章 BlogPosting + BreadcrumbList JSON-LD、canonical 保留大小写、每篇独立描述 | `scripts/seo-jsonld.js` |
-| 代码块 | 全屏专注查看（Esc / 点背景退出），保留复制与折叠 | `source/js/custom.js` |
+| 代码块 | 全屏专注查看（Esc / 点背景退出），保留复制与折叠；行号可复制 `#cb1-L3` 永久链接 | `source/js/custom.js` |
 
 ### 自定义页面
 
@@ -177,7 +177,7 @@ npm run test:l2d            # Live2D 加载诊断(模型 / Core / 404)
 npm run test:smooth         # 26 项滚动与动效平滑度回归
 npm run test:content        # 文章 front matter / 站内链接 / 图片 / 文风检查
 npm run test:transitions    # 44 项 SPA 跳转 / 连点 / 前后退 / 搜索焦点 / 路由播报
-npm run test:sidebar        # 37 项文章侧栏 / 进度 / 锚点 / 表格 / 面包屑 / 代码全屏
+npm run test:sidebar        # 38 项文章侧栏 / 进度 / 锚点 / 表格 / 面包屑 / 代码全屏
 npm run test:series         # 53 项系列页 / 徽章 / 系列卡 / SPA / 移动端
 npm run test:assets         # 40 项响应式横幅 / WebP 纹理 / JSON Feed / 图标子集 / JSON-LD
 npm run test:search         # 18 项搜索 combobox / 方向键 / Enter / 空态 / IME

@@ -101,7 +101,7 @@ test/                    11 套 Puppeteer / Node 检查
 | 套件 | 项数 | 覆盖 |
 |---|---:|---|
 | `test:transitions` | 44 | SPA 跳转、连点、前进后退、搜索焦点、路由播报、800px 导航 |
-| `test:sidebar` | 37 | 侧栏卡片、进度环、锚点、表格、Markdown、代码全屏、面包屑、移动目录 |
+| `test:sidebar` | 38 | 侧栏卡片、进度环、锚点、表格、Markdown、代码全屏、面包屑、移动目录 |
 | `test:series` | 53 | 系列页、徽章/系列卡、Atom、归档入口、SPA、移动端 |
 | `test:assets` | 40 | 响应式横幅、WebP 纹理、sitemap/llms、JSON-LD、JSON Feed、图标子集、OG 元数据、APlayer |
 | `test:a11y` | 63 | 名称、alt、列表语义、标题、地标、图片查看器键盘、脚注、项目/简历页 |
@@ -112,7 +112,7 @@ test/                    11 套 Puppeteer / Node 检查
 | `test:archive` | 12 | 归档热力图与移动端 |
 | `test:content` | 22 篇 | front matter、站内链接、图片、文风硬规则 |
 
-合计 333 项浏览器检查和 22 篇文章的内容检查。所有套件在本机通过；CI 目前只跑不依赖浏览器的 `test:content`。
+合计 334 项浏览器检查和 22 篇文章的内容检查。所有套件在本机通过；CI 目前只跑不依赖浏览器的 `test:content`。
 
 ## 7. 已知边界
 

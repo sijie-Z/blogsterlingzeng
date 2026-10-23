@@ -3201,6 +3201,23 @@ a.post-side-name:hover {
   box-shadow: inset 2px 0 0 var(--primary-color);
 }
 
+/* 代码行号:可点击复制 #cb1-L3 永久链接 */
+.highlight-container .gutter .line {
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.highlight-container .gutter .line:hover {
+  color: var(--primary-color);
+  text-decoration: underline;
+}
+
+.highlight .line.code-line-target {
+  background: color-mix(in srgb, var(--primary-color) 20%, transparent);
+  box-shadow: inset 2px 0 0 var(--primary-color);
+  transition: background 0.2s ease;
+}
+
 /* ========================================
    FOOTNOTES
    ======================================== */

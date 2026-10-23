@@ -133,6 +133,20 @@ function check(name, cond, extra) {
     }));
     check('再次点击按钮可退出代码全屏', !back.full && back.inArticle && back.orphan === 0, JSON.stringify(back));
   }
+  const codeLine = await page.evaluate(() => {
+    const lines = [...document.querySelectorAll('.code .line')].filter(l => l.id.startsWith('cb'));
+    const gutter = document.querySelector('.gutter .line');
+    if (!lines.length || !gutter) return { missing: true };
+    gutter.click();
+    const id = location.hash.slice(1);
+    return {
+      missing: false,
+      total: lines.length,
+      hash: location.hash,
+      target: !!document.getElementById(id)?.classList.contains('code-line-target'),
+    };
+  });
+  check('代码行有唯一 id 且可复制行链接', !codeLine.missing && codeLine.total > 5 && /^#cb\d+-L\d+$/.test(codeLine.hash) && codeLine.target, JSON.stringify(codeLine));
   check('无横向溢出', first.overflow <= 2, String(first.overflow));
   check('首屏 CLS < 0.12', first.cls < 0.12, first.cls.toFixed(4));
   console.log('  CLS', first.cls.toFixed(4));
