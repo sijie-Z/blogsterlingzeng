@@ -170,7 +170,7 @@ function check(name, cond, extra) {
     } catch (e) { return { ok: false, types: [] }; }
   });
   check('系列页有 CollectionPage JSON-LD', seriesLd.ok && seriesLd.types.includes('CollectionPage'), JSON.stringify(seriesLd));
-  check('系列页 JSON-LD 列出 5 篇文章', seriesLd.parts === 5, JSON.stringify(seriesLd));
+  check('系列页 JSON-LD 列出 6 篇文章', seriesLd.parts === 6, JSON.stringify(seriesLd));
   const ogUrl = await page.evaluate(() => ({
     og: document.querySelector('meta[property="og:url"]')?.content || '',
     canonical: document.querySelector('link[rel="canonical"]')?.href || '',
@@ -217,7 +217,7 @@ function check(name, cond, extra) {
     };
   });
   check('站点 JSON Feed 可解析且为 1.1', feeds.siteStatus === 200 && feeds.siteVersion === 'https://jsonfeed.org/version/1.1', JSON.stringify(feeds));
-  check('站点 JSON Feed 收录 21 篇文章', feeds.siteItems === 21, String(feeds.siteItems));
+  check('站点 JSON Feed 收录 22 篇文章', feeds.siteItems === 22, String(feeds.siteItems));
   check('JSON Feed 内 URL 全部绝对化', feeds.allAbsolute, 'relative url found');
   check('系列 JSON Feed 收录 3 篇文章', feeds.seriesStatus === 200 && feeds.seriesItems === 3, JSON.stringify(feeds));
 

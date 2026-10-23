@@ -56,7 +56,7 @@ RAG / LangGraph / 向量数据库 / LoRA 微调 / 评测设计
 ## 📅 时间线
 
 {% timeline %}
-2026.10 :: 博客上线系列阅读与系列订阅；字体子集化、CLS 与滚动性能优化；文章更新到 21 篇
+2026.10 :: 博客上线系列阅读与系列订阅；字体子集化、CLS 与滚动性能优化；文章更新到 22 篇
 2026.09 :: 升入大四；博客 HTTPS 上线（Cloudflare）；NFT Launchpad Kit v1.0.0 发布并转向 Agent-Native 方向
 2026.08 :: MiQroGate 推进至 Phase 1 G7.4（响应缓存）；DocMind Agent 消融实验完成；博客补齐项目复盘
 2026.07 :: NLP 训练实验框架（BERT → LoRA 微调 Qwen2.5）；GeoAI Assistant 产品化

@@ -73,8 +73,8 @@ function check(name, cond, extra) {
   }));
   check('系列页标题', series.h1 === '博客工程化', series.h1);
   check('系列简介非空', series.desc.length > 8, series.desc);
-  check('系列页 5 篇', series.items.length === 5, String(series.items.length));
-  check('顺序按 series_order', series.items.map(i => i.idx).join(',') === '01,02,03,04,05', JSON.stringify(series.items.map(i => i.idx)));
+  check('系列页 6 篇', series.items.length === 6, String(series.items.length));
+  check('顺序按 series_order', series.items.map(i => i.idx).join(',') === '01,02,03,04,05,06', JSON.stringify(series.items.map(i => i.idx)));
   check('第一项是建站文章', series.items[0]?.href === '/2026/05/08/hexo-blog-setup-guide/', JSON.stringify(series.items[0]));
   check('系列页显示日期分类', series.items.every(i => /2026-\d\d-\d\d/.test(i.meta)), JSON.stringify(series.items.map(i => i.meta)));
   check('返回全部系列', series.back === '/series/', series.back);
@@ -93,7 +93,7 @@ function check(name, cond, extra) {
     };
   });
   check('系列 Atom 可访问且合法', feed.status === 200 && !feed.error, JSON.stringify(feed));
-  check('系列 Atom 含 5 篇文章', feed.entries === 5, String(feed.entries));
+  check('系列 Atom 含 6 篇文章', feed.entries === 6, String(feed.entries));
   check('系列页声明 Atom feed', feed.head && feed.self.includes('/series/blog-engineering/atom.xml'), JSON.stringify(feed));
 
   console.log('=== 2.5 归档页系列入口 ===');
@@ -150,17 +150,17 @@ function check(name, cond, extra) {
     };
   });
   check('文章有系列徽章', article.badge, JSON.stringify(article));
-  check('徽章显示第 3/5 篇', article.badgeCount === '第 3 篇 / 共 5 篇', article.badgeCount);
+  check('徽章显示第 3/6 篇', article.badgeCount === '第 3 篇 / 共 6 篇', article.badgeCount);
   check('徽章链接到系列页', article.badgeHref === SERIES, article.badgeHref);
   check('徽章在正文之前', article.badgeBeforeContent);
   check('文章有系列卡', article.card);
-  check('系列卡进度 60%', article.cardCount.includes('60%'), article.cardCount);
+  check('系列卡进度 50%', article.cardCount.includes('50%'), article.cardCount);
   check('当前项已标记', article.current.includes('当前') && article.currentAria === 'page', JSON.stringify(article.current));
-  check('系列列表 5 项', article.listCount === 5, String(article.listCount));
+  check('系列列表 5 项', article.listCount === 6, String(article.listCount));
   check('上一篇指向 Live2D 文章', article.prevHref === PREV && article.prevRel === 'prev', JSON.stringify({ href: article.prevHref, rel: article.prevRel }));
   check('下一篇指向系列第 4 篇', article.nextTag === 'A' && article.nextHref === '/2026/10/23/hexo-series-reading-path/', JSON.stringify({ tag: article.nextTag, href: article.nextHref }));
   check('原生 details 折叠', article.details);
-  check('进度条 60%', article.progress === '60%', article.progress);
+  check('进度条 60%', article.progress === '50%', article.progress);
   check('系列卡在相关阅读之前', article.seriesBeforeRelated, JSON.stringify({ related: article.seriesBeforeRelated }));
   check('文章无横向溢出', article.overflow <= 2, String(article.overflow));
 
@@ -176,7 +176,7 @@ function check(name, cond, extra) {
     overflow: document.documentElement.scrollWidth - innerWidth,
   }));
   check('SPA 进入系列页', spa.path === '/series/blog-engineering/' && spa.h1 === '博客工程化', JSON.stringify(spa));
-  check('SPA 后系列列表存在', spa.items === 5, String(spa.items));
+  check('SPA 后系列列表存在', spa.items === 6, String(spa.items));
   check('SPA 后无横向溢出', spa.overflow <= 2, String(spa.overflow));
   await page.goBack().catch(() => {});
   await page.waitForFunction(() => location.pathname === '/2026/10/22/font-subset-and-cls/' && !!document.querySelector('.post-series-badge'), { timeout: 10000 }).catch(() => {});
@@ -199,7 +199,7 @@ function check(name, cond, extra) {
       prev: document.querySelector('.post-series-prev')?.tagName || '',
       prevText: document.querySelector('.post-series-prev')?.textContent.replace(/\s+/g, ' ').trim() || '',
     }));
-    check('系列首篇显示第 1 篇', first.count === '第 1 篇 / 共 5 篇', first.count);
+    check('系列首篇显示第 1 篇', first.count === '第 1 篇 / 共 6 篇', first.count);
     check('系列首篇上一篇禁用', first.prev === 'SPAN' && first.prevText.includes('已是第一篇'), JSON.stringify(first));
   } else {
     check('系列列表可点击', false, '未找到列表链接');
