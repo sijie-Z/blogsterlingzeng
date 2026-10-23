@@ -12,6 +12,9 @@
 
 'use strict';
 
+const fs = require('fs');
+const path = require('path');
+
 function escapeHtml(value) {
   return String(value == null ? '' : value).replace(/[&<>"']/g, ch => ({
     '&': '&amp;',
@@ -345,7 +348,12 @@ hexo.extend.generator.register('series-pages', function () {
       series_page: true,
       comment: false,
       // 社交分享优先用系列最新文章的封面
-      og_image: group.latest.cover || group.latest.banner || undefined,
+      // 社交分享优先用生成的系列 OG 卡,没有则回退到最新文章封面
+      og_image: fs.existsSync(
+        path.join(hexo.source_dir, 'images', 'og', `series-${group.slug}.jpg`)
+      )
+        ? `/images/og/series-${group.slug}.jpg`
+        : (group.latest.cover || group.latest.banner || undefined),
     },
   }));
   routes.push({
@@ -357,6 +365,7 @@ hexo.extend.generator.register('series-pages', function () {
       content: renderSeriesIndex(list),
       series_page: true,
       comment: false,
+      og_image: '/images/og/page-series.jpg',
     },
   });
   for (const group of list) {
@@ -377,7 +386,8 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
   const href = seriesFeedUrl(match[1]);
   if (str.includes('data-series-feed')) return str;
   return str.replace('</head>', () =>
-    `<link data-series-feed rel="alternate" type="application/atom+xml" title="${escapeHtml(page.title || '')}" href="${escapeHtml(href)}">\n</head>`);
+    `<link data-series-feed rel="alternate" type="application/atom+xml" title="${escapeHtml(page.title || '')}" href="${escapeHtml(href)}">\n` +
+    `<link data-series-json-feed rel="alternate" type="application/feed+json" title="${escapeHtml(page.title || '')}" href="${escapeHtml(href.replace(/atom\.xml$/, 'feed.json'))}">\n</head>`);
 });
 
 hexo.extend.filter.register('after_render:html', function (str, locals) {
@@ -445,7 +455,6 @@ function streamToString(stream) {
 
 hexo.extend.filter.register('after_generate', function () {
   const { list } = buildSeries();
-  if (!list.length) return;
 
   let routeStream;
   try {
@@ -480,7 +489,10 @@ hexo.extend.filter.register('after_generate', function () {
       hexo.log.warn('[series] sitemap.xml 缺少 </urlset>,系列 URL 未追加');
       return;
     }
-    hexo.route.set('sitemap.xml', xml.replace('</urlset>', () => extra + '</urlset>'));
+    // 页面 canonical 是目录 URL,sitemap 也统一去掉 index.html
+    let out = xml.replace(/<loc>([^<]*?)\/index\.html<\/loc>/g, (m, path) => `<loc>${path}/</loc>`);
+    out = out.replace('</urlset>', () => (list.length ? extra : '') + '</urlset>');
+    hexo.route.set('sitemap.xml', out);
   });
 });
 

@@ -1101,11 +1101,24 @@ html.dark ::selection {
    PRINT
    ======================================== */
 @media print {
+  @page { margin: 18mm 16mm; }
+
   .navbar-container, .sidebar, .tool-scroll-to-top, .scroll-progress-bar,
-  .post-tools, .post-nav, footer.footer { display: none !important; }
+  .post-tools, .post-nav, footer.footer, .post-side-stack, .related-posts,
+  .post-series-card, .reading-resume, .mobile-toc, #giscus-container,
+  .side-tools, .code-fullscreen-btn, .copy-button, .fold-button { display: none !important; }
+
   .article-content { font-size: 11pt; line-height: 1.7; max-width: 100%; }
   .article-content a { color: #000; text-decoration: underline; background: none; }
+  .article-content a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 9pt;
+    word-break: break-all;
+  }
   .article-content img { max-width: 100%; height: auto; }
+  .article-content pre, .article-content figure, .article-content table,
+  .article-content blockquote { break-inside: avoid; }
+  .article-content h2, .article-content h3 { break-after: avoid; }
 }
 
 /* ========================================
@@ -2402,16 +2415,37 @@ footer.footer .info-container .customize-info {
   * {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+    animation-delay: 0s !important;
   }
 }
 
 /* ========================================
    VIEW TRANSITION — 与 ericterminal 完全一致
    ======================================== */
-::view-transition-group(*),
-::view-transition-old(*),
-::view-transition-new(*) {
+html[data-theme-switching]::view-transition-group(*),
+html[data-theme-switching]::view-transition-old(*),
+html[data-theme-switching]::view-transition-new(*) {
   animation: none !important;
+}
+
+/* Swup native:页面切换交给浏览器做交叉淡入,固定导航不参与快照 */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 180ms;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .navbar-container {
+    view-transition-name: site-header;
+  }
+
+  ::view-transition-group(site-header),
+  ::view-transition-old(site-header),
+  ::view-transition-new(site-header) {
+    animation: none;
+  }
 }
 
 html[data-theme-switching]::view-transition-old(root),
@@ -2420,6 +2454,46 @@ html[data-theme-switching]::view-transition-new(root) {
   mix-blend-mode: normal;
 }
 
+
+/* ========================================
+   RESUME
+   ======================================== */
+.resume-page > h2:first-child {
+  margin-top: 0;
+  font-size: 2rem;
+  letter-spacing: -0.02em;
+}
+
+.resume-print {
+  display: inline-flex;
+  align-items: center;
+  margin: 0.4rem 0 1.4rem;
+  padding: 8px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--default-text-color);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.resume-print:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+@media print {
+  .resume-print { display: none !important; }
+  .resume-page a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 9pt;
+    word-break: break-all;
+  }
+  .resume-page h2 { break-after: avoid; }
+  .resume-page h3 { break-after: avoid; }
+  .resume-page li { break-inside: avoid; }
+}
 
 /* ========================================
    POST SIDEBAR — 文章右侧信息卡
@@ -2546,7 +2620,8 @@ html[data-theme-switching]::view-transition-new(root) {
   margin-top: 8px;
 }
 
-.post-side-author-links a {
+.post-side-author-links a,
+.post-side-author-links button.post-side-copy-md {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2560,7 +2635,15 @@ html[data-theme-switching]::view-transition-new(root) {
   transition: color 0.18s ease, background-color 0.18s ease;
 }
 
-.post-side-author-links a:hover {
+.post-side-author-links button.post-side-copy-md {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}
+
+.post-side-author-links a:hover,
+.post-side-author-links button.post-side-copy-md:hover {
   color: var(--primary-color);
   background: color-mix(in srgb, var(--primary-color) 10%, transparent);
 }
@@ -3041,6 +3124,27 @@ a.post-side-name:hover {
   margin: 0 auto;
 }
 
+/* 代码语言徽标：放在代码块左上角，不参与布局 */
+.highlight-container {
+  position: relative;
+}
+
+.code-lang {
+  position: absolute;
+  top: 10px;
+  left: 14px;
+  z-index: 2;
+  font-family: var(--code-font-family, ui-monospace, SFMono-Regular, Consolas, monospace);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--second-text-color);
+  opacity: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
 /* 代码块全屏 */
 .code-fullscreen-btn {
   position: absolute;
@@ -3168,8 +3272,17 @@ body.code-fullscreen-open {
   transform: translateY(0);
 }
 
+#main-content {
+  scroll-margin-top: 96px;
+}
+
 #main-content:focus {
   outline: none;
+}
+
+#main-content:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: -2px;
 }
 
 /* ========================================

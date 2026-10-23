@@ -339,6 +339,11 @@ patchText('layout/components/swup.ejs', [
     '        containers: ["#swup"],\n        animationSelector: false,\n    });',
     'swup disable animation selector',
   ],
+  [
+    '        containers: ["#swup"],\n        animationSelector: false,',
+    '        containers: ["#swup"],\n        native: true,\n        animationSelector: false,',
+    'swup native view transitions',
+  ],
 ]);
 
 // 4.5 文章页统计行(阅读数 + 点赞)构建期渲染。
@@ -564,8 +569,82 @@ patchText('layout/layout.ejs', [
     'html lang first',
   ],
 ]);
+// 6.45 pangu 只处理正文。autoSpacingPage 会在页面加载后改标题文字,
+//      标题换行变化会让绝对定位的封面标题产生 CLS。
+patchText('source/js/plugins/pangu.js', [
+  [
+    '  pangu.spacingElementByClassName("markdown-body");\n  pangu.autoSpacingPage();',
+    '  // 只处理正文;整页 autoSpacingPage 会改标题并触发 CLS\n  pangu.spacingElementByClassName("markdown-body");',
+    'pangu no auto spacing',
+  ],
+]);
+patchText('source/js/build/plugins/pangu.js', [
+  [
+    ',pangu.autoSpacingPage()',
+    '',
+    'pangu no auto spacing build',
+  ],
+]);
+
+// 6.5 用 Intl 替换 essays 页的 moment 依赖。
+//     moment-with-locales 375KB,却只在这一个页面格式化“今天/昨天”;
+//     替换后可以从所有页面移除该脚本。整文件重写并带标记,重复执行不会叠加。
+function writeEssays(relPath, content) {
+  const file = path.join(themeRoot, relPath);
+  let text;
+  try { text = fs.readFileSync(file, 'utf8'); } catch (e) { return; }
+  if (text.includes('formatEssayDate')) return;
+  fs.writeFileSync(file, content, 'utf8');
+  console.log('[theme-patch] 已优化', relPath);
+}
+writeEssays('source/js/layouts/essays.js', `function formatEssayDate(raw, locale) {
+  const date = new Date(raw);
+  if (Number.isNaN(date.getTime())) return raw;
+  const lang = Array.isArray(locale) ? locale[0] : locale;
+  const now = new Date();
+  const day = value => new Date(value.getFullYear(), value.getMonth(), value.getDate()).getTime();
+  const diff = Math.round((day(now) - day(date)) / 86400000);
+  const time = date.toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' });
+  if (diff === 0) return '今天 ' + time;
+  if (diff === 1) return '昨天 ' + time;
+  if (diff > 1 && diff < 7) return diff + ' 天前';
+  return date.toLocaleDateString(lang, { year: 'numeric', month: '2-digit', day: '2-digit' });
+}
+
+export default function initEssays() {
+  const dateElements = document.querySelectorAll(".essay-date");
+  if (!dateElements.length) return;
+  dateElements.forEach((element) => {
+    const rawDate = element.getAttribute("data-date");
+    const locale = config.language || "en";
+    element.textContent = formatEssayDate(rawDate, locale);
+  });
+}
+`);
+writeEssays('source/js/build/layouts/essays.js', `function formatEssayDate(raw,locale){const date=new Date(raw);if(Number.isNaN(date.getTime()))return raw;const lang=Array.isArray(locale)?locale[0]:locale,now=new Date(),day=value=>new Date(value.getFullYear(),value.getMonth(),value.getDate()).getTime(),diff=Math.round((day(now)-day(date))/864e5),time=date.toLocaleTimeString(lang,{hour:'2-digit',minute:'2-digit'});if(diff===0)return'今天 '+time;if(diff===1)return'昨天 '+time;if(diff>1&&diff<7)return diff+' 天前';return date.toLocaleDateString(lang,{year:'numeric',month:'2-digit',day:'2-digit'})}
+export default function initEssays(){const t=document.querySelectorAll(".essay-date");t.length&&t.forEach((t=>{const e=t.getAttribute("data-date"),n=config.language||"en",a=formatEssayDate(e,n);t.textContent=a}))}
+//# sourceMappingURL=essays.js.map
+`);
+patchText('layout/components/scripts.ejs', [
+  [
+    "<%- renderJS('libs/moment-with-locales.min.js', { swupReload: false }) %>\n",
+    '',
+    'drop moment script',
+  ],
+]);
+
 patchText('layout/components/header/head.ejs', [
   [
+    `    <!--- Fontawesome Part-->
+    <%- renderCSS('fontawesome/fontawesome.min.css') %>
+    <%- renderCSS('fontawesome/brands.min.css') %>
+    <%- renderCSS('fontawesome/solid.min.css') %>
+    <%- renderCSS('fontawesome/regular.min.css') %>
+`,
+    `    <!--- Fontawesome Part: 类名子集由 scripts/fa-subset.js 尾部注入 -->
+`,
+    'fontawesome css class subset',
+  ],  [
     'let ogImage = page.og_image || openGraphConfig?.image;',
     'let ogImage = page.og_image || page.cover || page.banner || openGraphConfig?.image;',
     'og image cover',
@@ -582,12 +661,12 @@ patchText('layout/components/header/head.ejs', [
   ],
   [
     '    <meta name="robots" content="index,follow">',
-    `    <meta name="robots" content="<%= String(page.path || '').replace(/index\\.html$/, '') === '404.html' ? 'noindex,follow' : 'index,follow' %>">`,
+    `    <meta name="robots" content="<%= String(page.path || '').replace(/index\\.html$/, '') === '404.html' ? 'noindex,follow' : 'index,follow,max-image-preview:large' %>">`,
     'robots noindex 404',
   ],
   [
     '    <meta name="googlebot" content="index,follow">',
-    `    <meta name="googlebot" content="<%= String(page.path || '').replace(/index\\.html$/, '') === '404.html' ? 'noindex,follow' : 'index,follow' %>">`,
+    `    <meta name="googlebot" content="<%= String(page.path || '').replace(/index\\.html$/, '') === '404.html' ? 'noindex,follow' : 'index,follow,max-image-preview:large' %>">`,
     'googlebot noindex 404',
   ],
   [

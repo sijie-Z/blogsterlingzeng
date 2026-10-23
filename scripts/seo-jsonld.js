@@ -8,10 +8,35 @@
 
 'use strict';
 
+const fs = require('fs');
+const path = require('path');
+
 function absUrl(root, value) {
   const url = String(value || '');
   if (/^https?:\/\//i.test(url)) return url;
   return root + (url.startsWith('/') ? url : '/' + url);
+}
+
+// 与 scripts/og-image.js 使用同一套命名,保证 JSON-LD 与 og:image 是同一张图
+function generatedOg(page) {
+  if (!page) return '';
+  const route = String(page.path || '').replace(/^\/+/, '');
+  const dir = path.join(hexo.source_dir, 'images', 'og');
+  const has = name => fs.existsSync(path.join(dir, name));
+  if (page.series_page) {
+    if (/^series\/?(index\.html)?$/.test(route)) return has('page-series.jpg') ? '/images/og/page-series.jpg' : '';
+    const match = route.match(/^series\/([a-z0-9-]+)\//);
+    return match && has(`series-${match[1]}.jpg`) ? `/images/og/series-${match[1]}.jpg` : '';
+  }
+  const slug = page.slug || path.basename(String(page.source || ''), path.extname(String(page.source || '')));
+  if (slug && has(`${slug}.jpg`)) return `/images/og/${slug}.jpg`;
+  const pageMap = {
+    'projects/index.html': 'page-projects.jpg',
+    'about/index.html': 'page-about.jpg',
+    'resume/index.html': 'page-resume.jpg',
+    'index.html': 'home.jpg',
+  };
+  return pageMap[route] && has(pageMap[route]) ? `/images/og/${pageMap[route]}` : '';
 }
 
 function iso(date) {
@@ -113,7 +138,7 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
           url,
           name: String(page.title || ''),
           description: String(page.description || ''),
-          image: page.og_image ? absUrl(root, page.og_image) : root + '/images/og-banner.jpg',
+          image: absUrl(root, page.og_image || generatedOg(page) || '/images/og-banner.jpg'),
           inLanguage: 'zh-CN',
           isPartOf: {
             '@type': 'WebSite',
@@ -153,7 +178,7 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
   if (str.includes('"BlogPosting"')) return str;
 
   const canonical = root + '/' + String(page.path || '').replace(/^\/+/, '');
-  const image = absUrl(root, page.cover || page.banner || '/images/og-banner.jpg');
+  const image = absUrl(root, page.og_image || generatedOg(page) || page.cover || page.banner || '/images/og-banner.jpg');
   const authorUrl = root + '/about/';
   const tags = page.tags && page.tags.toArray ? page.tags.toArray().map(t => t.name) : [];
   const categories = page.categories && page.categories.toArray ? page.categories.toArray() : [];

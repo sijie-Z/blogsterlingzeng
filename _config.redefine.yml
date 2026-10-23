@@ -153,6 +153,9 @@ navbar:
     关于:
       path: /about
       icon: fa-regular fa-user
+    简历:
+      path: /resume
+      icon: fa-regular fa-file-lines
     友链:
       path: /friends
       icon: fa-regular fa-users

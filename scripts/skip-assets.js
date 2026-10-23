@@ -10,6 +10,9 @@
 
 'use strict';
 
+const fs = require('fs');
+const path = require('path');
+
 const SKIP = process.env.CJ_SKIP_OLD_TEXTURES === '1'
   ? ['live2d/model/ds-whale-girl/textures/texture_00.png']
   : [];
@@ -29,6 +32,24 @@ hexo.extend.filter.register('after_generate', function () {
   }
   if (!(theme.comment && theme.comment.system === 'waline')) {
     extras.push('js/libs/waline.js', 'js/build/libs/waline.js');
+  }
+  // essays 页已改用 Intl 格式化日期,不再需要 375KB 的 moment
+  extras.push('js/libs/moment-with-locales.min.js', 'js/build/libs/moment-with-locales.min.js');
+  // 全量图标 CSS 已由 fontawesome-icons-subset.css 取代
+  if (fs.existsSync(path.join(hexo.source_dir, 'css', 'fontawesome-icons-subset.css'))) {
+    extras.push(
+      'fontawesome/fontawesome.min.css',
+      'fontawesome/brands.min.css',
+      'fontawesome/solid.min.css',
+      'fontawesome/regular.min.css'
+    );
+    // 主题还会复制 8.4MB 的全量 webfonts 和其余样式表;页面只引用
+    // /fontawesome/webfonts/*.subset.woff2,这些都不再需要部署。
+    for (const route of hexo.route.list()) {
+      if (route.startsWith('webfonts/') || /^fontawesome\/[^/]+\.css$/.test(route)) {
+        extras.push(route);
+      }
+    }
   }
   for (const path of extras) {
     try { if (hexo.route.get(path)) hexo.route.remove(path); } catch (e) {}

@@ -217,16 +217,21 @@
   }
 
   function announceRoute() {
-    if (!window.__cjRouteAnnounced) {
-      window.__cjRouteAnnounced = true;
-      return;
-    }
     const announcer = document.getElementById('route-announcer');
     if (!announcer) return;
-    const heading = document.querySelector('.main-content h1, .article-content h1');
+    const heading = document.querySelector('.article-content h1, .main-content h1');
     const text = (heading && heading.textContent.trim()) || document.title;
     announcer.textContent = '';
     setTimeout(() => { announcer.textContent = '已导航到：' + text; }, 100);
+  }
+
+  // SPA 换页后把焦点交给新页面标题,键盘/读屏用户不用重新 Tab 一遍导航
+  function focusRouteTarget() {
+    const target = document.querySelector('.article-content h1, .main-content h1') ||
+      document.getElementById('main-content');
+    if (!target) return;
+    if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+    target.focus({ preventScroll: true });
   }
 
   function initSwupNavPause() {
@@ -234,13 +239,18 @@
       if (!swup || !swup.hooks || swup.__cjNavPause) return;
       swup.__cjNavPause = true;
       swup.hooks.on('visit:start', () => {
+        swup.__cjAnnounceNext = true;
         closeCodeFullscreen();
         pauseLive2DForNav();
       });
       swup.hooks.on('page:view', () => {
         window.__cjSpaVisit = true;
         resumeLive2DAfterNav();
-        announceRoute();
+        if (swup.__cjAnnounceNext) {
+          swup.__cjAnnounceNext = false;
+          announceRoute();
+          focusRouteTarget();
+        }
       });
     };
     if (window.swup && window.swup.hooks) {
@@ -981,12 +991,17 @@
   // ============================
   // 移动端目录:桌面侧栏在手机上被隐藏,这里用原生 details 克隆一份
   function initMobileToc() {
+    document.querySelectorAll('.post-toc').forEach(toc => {
+      toc.setAttribute('role', 'navigation');
+      toc.setAttribute('aria-label', '文章目录');
+    });
     const content = document.querySelector('.post-page-container .article-content');
     if (!content || document.querySelector('.mobile-toc')) return;
     const nav = document.querySelector('.post-toc .nav');
     if (!nav) return;
     const details = document.createElement('details');
     details.className = 'mobile-toc';
+    details.setAttribute('aria-label', '文章目录');
     const summary = document.createElement('summary');
     summary.textContent = '目录';
     details.appendChild(summary);
@@ -1005,8 +1020,10 @@
       const anchor = document.createElement('a');
       anchor.className = 'heading-anchor';
       anchor.href = '#' + heading.id;
-      anchor.title = '复制本节链接';
-      anchor.setAttribute('aria-label', '复制本节链接');
+      const headingText = (heading.textContent || '').trim().slice(0, 80);
+      const anchorLabel = headingText ? `复制「${headingText}」的链接` : '复制本节链接';
+      anchor.title = anchorLabel;
+      anchor.setAttribute('aria-label', anchorLabel);
       anchor.innerHTML = '<i class="fa-solid fa-link" aria-hidden="true"></i>';
       anchor.addEventListener('click', () => {
         const url = window.location.origin + window.location.pathname + '#' + encodeURIComponent(heading.id);
@@ -1103,33 +1120,154 @@
         if (btn) btn.click();
       }, { passive: true });
     }
+
+    // 弹层打开时把 Tab 限制在对话框内,并让背景暂时 inert
+    if (!mask.__cjTabTrap) {
+      mask.__cjTabTrap = true;
+      mask.addEventListener('keydown', e => {
+        if (e.key !== 'Tab' || !mask.classList.contains('active')) return;
+        const focusables = [...mask.querySelectorAll('button, [href], [tabindex]:not([tabindex="-1"])')]
+          .filter(el => !el.disabled && el.getClientRects().length > 0);
+        if (!focusables.length) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      });
+    }
+
+    const setBackgroundInert = on => {
+      if (on) {
+        const nodes = [];
+        let node = mask;
+        while (node && node !== document.body) {
+          const parent = node.parentElement;
+          if (!parent) break;
+          for (const sibling of parent.children) {
+            if (sibling === node || sibling.contains(mask)) continue;
+            if (!sibling.inert) {
+              sibling.inert = true;
+              nodes.push(sibling);
+            }
+          }
+          node = parent;
+        }
+        window.__cjInertNodes = nodes;
+      } else {
+        (window.__cjInertNodes || []).forEach(node => { node.inert = false; });
+        window.__cjInertNodes = [];
+      }
+    };
+
     new MutationObserver(() => {
       if (mask.classList.contains('active')) {
+        setBackgroundInert(true);
         requestAnimationFrame(() => {
           const btn = mask.querySelector('.image-viewer-close');
           if (btn && mask.classList.contains('active')) btn.focus({ preventScroll: true });
         });
-      } else if (window.__cjLastImage && window.__cjLastImage.isConnected) {
-        window.__cjLastImage.focus({ preventScroll: true });
-        window.__cjLastImage = null;
+      } else {
+        setBackgroundInert(false);
+        if (window.__cjLastImage && window.__cjLastImage.isConnected) {
+          window.__cjLastImage.focus({ preventScroll: true });
+          window.__cjLastImage = null;
+        }
       }
     }).observe(mask, { attributes: true, attributeFilter: ['class'] });
   }
 
+  function announceAction(message) {
+    let region = document.getElementById('action-status');
+    if (!region) {
+      region = document.createElement('div');
+      region.id = 'action-status';
+      region.className = 'sr-only';
+      region.setAttribute('role', 'status');
+      region.setAttribute('aria-live', 'polite');
+      region.setAttribute('aria-atomic', 'true');
+      document.body.appendChild(region);
+    }
+    region.textContent = '';
+    setTimeout(() => { region.textContent = message; }, 60);
+  }
+
   function initCodeButtonsA11y() {
-    const labels = { 'copy-button': '复制代码', 'fold-button': '折叠代码' };
-    document.querySelectorAll('.copy-button, .fold-button').forEach(btn => {
-      if (btn.tagName === 'BUTTON' || btn.dataset.cjA11y) return;
-      btn.dataset.cjA11y = '1';
-      btn.tabIndex = 0;
-      btn.setAttribute('role', 'button');
-      btn.setAttribute('aria-label', labels[btn.classList[0]] || '代码操作');
-      btn.addEventListener('keydown', e => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          btn.click();
-        }
-      });
+    const figures = [...document.querySelectorAll('.highlight-container')];
+    figures.forEach((container, index) => {
+      const labelIndex = index + 1;
+      const copy = container.querySelector('.copy-button');
+      const fold = container.querySelector('.fold-button');
+
+      if (copy && copy.tagName !== 'BUTTON') {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = copy.className;
+        btn.innerHTML = copy.innerHTML;
+        btn.setAttribute('aria-label', `复制第 ${labelIndex} 段代码`);
+        btn.addEventListener('click', () => {
+          const lines = [...container.querySelectorAll('.code .line')];
+          const code = lines.map(line => line.innerText).join('\n');
+          const done = () => {
+            btn.querySelector('i').className = 'fa-regular fa-check';
+            announceAction(`第 ${labelIndex} 段代码已复制`);
+            setTimeout(() => {
+              btn.querySelector('i').className = 'fa-regular fa-copy';
+            }, 1200);
+          };
+          const failed = () => announceAction('复制失败，请手动选择代码');
+          if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(code).then(done).catch(() => fallbackCopy(code, done, failed));
+          } else {
+            fallbackCopy(code, done, failed);
+          }
+        });
+        copy.replaceWith(btn);
+      }
+
+      if (fold && fold.tagName !== 'BUTTON') {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = fold.className;
+        btn.innerHTML = fold.innerHTML;
+        btn.setAttribute('aria-label', `折叠第 ${labelIndex} 段代码`);
+        btn.setAttribute('aria-expanded', 'true');
+        btn.addEventListener('click', () => {
+          const folded = container.classList.toggle('folded');
+          btn.querySelector('i').className = folded
+            ? 'fa-solid fa-chevron-up'
+            : 'fa-solid fa-chevron-down';
+          btn.setAttribute('aria-expanded', String(!folded));
+          btn.setAttribute('aria-label', `${folded ? '展开' : '折叠'}第 ${labelIndex} 段代码`);
+        });
+        fold.replaceWith(btn);
+      }
+    });
+  }
+
+  function initCodeLangBadges() {
+    const names = {
+      js: 'JS', javascript: 'JS', jsx: 'JSX', ts: 'TS', typescript: 'TS', tsx: 'TSX',
+      bash: 'Shell', shell: 'Shell', sh: 'Shell', zsh: 'Shell',
+      yaml: 'YAML', yml: 'YAML', json: 'JSON', python: 'Python', py: 'Python',
+      java: 'Java', html: 'HTML', css: 'CSS', scss: 'SCSS', sql: 'SQL',
+      diff: 'Diff', text: 'Text', plaintext: 'Text',
+    };
+    document.querySelectorAll('.highlight-container').forEach(container => {
+      if (container.querySelector('.code-lang')) return;
+      const figure = container.querySelector('figure.highlight');
+      if (!figure) return;
+      const langClass = [...figure.classList].find(cls => names[cls.toLowerCase()]);
+      if (!langClass) return;
+      const badge = document.createElement('span');
+      badge.className = 'code-lang';
+      badge.textContent = names[langClass.toLowerCase()];
+      badge.setAttribute('aria-hidden', 'true');
+      container.appendChild(badge);
     });
   }
 
@@ -1297,15 +1435,55 @@
     list.appendChild(li);
   }
 
-  function fallbackCopy(text, done) {
+  function fallbackCopy(text, done, failed) {
     const ta = document.createElement('textarea');
     ta.value = text;
     ta.style.position = 'fixed';
     ta.style.opacity = '0';
     document.body.appendChild(ta);
     ta.select();
-    try { document.execCommand('copy'); done(); } catch (e) {}
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
     ta.remove();
+    if (ok) done();
+    else if (failed) failed();
+  }
+
+  // ============================
+  // Copy Markdown — 侧栏按钮直接复制文章 Markdown 原文
+  // ============================
+  function initCopyMarkdown() {
+    if (window.__cjCopyMdTracked) return;
+    window.__cjCopyMdTracked = true;
+    document.addEventListener('click', e => {
+      const btn = e.target.closest('.post-side-copy-md');
+      if (!btn) return;
+      e.preventDefault();
+      const url = btn.dataset.mdUrl;
+      if (!url) return;
+      fetch(url, { cache: 'no-store' })
+        .then(res => {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.text();
+        })
+        .then(text => {
+          const done = () => {
+            showToast('Markdown 已复制');
+            announceAction('Markdown 原文已复制');
+            const icon = btn.querySelector('i');
+            if (icon) {
+              icon.className = 'fa-regular fa-check';
+              setTimeout(() => { icon.className = 'fa-regular fa-copy'; }, 1200);
+            }
+          };
+          if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+          } else {
+            fallbackCopy(text, done);
+          }
+        })
+        .catch(() => showToast('复制失败，请打开 Markdown 原文'));
+    });
   }
 
   // ============================
@@ -1589,11 +1767,11 @@
   // ============================
   function initReveal() {
     if (!('IntersectionObserver' in window)) return;
+    // 只给卡片类元素做入场,正文标题/代码/表格保持始终可见:
+    // 锚点跳转和复制按钮不能落在 opacity:0 的内容上。
     const targets = document.querySelectorAll(
-      '.article-content h2, .article-content h3, .article-content h4, ' +
-      '.article-content p img, .article-content blockquote, .article-content pre, ' +
-      '.article-content table, .related-post-item, .project-card, ' +
-      '.friends-link-container .group, .page-template-content h2, .page-template-content h3'
+      '.related-post-item, .project-card, .friends-link-container .group, ' +
+      '.series-index-card, .archive-series-card, .post-series-card'
     );
     if (targets.length === 0) return;
 
@@ -1628,7 +1806,7 @@
           obs.unobserve(e.target);
         }
       });
-    }, { threshold: 0.06, rootMargin: '0px 0px -36px 0px' });
+    }, { threshold: 0, rootMargin: '0px 0px -36px 0px' });
 
     targets.forEach(el => {
       if (!el.classList.contains('reveal-visible')) obs.observe(el);
@@ -1973,6 +2151,7 @@
     onceGlobal('postSidebar', initPostSidebar);
     initGithubProjects();
     initCopyLink();
+    initCopyMarkdown();
     initRelatedPosts();
     initSeason();
     initThemeSwitcher();
@@ -1985,6 +2164,7 @@
         initHeadingAnchors();
         initCodeFullscreen();
         initCodeButtonsA11y();
+        initCodeLangBadges();
       }, 60);
     });
     onceGlobal('themeToggle', initThemeToggle);
@@ -2023,7 +2203,7 @@
     const vw = window.innerWidth, vh = window.innerHeight;
     if (!vw || !vh) return;
     const maxR = Math.hypot(Math.max(x, vw - x), Math.max(y, vh - y)) + 60;
-    const dur = 620;  // 与 ericterminal 一致
+    const dur = 300;  // 主题切换控制在 300ms 内,避免整页快照拖慢交互
     const clip = [
       'circle(0px at ' + x + 'px ' + y + 'px)',
       'circle(' + maxR + 'px at ' + x + 'px ' + y + 'px)'
@@ -2044,7 +2224,8 @@
   }
 
   function switchTheme(applyFn, x, y) {
-    if (typeof document.startViewTransition === 'function') {
+    const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!reduced && typeof document.startViewTransition === 'function') {
       document.documentElement.setAttribute('data-theme-switching', 'ripple');
       let vt;
       try {

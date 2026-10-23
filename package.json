@@ -26,7 +26,8 @@
     "test:series": "node test/series-check.js",
     "test:assets": "node test/assets-check.js",
     "test:search": "node test/search-nav-check.js",
-    "test:a11y": "node test/a11y-check.js"
+    "test:a11y": "node test/a11y-check.js",
+    "og:images": "node tools/gen-og-images.js"
   },
   "hexo": {
     "version": "7.3.0"

@@ -12,6 +12,6 @@ hexo.extend.filter.register('after_render:html', function (str) {
     .join('\n');
   return str.replace(
     '</head>',
-    preloads + '\n<link rel="stylesheet" href="/css/fontawesome-subset.css?v=' + FONT_V + '"></head>'
+    preloads + '\n<link rel="stylesheet" href="/css/fontawesome-icons-subset.css?v=' + FONT_V + '"></head>'
   );
 });

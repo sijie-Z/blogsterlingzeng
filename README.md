@@ -50,6 +50,10 @@
 | SPA 导航 | 页面无刷新切换，体验流畅 | `swup.js` |
 | 阅读进度 | 顶部渐变进度条 | `source/js/custom.js` |
 | RSS 订阅 | Atom 格式 + 页脚订阅图标 | `hexo-generator-feed` |
+| JSON Feed | 站点与系列级 `feed.json`，全文 HTML + 绝对 URL | `scripts/json-feed.js` |
+| 分享卡片 | 每篇文章 / 系列 / 页面生成 1200×630 OG 图 | `tools/gen-og-images.js` |
+| 简历页 | 一页式 HTML 简历，可打印 / 存 PDF | `source/resume/` |
+| 复制 Markdown | 侧栏一键复制文章 Markdown 原文 | `scripts/post-sidebar.js` |
 | 相关阅读 | 标签相似度推荐（前端渲染，无原生依赖） | `scripts/related-posts.js` |
 | 文章置顶 | `sticky: 1` 字段置顶 | `hexo-generator-index` |
 | Sitemap | `sitemap.xml` + `robots.txt` | `hexo-generator-sitemap` |
@@ -110,7 +114,7 @@
 
 **构建期优先**：系列页、写作热力图、文章侧栏、JSON-LD、Markdown 原文、llms.txt 全部在 `hexo generate` 阶段生成，运行时不发额外请求、不引入布局抖动。主题通过 `scripts/theme-patch.js` 做可审计的最小补丁（Swup、TOC、搜索防抖、APlayer 延迟加载等），补丁可重复执行。
 
-更完整的架构、测量方法和已知边界见 [docs/ENGINEERING.md](docs/ENGINEERING.md)。
+更完整的架构、测量方法和已知边界见 [docs/ENGINEERING.md](docs/ENGINEERING.md)；下一轮可以继续做的方向见 [docs/BACKLOG.md](docs/BACKLOG.md)。
 
 ---
 
@@ -171,11 +175,11 @@ npm run test:l2d            # Live2D 加载诊断(模型 / Core / 404)
 npm run test:smooth         # 26 项滚动与动效平滑度回归
 npm run test:content        # 文章 front matter / 站内链接 / 图片 / 文风检查
 npm run test:transitions    # 44 项 SPA 跳转 / 连点 / 前后退 / 搜索焦点 / 路由播报
-npm run test:sidebar        # 35 项文章侧栏 / 进度 / 锚点 / 表格 / Markdown / 代码全屏
+npm run test:sidebar        # 36 项文章侧栏 / 进度 / 锚点 / 表格 / Markdown / 代码全屏
 npm run test:series         # 53 项系列页 / 徽章 / 系列卡 / SPA / 移动端
-npm run test:assets         # 31 项响应式横幅 / WebP 纹理 / 系列收录 / JSON-LD
+npm run test:assets         # 39 项响应式横幅 / WebP 纹理 / JSON Feed / 图标子集 / JSON-LD
 npm run test:search         # 17 项搜索 combobox / 方向键 / Enter / 空态 / IME
-npm run test:a11y           # 37 项无障碍:名称 / alt / 列表语义 / 标题 / 地标
+npm run test:a11y           # 61 项无障碍:名称 / alt / 列表语义 / 标题 / 地标
 npm run test:resume         # 7 项阅读位置记忆与“继续阅读”
 npm run test:archive        # 12 项归档写作热力图与移动端
 npm run profile:nav         # 第一次跳转的 CPU 采样诊断
@@ -246,6 +250,7 @@ blogsterlingzeng/
 │
 ├── node_modules/hexo-theme-redefine/ # Redefine 主题(npm 安装,postinstall 打补丁)
 ├── scripts/                          # 构建期脚本(系列/侧栏/热力图/SEO)
+├── tools/                            # 非构建期工具(OG 分享卡生成)
 ├── docs/                             # 运维与部署文档
 │
 ├── _config.yml                      # Hexo 站点配置

@@ -64,13 +64,16 @@ test/                    11 套 Puppeteer / Node 检查
 
 | 指标 | 数值 |
 |---|---|
-| 文章首屏 CLS | 0.0001–0.0003 |
-| 首页首屏 CLS | ~0.002 |
+| 文章首屏 CLS | 0.0001 |
+| 首页首屏 CLS | 0.002–0.004 |
 | 点击 → 内容替换 | 15–43ms |
 | 点击 → 导航结束 | 134–246ms |
 | 首屏 long task | 无（导航时的单次 120–190ms 来自 Swup 解析长文 HTML） |
 | 手机横幅（亮色） | 35KB / 960w（原图 63KB / 1920w） |
 | Live2D 主纹理 | 308KB WebP（原 1.7MB PNG） |
+| FontAwesome CSS | 65KB 类名子集（原 4 个文件约 200KB） |
+| 移除的脚本 | moment 375KB（essays 页改用 Intl） |
+| 部署产物 | 25MB（含 28 张 OG 卡；移除全量 webfonts / source map 后，原 33MB+） |
 
 ### 关键取舍
 
@@ -91,17 +94,17 @@ test/                    11 套 Puppeteer / Node 检查
 - **目录**：桌面 TOC 当前项有 `aria-current="location"`；移动端使用原生 `<details>` 目录。
 - **对比度**：浅色/深色/四季主题的次要文字统一到 WCAG AA 以上。
 
-验证：axe-core 4.10 在桌面和移动端扫描首页、文章页、归档、系列总览、系列页、关于、404，WCAG A/AA 标签下 **0 条违规**。回归测试另覆盖标题唯一性、图片 alt、链接/按钮名称、列表语义、地标和 skip link。
+验证：axe-core 4.10 在桌面和移动端扫描首页、文章页、归档、系列总览、系列页、关于、项目、简历、404，WCAG A/AA 标签下 **0 条违规**。回归测试另覆盖标题唯一性、图片 alt、链接/按钮名称、列表语义、地标和 skip link。
 
 ## 6. 测试矩阵
 
 | 套件 | 项数 | 覆盖 |
 |---|---:|---|
 | `test:transitions` | 44 | SPA 跳转、连点、前进后退、搜索焦点、路由播报、800px 导航 |
-| `test:sidebar` | 35 | 侧栏卡片、进度环、锚点、表格、Markdown、代码全屏、移动目录 |
+| `test:sidebar` | 36 | 侧栏卡片、进度环、锚点、表格、Markdown、代码全屏、移动目录 |
 | `test:series` | 53 | 系列页、徽章/系列卡、Atom、归档入口、SPA、移动端 |
-| `test:assets` | 30 | 响应式横幅、WebP 纹理、sitemap/llms、JSON-LD、音乐预加载 |
-| `test:a11y` | 37 | 名称、alt、列表语义、标题、地标、图片查看器键盘 |
+| `test:assets` | 39 | 响应式横幅、WebP 纹理、sitemap/llms、JSON-LD、JSON Feed、图标子集、OG 元数据 |
+| `test:a11y` | 61 | 名称、alt、列表语义、标题、地标、图片查看器键盘、项目/简历页 |
 | `test:search` | 17 | combobox/listbox、方向键、Enter、空态、IME、SPA |
 | `test:smooth` | 26 | 滚动、Live2D 暂停、reduced-motion、移动端溢出 |
 | `test` | 33 | 端到端页面、主题切换、Live2D、次级页面 |
@@ -109,21 +112,21 @@ test/                    11 套 Puppeteer / Node 检查
 | `test:archive` | 12 | 归档热力图与移动端 |
 | `test:content` | 21 篇 | front matter、站内链接、图片、文风硬规则 |
 
-合计 294 项浏览器检查和 21 篇文章的内容检查。所有套件在本机通过；CI 目前只跑不依赖浏览器的 `test:content`。
+合计 328 项浏览器检查和 21 篇文章的内容检查。所有套件在本机通过；CI 目前只跑不依赖浏览器的 `test:content`。
 
 ## 7. 已知边界
 
 - **Swup 解析成本**：首跳时如果用户没有 hover 预取，Swup 需要解析整篇长文 HTML，单次 long task 约 120–190ms。真实用户悬停链接会提前预取，测试里的程序化点击没有 hover 阶段。
 - **全量字体仍在产物里**：FontAwesome 全量 webfonts 和主题库文件仍会部署，虽然页面只请求子集字体；彻底裁剪需要更细的资源清单。
 - **mermaid/waline**：当前配置未启用，构建时移除；重新启用会自动保留对应文件。
-- **图片查看器手势**：键盘和按钮已可用，触屏双指缩放/滑动切换尚未实现。
-- **Live2D 工具菜单**：画布可点击/拖拽，但工具栏图标还没有完整的键盘操作。
+- **图片查看器手势**：键盘、按钮和左右滑动已可用，触屏双指缩放尚未实现。
+- **Live2D 工具菜单**：画布可点击/拖拽，工具栏已改为原生按钮并支持键盘；暂停/恢复状态还没有常驻的可见控件。
 - **主题升级**：补丁目标是 2.9.0 的模板文本；版本已锁定，升级时需要重新核对 `theme-patch.js` 的标记。
 
 ## 8. 如果继续做
 
 1. 用内容哈希替代手写字体/静态资源版本号，彻底消除缓存不一致。
-2. 图片查看器补 Pointer Events 双指缩放和左右滑动。
-3. Live2D 工具栏改为原生按钮，并把暂停/恢复状态暴露成可见控件。
+2. 图片查看器补 Pointer Events 双指缩放。
+3. 把 Live2D 的暂停/恢复做成常驻的可见控件。
 4. 在 CI 里跑 `test:content` + 构建，浏览器套件留在本地或 self-hosted runner。
-5. 给每个系列增加 JSON Feed，覆盖只支持 JSON 的聚合器。
+5. 在 Nginx / Cloudflare 给带哈希或版本号的静态资源加 `Cache-Control: immutable`，HTML 保持短缓存。

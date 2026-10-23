@@ -69,6 +69,10 @@ async function audit(page) {
     ['文章页', '/2026/10/22/font-subset-and-cls/'],
     ['归档', '/archives/'],
     ['系列页', '/series/blog-engineering/'],
+    ['系列总览', '/series/'],
+    ['关于', '/about/'],
+    ['项目', '/projects/'],
+    ['简历', '/resume/'],
     ['404', '/404.html'],
   ];
 
@@ -121,7 +125,7 @@ async function audit(page) {
     const btn = document.querySelector('.copy-button');
     return btn ? { tag: btn.tagName, role: btn.getAttribute('role'), tab: btn.tabIndex } : { missing: true };
   });
-  check('代码按钮可键盘操作', !codeBtn.missing && codeBtn.role === 'button' && codeBtn.tab === 0, JSON.stringify(codeBtn));
+  check('代码按钮可键盘操作', !codeBtn.missing && (codeBtn.tag === 'BUTTON' || codeBtn.role === 'button') && codeBtn.tab === 0, JSON.stringify(codeBtn));
 
   check('零页面错误', errors.length === 0, errors.slice(0, 2).join(' | '));
 

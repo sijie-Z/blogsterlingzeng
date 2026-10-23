@@ -6,9 +6,11 @@ const path = require('path');
 const { execFileSync } = require('child_process');
 
 const ROOT = path.join(__dirname, '..');
-const FA_CSS_DIR = path.join(ROOT, 'public', 'fontawesome');
+const FA_CSS_DIR = path.join(ROOT, 'node_modules', 'hexo-theme-redefine', 'source', 'fontawesome');
 const FONT_SRC = path.join(ROOT, 'node_modules', 'hexo-theme-redefine', 'source', 'webfonts');
 const OUT_DIR = path.join(ROOT, 'source', 'fontawesome', 'webfonts');
+const CSS_OUT = path.join(ROOT, 'source', 'css', 'fontawesome-icons-subset.css');
+const FONT_V = '20261023b';
 
 const UTILITY = new Set([
   'fa-5x', 'fa-animation-duration', 'fa-beat', 'fa-brands', 'fa-fw', 'fa-lg', 'fa-regular',
@@ -60,12 +62,83 @@ function buildCodepointMap() {
   return map;
 }
 
+function splitRules(css) {
+  const rules = [];
+  let i = 0;
+  while (i < css.length) {
+    while (i < css.length && /\s/.test(css[i])) i++;
+    if (i >= css.length) break;
+    const start = i;
+    while (i < css.length && css[i] !== '{' && css[i] !== ';') i++;
+    if (i >= css.length) break;
+    if (css[i] === ';') { i++; continue; }
+    const prelude = css.slice(start, i).trim();
+    let depth = 0;
+    const bodyStart = ++i;
+    while (i < css.length) {
+      const ch = css[i];
+      if (ch === '{') depth++;
+      else if (ch === '}') {
+        if (depth === 0) break;
+        depth--;
+      }
+      i++;
+    }
+    const body = css.slice(bodyStart, i);
+    i++;
+    rules.push({ prelude, body });
+  }
+  return rules;
+}
+
+function filterRules(rules, used, icons) {
+  const out = [];
+  for (const rule of rules) {
+    const prelude = rule.prelude;
+    if (/^@font-face/i.test(prelude)) continue;
+    if (/^@(media|supports|layer|container)/i.test(prelude)) {
+      const inner = filterRules(splitRules(rule.body), used, icons);
+      if (inner.trim()) out.push(`${prelude}{${inner}}`);
+      continue;
+    }
+    if (/^@/i.test(prelude)) {
+      out.push(`${prelude}{${rule.body}}`);
+      continue;
+    }
+    const names = [...prelude.matchAll(/\.fa-([a-z0-9-]+)/g)].map(m => 'fa-' + m[1]);
+    const iconNames = names.filter(name => icons.has(name));
+    if (iconNames.length && !iconNames.some(name => used.has(name))) continue;
+    out.push(`${prelude}{${rule.body}}`);
+  }
+  return out.join('\n');
+}
+
+function writeCssSubset(used, iconMap) {
+  const files = fs.readdirSync(FA_CSS_DIR)
+    .filter(file => file.endsWith('.css') && !/subset/.test(file));
+  const css = files.map(file => fs.readFileSync(path.join(FA_CSS_DIR, file), 'utf8')).join('\n');
+  const rules = splitRules(css.replace(/\/\*[\s\S]*?\*\//g, ''));
+  const filtered = filterRules(rules, new Set(used), iconMap);
+  const faces = [
+    ['900', 'fa-solid-900'],
+    ['400', 'fa-regular-400'],
+  ].map(([weight, file]) => `@font-face{font-family:"Font Awesome 6 Pro";font-style:normal;font-weight:${weight};font-display:swap;src:url("/fontawesome/webfonts/${file}.subset.woff2?v=${FONT_V}") format("woff2")}`)
+    .concat(`@font-face{font-family:"Font Awesome 6 Brands";font-style:normal;font-weight:400;font-display:swap;src:url("/fontawesome/webfonts/fa-brands-400.subset.woff2?v=${FONT_V}") format("woff2")}`)
+    .join('\n');
+  const banner = `/* 由 npm run build:fonts 生成:只保留站点实际用到的 ${used.length} 个图标 */\n`;
+  fs.writeFileSync(CSS_OUT, banner + faces + '\n' + filtered + '\n', 'utf8');
+  const kb = Math.round(fs.statSync(CSS_OUT).size / 1024);
+  console.log(`[fa-subset] ${path.basename(CSS_OUT)} ${kb} KB`);
+}
+
 function main() {
   const used = [...collectUsedNames()].filter(n => !UTILITY.has(n));
   const map = buildCodepointMap();
   const icons = used.filter(n => map.has(n)).sort();
   const codepoints = [...new Set(icons.map(n => map.get(n)))].sort();
   if (!codepoints.length) throw new Error('没有扫描到任何图标');
+
+  writeCssSubset(used, map);
 
   const unicodes = codepoints.map(c => 'U+' + c.toUpperCase().padStart(4, '0')).join(',');
   fs.mkdirSync(OUT_DIR, { recursive: true });

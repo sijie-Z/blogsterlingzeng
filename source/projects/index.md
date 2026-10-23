@@ -3,138 +3,140 @@ title: 项目
 date: 2026-08-28 10:00:00
 ---
 
-## 开源项目
+## 30 秒版
 
-> 以下是我从零搭建的原创项目，每个都代表了我在某个方向的探索。
+我是 Sterling，地信（GIS）专业大四学生，方向是 **前端 / 全栈 / AI 应用工程**。
 
----
+下面三个项目分别回答三个问题：**怎么把密钥管住**（MiQroGate）、**一个信号到底能不能投资**（quant_platform）、**RAG 的效果差在检索还是生成**（DocMind）。每个案例都写了问题、取舍、证据和边界——包括没做成的部分。
 
-### 把 API Key 关进网关
-
-**miqro-gate** | Java 21 · Spring WebFlux · Phase 1 推进至 G7.4
-
-企业级 AI 凭证虚拟化与用量治理系统。把真实上游 API Key 安全映射为可独立追踪、轮换、吊销的 Virtual Key，内部用户在门户自助创建，网关负责鉴权替换、确定性转发、用量统计与审计。
-
-**技术栈：** Java 21 · Spring WebFlux · Vue 3 · TypeScript · PostgreSQL
-
-**亮点：**
-- 控制面/数据面分离，热路径零数据库访问（路由快照 + pg_notify）
-- 统一 404 防探测、常量时间 HMAC、密钥零残留
-- 不保存提示词/代码/回答正文；不因预算阻断，Webhook 告警
-- 响应缓存已启用（对齐供应商精确缓存方案,ADR-0009）；7 家厂商 20 个产品适配器
-
-[Github](https://github.com/sijie-Z/miqro-gate) · [博客文章](/2026/08/28/miqro-gate-virtual-key-design/)
+- 最值得先看：[MiQroGate](#miqrogate) · [quant_platform](#quant-platform) · [DocMind](#docmind)
+- 更快的方式：看[系列文章](/series/)、[简历](/resume/)，或直接[发邮件](mailto:1683039482@qq.com)
 
 ---
 
-### A 股多因子量化研究平台
+<a id="miqrogate"></a>
+## MiQroGate：把 API Key 关进网关
 
-**quant_platform** | Python
+**Java 21 · Spring WebFlux · Vue 3 · PostgreSQL** ｜ 个人项目 ｜ 持续维护
 
-从数据获取到因子构建、组合优化、回测验证的完整流水线。六项系统性验证（Oracle IC / Known Alpha / MVO / WalkForward / 零前视契约）。
+### 问题
 
-**技术栈：** Python · Pandas · cvxpy · FastAPI · Vue 3 · ECharts
+团队共用一个真实上游 API Key 时，三件事同时失控：**不知道谁在用、没法按人计量、出事不能只吊销一个人。** 企业采购往往横跨多家模型厂商，每家的鉴权方式和用量口径都不一样。
 
-**亮点：**
-- 97 个 REST 端点、81 个测试文件，QMT 实盘 + Paper Trading
-- 研究结论：A 股是反转市场，80 日反转 Alpha 在月频执行下失效（"信号存在 ≠ 策略可投资"）
-- No-Lookahead 零前视契约，失败运行同样记录 Trust Metadata
+### 约束
 
-[Github](https://github.com/sijie-Z/quant_platform) · [博客文章](/2026/08/28/quant-reversal-execution-gap/)
+- 不能改上游协议，业务代码接入成本要接近零
+- 不保存提示词、代码、回答正文
+- 预算不足时告警，但**不阻断**请求
+- 热路径不能查数据库
 
----
+### 关键决策
 
-### DocMind — RAG 智能知识库
+1. **控制面 / 数据面分离。** 控制面负责 Virtual Key 的创建、轮换、吊销；网关只认路由快照。快照通过 `pg_notify` 失效，热路径零数据库访问。
+2. **安全默认值写进架构。** 统一 404 防探测、常量时间 HMAC 比较、密钥零残留；网关端口只暴露 `health` 和 `info`，`metrics` 不对外开放，并用冒烟测试守住这条边界。
+3. **响应缓存对齐供应商语义。** 只缓存可安全复用的响应，避免“缓存把计量算错”。
 
-**DocMind-RAG** | Python · Vue
+### 证据
 
-基于 RAG 架构的全栈知识库系统。上传文档后自动解析、分块、向量化，通过自然语言对话获得可溯源的 AI 回答。
+- 449 个 Java 文件、134 个测试文件；ArchUnit 管模块边界，契约测试 + 协议夹具 + 端到端分层
+- 7 家厂商、20 个产品适配器
+- 前端 vitest 21/21、Playwright 15/15，lint / typecheck / 构建全绿
 
-**技术栈：** FastAPI · Vue 3 · Elasticsearch · Redis · MinIO · Kafka
+### 边界
 
-**亮点：**
-- 混合检索（BM25 + 向量 + RRF 融合 + BGE Reranker）
-- PDF/Word/PPT/TXT 解析，支持扫描件 OCR
-- SSE 流式对话 + 引用溯源
-- Agent 消融研究：7 组对照实验证明规划粒度决定性能（69% → 93.1%）
+- 20 个适配器**都还没有经过真实凭证联调**。文档把“官方资料确认 / 已实现 / 真实凭证已验证”分成三级，不伪造 PASS。
+- 我的角色是项目所有者：写规格、做架构与审查、合并发布；实现主要由 Claude Code 按规格完成。这条写在这里，是因为它会在面试里被问到。
 
-[Github](https://github.com/sijie-Z/DocMind-RAG) · [博客文章](/2026/05/10/docmind-rag-knowledge-base/)
-
----
-
-### MindPilot — 多 Agent RAG 平台
-
-**MindPilot** | Python · Vue
-
-支持多模态文档理解、多 Agent 协作编排的企业级 RAG 平台。从 DocMind 演进而来，核心变化是从单 Agent 到多 Agent 协作。
-
-**技术栈：** FastAPI · Vue 3 · LangGraph · Milvus · Docker
-
-**亮点：**
-- LangGraph 状态机：意图识别 → 检索 → 生成 → RAGAS 评估
-- Self-RAG 自检机制，自动调整检索策略
-- 多模态理解（GLM-4V 图片问答）
-- 多端接入（网页 + QQ 机器人 + 飞书机器人）
-- 对话分支、语义搜索高亮、RAG 质量仪表盘
-
-[Github](https://github.com/sijie-Z/MindPilot) · [博客文章](/2026/05/10/mindpilot-multi-agent-rag/)
+[GitHub](https://github.com/sijie-Z/miqro-gate) · [设计文章](/2026/08/28/miqro-gate-virtual-key-design/)
 
 ---
 
-### GeoData Security System — 空间数据安全溯源
+<a id="quant-platform"></a>
+## quant_platform：信号存在 ≠ 策略可投资
 
-**GeoData-Security-System** | Python · Vue
+**Python · Pandas · cvxpy · FastAPI · Vue 3** ｜ 个人项目 ｜ 研究已封档
 
-空间数据安全分发与溯源平台。通过 QR 码水印嵌入、HMAC-SHA256 签名和民主召回机制，实现完整的数据安全分发链路。
+### 问题
 
-**技术栈：** Flask · Vue 3 · PostgreSQL/PostGIS · Redis · Prometheus · Grafana
+量化研究最容易犯的错，是把“回测收益高”当成“策略能赚钱”。我想验证一个具体问题：**A 股的反转效应，在真实执行条件下还剩多少？**
 
-**亮点：**
-- 3 种栅格水印算法（LSB、DWT、直方图偏移）
-- QR 码水印 + HMAC 签名防伪造
-- 双级审批 + 民主召回投票
-- 完整监控体系（Prometheus + Grafana + Loki）
+### 约束
 
-[Github](https://github.com/sijie-Z/GeoData-Security-System) · [博客文章](/2026/05/10/geodata-security-traceability/)
+- 零前视偏差：价格因子只能用到 `signal_date`，Alpha 权重只能用历史 IC
+- 真实成本：佣金双边 0.03%、印花税卖出 0.05%、滑点、手数约束
+- 失败运行也要记录 Trust Metadata，保证结论可复现
 
----
+### 关键决策
 
-### NFT Launchpad Kit — Agent-Native 发行基础设施
+1. **先建自检，再谈收益。** 六项系统性验证：Oracle Factor IC=1.000000、Known Alpha Recovery、MVO Audit 60/60、Walk-Forward、Rank IC 手动对比差异 < 0.001%、No-Lookahead 零前视契约。
+2. **把执行成本当成一等公民。** 同一个 80 日反转信号，分别跑理想执行和月频真实调仓。
+3. **结论必须带边界。** “在已测试的固定频率和简单相位代理下无法恢复”，不写成“反转 Alpha 不可交易”。
 
-**nft-launchpad-kit** | Solidity · TypeScript · **v1.0.0 已发布**
+### 证据
 
-"代理发行,用户铸造。" 给任何 AI agent 一把密钥,它就能创建合集、签发铸造授权、发行链上资产——会员卡、任务奖励、凭证,全自动,全可验证。
+- 80 日反转：IC = **-0.081**，t 统计量 **-4.58**（2018–2025，10 个时间尺度）
+- 理想执行夏普 **0.45**，加波动率过滤 **0.60**
+- 月频真实调仓夏普 **-0.27**——同一个信号，0.72 的差距
+- 四次修复尝试均未恢复；平台侧 20+ 因子引擎、97 个 REST 端点、81 个测试文件
 
-**技术栈：** Solidity · ERC721A · Next.js 14 · Hardhat · viem · wagmi · The Graph
+### 边界
 
-**亮点：**
-- trusted-signer 流程(mintWithSignature712V2):离线签名授权链上铸造,一次性、限时、限量——签名者不一定是人
-- 6 种铸造模式 + Factory Clone + 无代码创建向导 + AI 元数据管线
-- 204 个测试,CI 3-4 分钟
-- 15 个 issue 的发布冲刺已完成:CI 从未运行过、密钥清理、测试基线——v1.0.0 已打 tag 发布
+- 只测试了固定频率和简单相位代理；状态空间模型、小波域相位估计、非线性控制**都没有测试**，不能排除。
+- 研究结论已封档，不再继续调参；这是一次“负结果”的完整记录。
 
-[Github](https://github.com/sijie-Z/nft-launchpad-kit) · [博客文章](/2026/08/28/nft-launchpad-release-sprint/)
-
----
-
-### NLP 训练实验框架
-
-**nlp-training-lab** | Python
-
-从零开始、渐进式学习 NLP 模型训练：BERT 中文新闻分类 → 文本匹配 → LoRA 微调 Qwen2.5 → GeoAI Assistant 产品化。
-
-**技术栈：** PyTorch · Transformers · PEFT (LoRA) · FastAPI
-
-**亮点：**
-- 4GB 显存跑通全流程（LoRA 只训练 0.42% 参数，adapter 仅 17MB）
-- 验证集 100% vs 测试集 90% 的过拟合实录
-- 一次诚实的失败记录（文本匹配 44%/30%，数据量不足）
-
-[Github](https://github.com/sijie-Z/nlp-training-lab) · [博客文章](/2026/08/28/nlp-training-lab/)
+[GitHub](https://github.com/sijie-Z/quant_platform) · [执行之痛](/2026/08/28/quant-reversal-execution-gap/) · [平台架构](/2026/05/10/quant-platform-a-share-research/)
 
 ---
 
-## 更多项目
+<a id="docmind"></a>
+## DocMind：RAG 的核心是检索，不是生成
+
+**Python · FastAPI · Vue 3 · Elasticsearch · Redis · MinIO · Kafka** ｜ 个人项目 ｜ 生产实现持续演进
+
+### 问题
+
+大模型不知道你的文档里写了什么。RAG 看起来只是“检索 + 生成”，但效果不好时，很难判断问题出在检索、重排还是提示词。
+
+### 约束
+
+- 文档格式杂：PDF / Word / PPT / TXT，含扫描件
+- 回答必须能追溯到原文
+- 10 万条文档规模下，向量索引不能把内存吃穿
+
+### 关键决策
+
+1. **混合检索。** BM25 负责精确匹配（如错误码 `ERR-4032`），向量负责语义；RRF 融合，再加 BGE Reranker 精排。
+2. **语义分块，而不是固定字数。** 按段落和标题切分并保留重叠，避免答案被切到两个块里。
+3. **向量降维 + 量化。** 1536 维降到 768 维，float32 转 int8，10 万条文档的索引内存从 8GB 降到约 2GB。
+4. **用消融实验回答“规划还是执行”。** 7 组对照实验，固定模型和评测集，只改一个变量。
+
+### 证据
+
+- Agent 消融：L1 覆盖率 **69% → 93.1%**（20 题评测集），失败数 5–6 → 0
+- 同一评测的 L2 系统层（10 题，歧义/边界查询）只有 **50%**——如实记录，没有藏
+- 生产实现迁移到 DocMind-RAG 仓库后，测试规模到 422 个
+
+### 边界
+
+- 30 题评测集偏小，结论是“在这个评测集上”的结论，不外推到所有 RAG 场景。
+- 扫描件 OCR、复杂表格解析仍有失败样例；引用溯源降低幻觉，但不能消灭幻觉。
+
+[GitHub](https://github.com/sijie-Z/DocMind-RAG) · [项目记录](/2026/05/10/docmind-rag-knowledge-base/) · [消融实验](/2026/08/28/docmind-agent-causal-study/)
+
+---
+
+## 其他项目
+
+| 项目 | 做什么 | 一个可验证的点 | 链接 |
+|---|---|---|---|
+| **MindPilot** | 多 Agent RAG 平台，从 DocMind 演进 | LangGraph 状态机 + Judge Agent；多端接入（Web / QQ / 飞书） | [GitHub](https://github.com/sijie-Z/mindpilot) · [文章](/2026/05/10/mindpilot-multi-agent-rag/) |
+| **GeoData Security** | 空间数据安全分发与溯源 | 3 种栅格水印 + QR 码水印 + HMAC 签名；双级审批与民主召回 | [GitHub](https://github.com/sijie-Z/GeoData-Security-System) · [文章](/2026/05/10/geodata-security-traceability/) |
+| **NFT Launchpad Kit** | Agent-Native 链上发行基础设施 | trusted-signer 离线签名铸造；204 个测试，v1.0.0 已发布 | [GitHub](https://github.com/sijie-Z/nft-launchpad-kit) · [发布复盘](/2026/08/28/nft-launchpad-release-sprint/) |
+| **NLP Training Lab** | 从 BERT 到 LoRA 微调的渐进式实验 | 4GB 显存跑通全流程，LoRA 只训练 0.42% 参数；保留 44%/30% 的失败记录 | [GitHub](https://github.com/sijie-Z/nlp-training-lab) · [实验记录](/2026/08/28/nlp-training-lab/) |
+
+---
+
+## 更多
 
 > 下面的卡片从 GitHub API 实时拉取，展示最近更新的仓库。
 

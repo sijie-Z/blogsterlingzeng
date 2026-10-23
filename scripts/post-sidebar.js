@@ -97,6 +97,7 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
       <button type="button" class="post-side-share" aria-label="分享本文"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i></button>
       <a href="${escapeHtml(editUrl)}" target="_blank" rel="noopener noreferrer" aria-label="在 GitHub 编辑本文"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i></a>
       <a href="${escapeHtml(markdownUrl)}" target="_blank" rel="noopener noreferrer" aria-label="查看 Markdown 原文"><i class="fa-solid fa-file-lines" aria-hidden="true"></i></a>
+      <button type="button" class="post-side-copy-md" data-md-url="${escapeHtml(markdownUrl)}" aria-label="复制 Markdown 原文"><i class="fa-regular fa-copy" aria-hidden="true"></i></button>
     </div>
   </section>
   ${tagHtml ? `<section class="post-side-card post-side-tags-card" aria-label="本文标签">

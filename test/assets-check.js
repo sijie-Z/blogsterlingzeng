@@ -195,6 +195,42 @@ function check(name, cond, extra) {
   const aboutLd = await page.evaluate(() => document.querySelector('script[type="application/ld+json"]')?.textContent || '');
   check('关于页有 ProfilePage JSON-LD', aboutLd.includes('"ProfilePage"') && aboutLd.includes('"Person"'), aboutLd.slice(0, 120));
 
+  console.log('=== 8. Feed / robots / sitemap / 图标子集 ===');
+  const feeds = await page.evaluate(async () => {
+    const read = async url => {
+      const res = await fetch(url);
+      return { status: res.status, data: await res.json() };
+    };
+    const site = await read('/feed.json');
+    const series = await read('/series/agent-rag/feed.json');
+    return {
+      siteStatus: site.status,
+      siteVersion: site.data.version,
+      siteItems: site.data.items.length,
+      allAbsolute: site.data.items.every(item => item.url.startsWith('https://') && !item.content_html.includes('src="/')),
+      seriesStatus: series.status,
+      seriesItems: series.data.items.length,
+      seriesUrl: series.data.feed_url,
+    };
+  });
+  check('站点 JSON Feed 可解析且为 1.1', feeds.siteStatus === 200 && feeds.siteVersion === 'https://jsonfeed.org/version/1.1', JSON.stringify(feeds));
+  check('站点 JSON Feed 收录 21 篇文章', feeds.siteItems === 21, String(feeds.siteItems));
+  check('JSON Feed 内 URL 全部绝对化', feeds.allAbsolute, 'relative url found');
+  check('系列 JSON Feed 收录 3 篇文章', feeds.seriesStatus === 200 && feeds.seriesItems === 3, JSON.stringify(feeds));
+
+  const seoMeta = await page.evaluate(() => ({
+    robots: document.querySelector('meta[name="robots"]')?.content || '',
+    iconCss: [...document.querySelectorAll('link[rel="stylesheet"]')].some(link => link.href.includes('fontawesome-icons-subset.css')),
+    fullFaCss: [...document.querySelectorAll('link[rel="stylesheet"]')].some(link => /fontawesome\/(fontawesome|brands|solid|regular)\.min\.css/.test(link.href)),
+    darkBanner: document.querySelector('img[src*="banner-dark"]')?.getAttribute('loading') || '',
+  }));
+  check('robots 声明 max-image-preview:large', seoMeta.robots.includes('max-image-preview:large'), seoMeta.robots);
+  check('只加载图标类名子集 CSS', seoMeta.iconCss && !seoMeta.fullFaCss, JSON.stringify(seoMeta));
+  check('暗色横幅不再 eager 下载', seoMeta.darkBanner !== 'eager', seoMeta.darkBanner);
+
+  const sitemapXml = await page.evaluate(async () => (await (await fetch('/sitemap.xml')).text()));
+  check('sitemap 不再包含 index.html', !sitemapXml.includes('/index.html</loc>'), 'index.html found');
+
   await browser.close();
   server.close();
 

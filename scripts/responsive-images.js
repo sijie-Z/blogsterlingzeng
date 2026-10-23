@@ -23,7 +23,7 @@ function hasVariant(name, width) {
 hexo.extend.filter.register('after_render:html', function (str) {
   if (!str || !str.includes('/images/banner-')) return str;
 
-  return str.replace(IMG_RE, (match, before, src, name, after) => {
+  str = str.replace(IMG_RE, (match, before, src, name, after) => {
     if (/\bsrcset=/.test(before + after)) return match;
     if (!hasVariant(name, 960) || !hasVariant(name, 1280)) return match;
     const srcset = [
@@ -33,4 +33,15 @@ hexo.extend.filter.register('after_render:html', function (str) {
     ].join(', ');
     return `<img${before} src="${src}" srcset="${srcset}" sizes="100vw"${after}>`;
   });
+
+  // 亮/暗两张横幅只有一张会显示。暗色图不再 eager + high:
+  // 亮色模式直接不下载,暗色模式下它进入视口仍会正常加载。
+  str = str.replace(/<img\b[^>]*banner-dark\.webp[^>]*>/g, tag => {
+    let out = tag.replace(/\sloading="eager"/i, ' loading="lazy"');
+    out = out.replace(/\sfetchpriority="high"/i, '');
+    if (!/\bloading=/i.test(out)) out = out.replace(/\s*\/?>$/, end => ' loading="lazy"' + end);
+    return out;
+  });
+
+  return str;
 });

@@ -57,6 +57,10 @@ function check(name, cond, extra) {
     toc: !!document.querySelector('.post-toc'),
     headingAnchors: document.querySelectorAll('.article-content h2 .heading-anchor').length,
     markdownLink: !!document.querySelector('.post-side-author-links a[aria-label="查看 Markdown 原文"]'),
+    copyMd: (() => {
+      const btn = document.querySelector('.post-side-copy-md');
+      return btn ? { label: btn.getAttribute('aria-label'), url: btn.dataset.mdUrl } : null;
+    })(),
     codeFullscreen: !!document.querySelector('.code-fullscreen-btn'),
     mobileTocDisplay: document.querySelector('.mobile-toc') ? getComputedStyle(document.querySelector('.mobile-toc')).display : 'missing',
     overflow: document.documentElement.scrollWidth - innerWidth,
@@ -70,6 +74,7 @@ function check(name, cond, extra) {
   check('目录仍在', first.toc);
   check('标题锚点已生成', first.headingAnchors >= 3, String(first.headingAnchors));
   check('Markdown 原文链接存在', first.markdownLink);
+  check('复制 Markdown 按钮存在', first.copyMd && first.copyMd.label === '复制 Markdown 原文' && /\/index\.md$/.test(first.copyMd.url || ''), JSON.stringify(first.copyMd));
   const asideOpen = await page.evaluate(() => ({
     open: document.documentElement.classList.contains('aside-open'),
     inert: document.querySelector('.toc-content-container')?.hasAttribute('inert'),
