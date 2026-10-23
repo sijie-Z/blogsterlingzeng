@@ -544,3 +544,12 @@ a.post-series-item-title:hover {
     grid-template-columns: 1fr;
   }
 }
+
+.series-rss {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.series-rss:hover {
+  text-decoration: underline;
+}

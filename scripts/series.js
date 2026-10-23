@@ -154,6 +154,10 @@ function seriesUrl(slug) {
   return sitePath('series/' + slug + '/');
 }
 
+function seriesFeedUrl(slug) {
+  return seriesUrl(slug) + 'atom.xml';
+}
+
 function postUrl(post) {
   return sitePath(post.path);
 }
@@ -253,7 +257,7 @@ function renderSeriesPage(group) {
   return `
 <div class="series-page" data-series="${escapeHtml(group.slug)}">
   ${group.description ? `<p class="series-page-desc">${escapeHtml(group.description)}</p>` : ''}
-  <div class="series-page-meta">${seriesMeta(group, true)}</div>
+  <div class="series-page-meta">${seriesMeta(group, true)} · <a class="series-rss" href="${escapeHtml(seriesFeedUrl(group.slug))}">RSS</a></div>
   <ol class="series-page-list">${items}</ol>
   <a class="series-back" href="${escapeHtml(sitePath('series/'))}"><span aria-hidden="true">←</span> 全部系列</a>
 </div>`;
@@ -291,6 +295,44 @@ function renderArchiveSeries(list) {
 </section>`;
 }
 
+function renderSeriesFeed(group) {
+  const config = hexo.config;
+  const root = String(config.url || '').replace(/\/+$/, '');
+  const site = String(config.title || '');
+  const author = String(config.author || '');
+  const pageUrl = root + seriesUrl(group.slug);
+  const selfUrl = root + seriesFeedUrl(group.slug);
+  const updated = (group.latest.updated || group.latest.date).toISOString();
+  const entries = group.posts.slice()
+    .sort((a, b) => b.post.date - a.post.date)
+    .map(({ post }) => {
+      const url = root + postUrl(post);
+      const summary = String(post.description || '').replace(/\s+/g, ' ').trim();
+      return `  <entry>
+    <title>${escapeHtml(post.title)}</title>
+    <link href="${escapeHtml(url)}"/>
+    <id>${escapeHtml(url)}</id>
+    <published>${post.date.toISOString()}</published>
+    <updated>${(post.updated || post.date).toISOString()}</updated>${summary ? `\n    <summary type="text">${escapeHtml(summary)}</summary>` : ''}
+  </entry>`;
+    }).join('\n');
+
+  return `<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>${escapeHtml(site + ' — ' + group.name)}</title>${group.description ? `\n  <subtitle>${escapeHtml(group.description)}</subtitle>` : ''}
+  <link href="${escapeHtml(pageUrl)}" rel="alternate"/>
+  <link href="${escapeHtml(selfUrl)}" rel="self" type="application/atom+xml"/>
+  <id>${escapeHtml(pageUrl)}</id>
+  <updated>${updated}</updated>
+  <author>
+    <name>${escapeHtml(author)}</name>
+    <uri>${escapeHtml(root + '/about/')}</uri>
+  </author>
+${entries}
+</feed>
+`;
+}
+
 hexo.extend.generator.register('series-pages', function () {
   const { list } = buildSeries();
   const routes = list.map(group => ({
@@ -317,7 +359,25 @@ hexo.extend.generator.register('series-pages', function () {
       comment: false,
     },
   });
+  for (const group of list) {
+    routes.push({
+      path: `series/${group.slug}/atom.xml`,
+      data: renderSeriesFeed(group),
+    });
+  }
   return routes;
+});
+
+// 系列页 head 里声明 Atom feed,阅读器/爬虫可以直接订阅
+hexo.extend.filter.register('after_render:html', function (str, locals) {
+  const page = locals && locals.page;
+  if (!str || !page || !page.series_page) return str;
+  const match = String(page.path || '').match(/^\/?series\/([a-z0-9-]+)\/(?:index\.html)?$/);
+  if (!match) return str;
+  const href = seriesFeedUrl(match[1]);
+  if (str.includes('data-series-feed')) return str;
+  return str.replace('</head>', () =>
+    `<link data-series-feed rel="alternate" type="application/atom+xml" title="${escapeHtml(page.title || '')}" href="${escapeHtml(href)}">\n</head>`);
 });
 
 hexo.extend.filter.register('after_render:html', function (str, locals) {

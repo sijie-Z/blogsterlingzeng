@@ -80,6 +80,21 @@ function check(name, cond, extra) {
   check('返回全部系列', series.back === '/series/', series.back);
   check('系列页无横向溢出', series.overflow <= 2, String(series.overflow));
   check('系列页显示预估阅读时间', /约 \d+ 分钟/.test(series.meta), series.meta);
+  const feed = await page.evaluate(async () => {
+    const res = await fetch('/series/blog-engineering/atom.xml');
+    const text = await res.text();
+    const doc = new DOMParser().parseFromString(text, 'application/xml');
+    return {
+      status: res.status,
+      entries: doc.querySelectorAll('entry').length,
+      error: doc.querySelector('parsererror')?.textContent.slice(0, 80) || '',
+      self: doc.querySelector('link[rel="self"]')?.getAttribute('href') || '',
+      head: !!document.querySelector('link[data-series-feed]'),
+    };
+  });
+  check('系列 Atom 可访问且合法', feed.status === 200 && !feed.error, JSON.stringify(feed));
+  check('系列 Atom 含 3 篇文章', feed.entries === 3, String(feed.entries));
+  check('系列页声明 Atom feed', feed.head && feed.self.includes('/series/blog-engineering/atom.xml'), JSON.stringify(feed));
 
   console.log('=== 2.5 归档页系列入口 ===');
   await page.goto(BASE + '/archives/', { waitUntil: 'networkidle2', timeout: 30000 });

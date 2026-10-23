@@ -56,7 +56,7 @@
 | 复制链接 | 文章页工具条复制当前链接 | `source/js/custom.js` |
 | Live2D 宠物 | DeepSeek 大肥鱼（Cubism 4.2 模型 / Cubism 5 Core 运行时，8 动作 / 44 表情） | `source/live2d/` |
 | 文章侧栏 | 作者卡 + 阅读进度环 + 标签 + 同分类 + 目录卡片（构建期渲染，无 CLS） | `scripts/post-sidebar.js` |
-| 系列文章 | `series` / `series_order` 声明，构建期生成系列总览与系列页；文章内显示进度徽章、系列内上下篇、折叠目录（0 运行时 JS） | `scripts/series.js` |
+| 系列文章 | `series` / `series_order` 声明，构建期生成系列总览、系列页与 Atom 订阅；文章内显示进度徽章、系列内上下篇、折叠目录（0 运行时 JS） | `scripts/series.js` |
 | 响应式横幅 | 960 / 1280 / 1920 三档 WebP srcset，手机按 DPR 自动选图 | `scripts/responsive-images.js` |
 | 轻量模型纹理 | Live2D 主纹理重采样为 1024 WebP，1.7MB → 308KB | `source/live2d/model/ds-whale-girl/` |
 | 404 页面 | 自定义 404 + 快捷搜索入口（Ctrl K / 斜杠） | `source/404.md` |
@@ -106,7 +106,7 @@
 | SPA 整次导航 | **~134ms** | Swup 只替换 `#swup`，滚动即时归零 |
 | Live2D 主纹理 | **1.7MB → 308KB** | 2048 PNG 重采样为 1024 WebP |
 | 手机首屏横幅 | **63KB → 35KB**（亮色） | 960/1280/1920 srcset + DPR 选图 |
-| 自动化浏览器检查 | **220+ 项** | 跳转、侧栏、系列、阅读记忆、归档、平滑度、资源、内容 |
+| 自动化浏览器检查 | **225+ 项** | 跳转、侧栏、系列、阅读记忆、归档、平滑度、资源、内容 |
 
 **构建期优先**：系列页、写作热力图、文章侧栏、JSON-LD、Markdown 原文、llms.txt 全部在 `hexo generate` 阶段生成，运行时不发额外请求、不引入布局抖动。主题通过 `scripts/theme-patch.js` 做可审计的最小补丁（Swup、TOC、搜索防抖、APlayer 延迟加载等），补丁可重复执行。
 
@@ -170,7 +170,7 @@ npm run test:smooth         # 26 项滚动与动效平滑度回归
 npm run test:content        # 文章 front matter / 站内链接 / 图片 / 文风检查
 npm run test:transitions    # 44 项 SPA 跳转 / 连点 / 前后退 / 搜索焦点 / 路由播报
 npm run test:sidebar        # 30 项文章侧栏 / 进度 / 锚点 / 表格 / Markdown / 代码全屏
-npm run test:series         # 48 项系列页 / 徽章 / 系列卡 / SPA / 移动端
+npm run test:series         # 51 项系列页 / 徽章 / 系列卡 / SPA / 移动端
 npm run test:assets         # 26 项响应式横幅 / WebP 纹理 / 系列收录 / JSON-LD
 npm run test:resume         # 7 项阅读位置记忆与“继续阅读”
 npm run test:archive        # 12 项归档写作热力图与移动端
