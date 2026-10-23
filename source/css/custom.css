@@ -1659,6 +1659,32 @@ html[data-season="spring"] .home-banner-container::after {
    NAVBAR CONTROLS — 季节切换 / 手电筒 / 秒表
    移植自旧版 themes.css,适配新版 CSS 变量
    ======================================== */
+/* 控件由 custom.js 运行时插入。先用伪元素占住同样的宽度,
+   插入后换成真实控件(has-nb-controls),.right 和整条导航
+   从首帧起位置一致,不会横向位移。 */
+.navbar-content::after {
+  content: '';
+  display: block;
+  flex: 0 0 70px;
+  width: 70px;
+  height: 32px;
+  /* 和真实 .nb-controls 一样用 margin-left:auto,
+     否则 space-between 与 auto margin 的空隙分配不同,
+     控件替换伪元素时 .right 仍会横移。 */
+  margin-left: auto;
+}
+.navbar-content.has-nb-controls::after,
+.navbar-content:has(.nb-controls)::after {
+  display: none;
+}
+@media (max-width: 768px) {
+  .navbar-content::after {
+    flex-basis: 62px;
+    width: 62px;
+    height: 28px;
+  }
+}
+
 .nb-controls {
   display: flex;
   align-items: center;

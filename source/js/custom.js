@@ -538,10 +538,17 @@
     // 进度条由主题的 updateScrollStyle 维护,这里只处理导航与页脚状态
     const update = (fromScroll = false) => {
       const scrollTop = window.scrollY;
-      // 页脚的“触底”判定需要当前真实高度:缓存可能因为滚动条/字体/图片
-      // 变化差 20px,差一点就会让 at-bottom 不触发。这里读一次真实值,
-      // 读取发生在滚动 rAF 里,布局已经是干净的,成本很低。
-      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      // 文档高度用缓存:load / resize / 字体就绪 / 换页后都会刷新,
+      // ResizeObserver 也会兜住图片撑高;不再每次滚动同步读 scrollHeight。
+      // 只在接近底部(<150px)时读一次真实值,保证页脚触底判定准确。
+      let maxScroll = (window.__cjScrollHeight || document.documentElement.scrollHeight) - window.innerHeight;
+      if (maxScroll - scrollTop <= 150) {
+        const realMax = document.documentElement.scrollHeight - window.innerHeight;
+        if (realMax !== maxScroll) {
+          window.__cjScrollHeight = realMax + window.innerHeight;
+          maxScroll = realMax;
+        }
+      }
 
       // Dynamic Island 导航栏:进入用 100px、退出用 40px,避免阈值附近反复抖动
       const navbar = document.querySelector('.navbar-container');
@@ -1002,6 +1009,9 @@
     if (!window.__cjNavControlsGlobal) {
       window.__cjNavControlsGlobal = true;
       document.addEventListener('click', e => {
+        // 只处理真实用户点击。APlayer 初始化时会自己 click 一次图标,
+        // 那种合成事件不应该把刚打开的季节菜单关掉。
+        if (!e.isTrusted) return;
         const controls = document.querySelector('.nb-controls');
         if (!controls) return;
         const dropdown = controls.querySelector('.nb-dropdown');
@@ -1019,7 +1029,11 @@
       });
     }
     const navbar = document.querySelector('.navbar-content');
-    if (!navbar || navbar.querySelector('.nb-controls')) return;
+    if (!navbar) return;
+    if (navbar.querySelector('.nb-controls')) {
+      navbar.classList.add('has-nb-controls');
+      return;
+    }
 
     const current = effectiveSeason();
     const controls = document.createElement('div');
@@ -1043,6 +1057,7 @@
           <button id="nbReset">重置</button>
         </div>
       </div>`;
+    navbar.classList.add('has-nb-controls');
     navbar.appendChild(controls);
 
     // 主题下拉
@@ -1157,18 +1172,28 @@
     );
     if (targets.length === 0) return;
 
-    targets.forEach(el => {
-      if (el.dataset.reveal) return;
-      el.dataset.reveal = '1';
+    // 先一次性读完所有位置,再统一写 class。旧实现边读边写:
+    // 每次 classList.add 都会让下一次 getBoundingClientRect 强制重新布局,
+    // 长文章上这一轮实测 129-175ms。读写分离后只有一次布局。
+    const aboveFold = new Array(targets.length);
+    for (let i = 0; i < targets.length; i++) {
+      const el = targets[i];
+      if (el.dataset.reveal) {
+        aboveFold[i] = null;
+        continue;
+      }
       // 首屏内已经可见的元素直接显示,不要再等 0.3s 入场——
       // 否则进文章页时标题/首段会先空白一下,观感像“慢半拍”。
       const rect = el.getBoundingClientRect();
-      if (rect.top < window.innerHeight && rect.bottom > 0) {
-        el.classList.add('reveal', 'reveal-visible');
-      } else {
-        el.classList.add('reveal');
-      }
-    });
+      aboveFold[i] = rect.top < window.innerHeight && rect.bottom > 0;
+    }
+    for (let i = 0; i < targets.length; i++) {
+      const el = targets[i];
+      if (aboveFold[i] === null) continue;
+      el.dataset.reveal = '1';
+      el.classList.add('reveal');
+      if (aboveFold[i]) el.classList.add('reveal-visible');
+    }
 
     if (window.__cjRevealObserver) window.__cjRevealObserver.disconnect();
     const obs = new IntersectionObserver(entries => {
@@ -1251,8 +1276,17 @@
       }
       localStorage.setItem(likeKey, String(likes));
       const iconClass = 'fa-' + (isLiked ? 'regular' : 'solid') + ' fa-heart';
-      const suffix = btn.closest('.post-page-stats') ? ' 个赞' : '';
-      btn.innerHTML = '<i class="' + iconClass + '"></i> ' + likes + suffix;
+      // 构建期输出的统计行有独立的数字节点,只改文本,不重建整块
+      const countEl = btn.querySelector('.stat-likes');
+      if (countEl) {
+        const icon = btn.querySelector('i');
+        if (icon) icon.className = iconClass;
+        countEl.textContent = String(likes);
+      } else {
+        const suffix = btn.closest('.post-page-stats') ? ' 个赞' : '';
+        btn.innerHTML = '<i class="' + iconClass + '"></i> ' + likes + suffix;
+      }
+      if (btn.closest('.post-page-stats')) btn.setAttribute('aria-pressed', String(!isLiked));
     });
   }
 
@@ -1283,9 +1317,11 @@
   }
 
   // 文章页:渲染阅读数 + 点赞(阅读数 +1)
+  // 统计行由构建期模板输出(见 scripts/theme-patch.js),首屏已有占位;
+  // 这里只更新数字和点赞状态,不再插入节点,避免文章头部 CLS。
   function initPostStats() {
     const postTitle = document.querySelector('.article-title');
-    if (!postTitle || document.querySelector('.post-page-stats')) return;
+    if (!postTitle) return;
     const path = window.location.pathname;
 
     const viewKey = 'views_' + path;
@@ -1296,18 +1332,40 @@
     const likes = parseInt(localStorage.getItem(likeKey) || '0');
     const isLiked = localStorage.getItem('liked_' + path) === 'true';
 
-    const statsDiv = document.createElement('div');
-    statsDiv.className = 'article-stats post-page-stats';
-    statsDiv.innerHTML =
-      '<span class="stat-item"><i class="fa-regular fa-eye"></i> ' + views + ' 次阅读</span>' +
-      '<button class="like-btn ' + (isLiked ? 'liked' : '') + '" data-href="' + path + '">' +
-      '<i class="fa-' + (isLiked ? 'solid' : 'regular') + ' fa-heart"></i> ' + likes + ' 个赞</button>';
+    let statsDiv = document.querySelector('.post-page-stats');
+    if (!statsDiv) {
+      // 兜底:模板没有带统计行时(旧缓存/其他模板分支)才插入一次
+      statsDiv = document.createElement('div');
+      statsDiv.className = 'article-stats post-page-stats';
+      statsDiv.innerHTML =
+        '<span class="stat-item"><i class="fa-regular fa-eye"></i> <span class="stat-views">0</span> 次阅读</span>' +
+        '<button class="like-btn" type="button"><i class="fa-regular fa-heart"></i> <span class="stat-likes">0</span> 个赞</button>';
+      const metaInfo = document.querySelector('.article-header .meta-info') || document.querySelector('.article-header-meta-info .meta-info');
+      if (metaInfo) metaInfo.parentNode.insertBefore(statsDiv, metaInfo.nextSibling);
+      else postTitle.parentNode.insertBefore(statsDiv, postTitle.nextSibling);
+    }
 
-    const metaInfo = document.querySelector('.article-header .meta-info') || document.querySelector('.article-header-meta-info .meta-info');
-    if (metaInfo) {
-      metaInfo.parentNode.insertBefore(statsDiv, metaInfo.nextSibling);
+    const viewsEl = statsDiv.querySelector('.stat-views');
+    if (viewsEl) {
+      viewsEl.textContent = String(views);
     } else {
-      postTitle.parentNode.insertBefore(statsDiv, postTitle.nextSibling);
+      const statItem = statsDiv.querySelector('.stat-item');
+      if (statItem) statItem.innerHTML = '<i class="fa-regular fa-eye"></i> ' + views + ' 次阅读';
+    }
+
+    const btn = statsDiv.querySelector('.like-btn');
+    if (btn) {
+      btn.dataset.href = path;
+      btn.classList.toggle('liked', isLiked);
+      btn.setAttribute('aria-pressed', String(isLiked));
+      const countEl = btn.querySelector('.stat-likes');
+      if (countEl) {
+        countEl.textContent = String(likes);
+        const icon = btn.querySelector('i');
+        if (icon) icon.className = 'fa-' + (isLiked ? 'solid' : 'regular') + ' fa-heart';
+      } else {
+        btn.innerHTML = '<i class="fa-' + (isLiked ? 'solid' : 'regular') + ' fa-heart"></i> ' + likes + ' 个赞';
+      }
     }
   }
 

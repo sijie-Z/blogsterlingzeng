@@ -51,15 +51,25 @@ function patchText(relPath, replacements) {
 patchText('source/js/utils/sideTools.js', [
   [
     'const height = document.body.scrollHeight;',
-    'const height = y <= 100 ? 0 : document.body.scrollHeight;',
+    'const height = y <= 100 ? 0 : (window.__cjScrollHeight || document.body.scrollHeight);',
     'sideTools source lazy height',
+  ],
+  [
+    'const height = y <= 100 ? 0 : document.body.scrollHeight;',
+    'const height = y <= 100 ? 0 : (window.__cjScrollHeight || document.body.scrollHeight);',
+    'sideTools source cached height',
   ],
 ]);
 patchText('source/js/build/utils/sideTools.js', [
   [
     'const t=window.scrollY,e=document.body.scrollHeight,o=window.innerHeight,',
-    'const t=window.scrollY,o=window.innerHeight;let e=0;if(t>100)e=document.body.scrollHeight;const ',
+    'const t=window.scrollY,o=window.innerHeight;let e=0;if(t>100)e=window.__cjScrollHeight||document.body.scrollHeight;const ',
     'sideTools build lazy height',
+  ],
+  [
+    'let e=0;if(t>100)e=document.body.scrollHeight;const ',
+    'let e=0;if(t>100)e=window.__cjScrollHeight||document.body.scrollHeight;const ',
+    'sideTools build cached height',
   ],
 ]);
 
@@ -152,41 +162,6 @@ patchText('source/js/layouts/toc.js', [
     'toc source use cached offsets',
   ],
   [
-    `  window.addEventListener(
-    "scroll",
-    () => {
-      tocState?.updateActiveTOCLink();
-    },
-    { signal },
-  );`,
-    `  window.addEventListener(
-    "scroll",
-    () => {
-      tocState?.updateActiveTOCLink();
-    },
-    { signal },
-  );
-  window.addEventListener(
-    "resize",
-    () => {
-      tocState?.registerTOCScroll();
-    },
-    { signal },
-  );`,
-    'toc source resize refresh',
-  ],
-  [
-    `  utils.showTOCAside();
-  utils.registerTOCScroll();
-  utils.updateActiveTOCLink();`,
-    `  utils.showTOCAside();
-  utils.registerTOCScroll();
-  utils.updateActiveTOCLink();
-  // 字体/图片加载后高度可能变化,延迟再算一次偏移
-  setTimeout(() => utils.registerTOCScroll(), 800);`,
-    'toc source delayed refresh',
-  ],
-  [
     `  if (navItems.length === 0) {
     tocToggle.hideToggle();
     tocContainer.remove();
@@ -226,21 +201,89 @@ patchText('source/js/build/layouts/toc.js', [
     'toc build use cached offsets',
   ],
   [
-    'window.addEventListener("scroll",(()=>{n?.updateActiveTOCLink()}),{signal:e})',
-    'window.addEventListener("scroll",(()=>{n?.updateActiveTOCLink()}),{signal:e}),window.addEventListener("resize",(()=>{n?.registerTOCScroll()}),{signal:e})',
-    'toc build resize refresh',
-  ],
-  [
-    'return l.showTOCAside(),l.registerTOCScroll(),l.updateActiveTOCLink(),n=l,l}',
-    'return l.showTOCAside(),l.registerTOCScroll(),l.updateActiveTOCLink(),setTimeout((()=>l.registerTOCScroll()),800),n=l,l}',
-    'toc build delayed refresh',
-  ],
-  [
     'if(0===c.length)return s.hideToggle(),r.remove(),document.querySelectorAll(".toc-marker").forEach((e=>{e.remove()})),n=null,null;',
     'if(0===c.length){s.hideToggle();const w=r.querySelector(".post-side-stack");if(w){const t=r.querySelector(".post-toc-wrap");t&&t.remove()}else r.remove();document.querySelectorAll(".toc-marker").forEach((e=>{e.remove()}));return n=null,null}',
     'toc build keep sidebar cards',
   ],
 ]);
+
+// 3.6 归一 TOC 的 resize / 延迟刷新补丁。
+//     旧写法每次 postinstall 都会在锚点后追加一段,实测累积了 12 个
+//     resize 监听和 12 个 800ms setTimeout。这里先清重复,再各装一份:
+//     resize 监听不带 signal,全站只注册一次(引用模块级 tocState)。
+const tocSourceFile = path.join(themeRoot, 'source/js/layouts/toc.js');
+try {
+  let tocSrc = fs.readFileSync(tocSourceFile, 'utf8');
+  const before = tocSrc;
+  tocSrc = tocSrc.replace(
+    /  window\.addEventListener\(\n    "resize",\n    \(\) => \{\n      tocState\?\.registerTOCScroll\(\);\n    \},\n    \{ signal \},\n  \);\n/g,
+    ''
+  );
+  tocSrc = tocSrc.replace(
+    /(?:  \/\/ 字体\/图片加载后高度可能变化,延迟再算一次偏移\n)?  setTimeout\(\(\) => utils\.registerTOCScroll\(\), 800\);\n/g,
+    ''
+  );
+  if (!tocSrc.includes('__cjTocResizeBound')) {
+    const scrollAnchor = `  window.addEventListener(
+    "scroll",
+    () => {
+      tocState?.updateActiveTOCLink();
+    },
+    { signal },
+  );`;
+    if (tocSrc.includes(scrollAnchor)) {
+      tocSrc = tocSrc.replace(scrollAnchor, scrollAnchor + `
+  if (!window.__cjTocResizeBound) {
+    window.__cjTocResizeBound = true;
+    window.addEventListener(
+      "resize",
+      () => {
+        tocState?.registerTOCScroll();
+      },
+      { passive: true },
+    );
+  }`);
+    }
+  }
+  const tocTail = '  utils.showTOCAside();\n  utils.registerTOCScroll();\n  utils.updateActiveTOCLink();';
+  if (tocSrc.includes(tocTail) && !tocSrc.includes('setTimeout(() => utils.registerTOCScroll(), 800);')) {
+    tocSrc = tocSrc.replace(tocTail, tocTail + '\n  // 字体/图片加载后高度可能变化,延迟再算一次偏移\n  setTimeout(() => utils.registerTOCScroll(), 800);');
+  }
+  if (tocSrc !== before) {
+    fs.writeFileSync(tocSourceFile, tocSrc, 'utf8');
+    console.log('[theme-patch] 已归一 TOC 监听器');
+  }
+} catch (e) {
+  console.warn('[theme-patch] TOC 归一失败:', e.message);
+}
+
+const tocBuildFile = path.join(themeRoot, 'source/js/build/layouts/toc.js');
+try {
+  let tocBuild = fs.readFileSync(tocBuildFile, 'utf8');
+  const before = tocBuild;
+  tocBuild = tocBuild.replace(
+    /,window\.addEventListener\("resize",\(\(\)=>\{n\?\.registerTOCScroll\(\)\}\),\{signal:e\}\)/g,
+    ''
+  );
+  tocBuild = tocBuild.replace(/setTimeout\(\(\(\)=>l\.registerTOCScroll\(\)\),800\),/g, '');
+  const scrollAnchor = 'window.addEventListener("scroll",(()=>{n?.updateActiveTOCLink()}),{signal:e})';
+  if (!tocBuild.includes('__cjTocResizeBound') && tocBuild.includes(scrollAnchor)) {
+    tocBuild = tocBuild.replace(
+      scrollAnchor,
+      scrollAnchor + ',window.__cjTocResizeBound||(window.__cjTocResizeBound=!0,window.addEventListener("resize",(()=>{n?.registerTOCScroll()}),{passive:!0}))'
+    );
+  }
+  const returnAnchor = 'return l.showTOCAside(),l.registerTOCScroll(),l.updateActiveTOCLink(),';
+  if (tocBuild.includes(returnAnchor) && !tocBuild.includes('setTimeout((()=>l.registerTOCScroll()),800)')) {
+    tocBuild = tocBuild.replace(returnAnchor, returnAnchor + 'setTimeout((()=>l.registerTOCScroll()),800),');
+  }
+  if (tocBuild !== before) {
+    fs.writeFileSync(tocBuildFile, tocBuild, 'utf8');
+    console.log('[theme-patch] 已归一 TOC 构建产物');
+  }
+} catch (e) {
+  console.warn('[theme-patch] TOC 构建产物归一失败:', e.message);
+}
 
 // 4. Swup:去掉 SwupSlideTheme 的退出动画。//    旧流程是"先播旧页退出动画(约 320ms),再替换 DOM",首跳 click→replace
 //    实测 426ms;改成内容立即替换、只播新页入场,click→replace 可降到 ~30ms。
@@ -271,14 +314,66 @@ patchText('layout/components/swup.ejs', [
     'swup instant scroll between pages',
   ],
   [
+    '            new SwupPreloadPlugin(),',
+    `            new SwupPreloadPlugin({
+                // 首屏已经在当前页面,再预取一次首页只会重复下载 + 解析;
+                // 站内跳转仍由 Swup 在 hover/进入视口时预取。
+                preloadInitialPage: false,
+            }),`,
+    'swup preload skip initial page',
+  ],
+  [
     '        containers: ["#swup"],\n    });',
     '        containers: ["#swup"],\n        animationSelector: false,\n    });',
     'swup disable animation selector',
   ],
 ]);
 
+// 4.5 文章页统计行(阅读数 + 点赞)构建期渲染。
+//      之前是在 custom.js 里运行时插入,61px 高的一行会把文章正文
+//      整体往下推,是文章页 CLS 的主要来源。这里在模板里先输出占位,
+//      前端只改数字,布局从首帧起就稳定。
+patchText('layout/pages/post/article-content.ejs', [
+  [
+    `\t\t\t\t\t<%- partial('pages/post/article-info', {articleObject: page, index: true}) %>
+\t\t\t\t</div>
+\t\t\t</div>`,
+    `\t\t\t\t\t<%- partial('pages/post/article-info', {articleObject: page, index: true}) %>
+\t\t\t\t</div>
+\t\t\t\t<div class="article-stats post-page-stats" data-post-stats>
+\t\t\t\t\t<span class="stat-item"><i class="fa-regular fa-eye"></i> <span class="stat-views">0</span> 次阅读</span>
+\t\t\t\t\t<button class="like-btn" type="button" aria-pressed="false" aria-label="点赞这篇文章"><i class="fa-regular fa-heart"></i> <span class="stat-likes">0</span> 个赞</button>
+\t\t\t\t</div>
+\t\t\t</div>`,
+    'post stats server rendered (author)',
+  ],
+  [
+    `\t\t\t\t<%- partial('pages/post/article-info', {articleObject: page, index: true}) %>
+\t\t\t</div>
+\t\t</div>`,
+    `\t\t\t\t<%- partial('pages/post/article-info', {articleObject: page, index: true}) %>
+\t\t\t</div>
+\t\t\t<div class="article-stats post-page-stats" data-post-stats>
+\t\t\t\t<span class="stat-item"><i class="fa-regular fa-eye"></i> <span class="stat-views">0</span> 次阅读</span>
+\t\t\t\t<button class="like-btn" type="button" aria-pressed="false" aria-label="点赞这篇文章"><i class="fa-regular fa-heart"></i> <span class="stat-likes">0</span> 个赞</button>
+\t\t\t</div>
+\t\t</div>`,
+    'post stats server rendered (meta)',
+  ],
+]);
+
+// 4.6 moment 只定义全局变量,换页时不需要重新下载/执行。
+//      去掉 data-swup-reload-script 可以少一次 ~80KB 的脚本执行。
+patchText('layout/components/scripts.ejs', [
+  [
+    "renderJS('libs/moment-with-locales.min.js', { swupReload: true })",
+    "renderJS('libs/moment-with-locales.min.js', { swupReload: false })",
+    'moment no swup reload',
+  ],
+]);
+
 // 5. APlayer:首屏初始化实测有 ~400ms 长任务。保留播放器,
-//    但把脚本推迟到空闲时加载,避免和文章首屏抢主线程。
+//    但把脚本推迟到首次交互或 6 秒后加载,避免和文章首屏抢主线程。
 patchText('layout/components/plugins/aplayer.ejs', [
   [
     `<div id="aplayer"></div>
@@ -300,13 +395,50 @@ patchText('layout/components/plugins/aplayer.ejs', [
     };
     document.body.appendChild(core);
   }
-  if ('requestIdleCallback' in window) requestIdleCallback(load, { timeout: 8000 });
-  else setTimeout(load, 2500);
+  var timer = setTimeout(load, 6000);
+  function load() {
+    if (loaded) return;
+    loaded = true;
+    clearTimeout(timer);
+    var core = document.createElement('script');
+    core.src = '/js/build/libs/APlayer.min.js';
+    core.onload = function () {
+      var init = document.createElement('script');
+      init.src = '/js/build/plugins/aplayer.js';
+      document.body.appendChild(init);
+    };
+    document.body.appendChild(core);
+  }
+  ['pointerdown', 'keydown', 'touchstart', 'scroll'].forEach(function (ev) {
+    window.addEventListener(ev, load, { once: true, passive: true });
+  });
 })();
 </script>`,
     'aplayer defer',
   ],
 ]);
+
+// 5.1 归一旧版 aplayer 补丁(requestIdleCallback 常常 ~1s 就触发,
+//     仍然会和首屏抢主线程):改成首次交互 / 6s 超时。
+const aplayerFile = path.join(themeRoot, 'layout/components/plugins/aplayer.ejs');
+try {
+  let ap = fs.readFileSync(aplayerFile, 'utf8');
+  const before = ap;
+  ap = ap.replace(
+    "  var loaded = false;\n  function load() {\n    if (loaded) return;\n    loaded = true;\n",
+    "  var loaded = false;\n  var timer = setTimeout(load, 6000);\n  function load() {\n    if (loaded) return;\n    loaded = true;\n    clearTimeout(timer);\n"
+  );
+  ap = ap.replace(
+    "  if ('requestIdleCallback' in window) requestIdleCallback(load, { timeout: 8000 });\n  else setTimeout(load, 2500);",
+    "  ['pointerdown', 'keydown', 'touchstart', 'scroll'].forEach(function (ev) {\n    window.addEventListener(ev, load, { once: true, passive: true });\n  });"
+  );
+  if (ap !== before) {
+    fs.writeFileSync(aplayerFile, ap, 'utf8');
+    console.log('[theme-patch] 已更新 aplayer 延迟策略');
+  }
+} catch (e) {
+  console.warn('[theme-patch] aplayer 归一失败:', e.message);
+}
 
 // 6. 文章页不需要 initPageHeightHandle 的三次 getBoundingClientRect:
 //    它只用于"短页面把 footer 顶下去",文章页天然比视口长。
