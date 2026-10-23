@@ -1018,11 +1018,14 @@
         if (!img || img.closest('.image-viewer-container')) return;
         window.__cjLastImage = img;
         // 主题在 click 里同步打开弹层,下一帧把焦点送到关闭按钮
-        setTimeout(() => {
+        const focusClose = () => {
           const maskNow = document.querySelector('.image-viewer-container.active');
-          const btn = maskNow && maskNow.querySelector('.image-viewer-close');
+          if (!maskNow || maskNow.contains(document.activeElement)) return;
+          const btn = maskNow.querySelector('.image-viewer-close');
           if (btn) btn.focus({ preventScroll: true });
-        }, 80);
+        };
+        setTimeout(focusClose, 80);
+        setTimeout(focusClose, 320);
       }, true);
     }
 

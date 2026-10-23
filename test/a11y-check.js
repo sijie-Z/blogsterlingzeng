@@ -101,12 +101,15 @@ async function audit(page) {
   });
   check('正文图片可聚焦且有名称', !imgA11y.missing && imgA11y.tab === 0 && imgA11y.role === 'button' && !!imgA11y.label, JSON.stringify(imgA11y));
   await page.keyboard.press('Enter');
-  await sleep(500);
+  const focusedClose = await page.waitForFunction(
+    () => document.activeElement?.classList.contains('image-viewer-close'),
+    { timeout: 2500 }
+  ).then(() => true).catch(() => false);
   const viewerOpen = await page.evaluate(() => ({
     active: !!document.querySelector('.image-viewer-container.active'),
     focus: document.activeElement?.classList.contains('image-viewer-close') || false,
   }));
-  check('Enter 打开图片查看器并聚焦关闭', viewerOpen.active && viewerOpen.focus, JSON.stringify(viewerOpen));
+  check('Enter 打开图片查看器并聚焦关闭', viewerOpen.active && focusedClose && viewerOpen.focus, JSON.stringify(viewerOpen));
   await page.keyboard.press('Escape');
   await sleep(500);
   const viewerClosed = await page.evaluate(() => ({
