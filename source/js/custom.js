@@ -715,7 +715,47 @@
     }
   }
 
+  // Live2D 的工具栏由第三方脚本注入,补键盘入口与名称
+  function decorateLive2DControls() {
+    const toggle = document.getElementById('waifu-toggle');
+    if (toggle && !toggle.__cjA11y) {
+      toggle.__cjA11y = true;
+      toggle.setAttribute('role', 'button');
+      toggle.tabIndex = 0;
+      toggle.setAttribute('aria-label', '显示或隐藏 Live2D 宠物');
+      toggle.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          toggle.click();
+        }
+      });
+    }
+    const labels = {
+      hitokoto: '随机一言', asteroids: '小行星', 'switch-model': '切换模型',
+      'switch-texture': '切换贴图', photo: '拍照', info: '关于 Live2D', quit: '关闭宠物',
+    };
+    document.querySelectorAll('#waifu-tool span').forEach(span => {
+      if (span.__cjA11y) return;
+      span.__cjA11y = true;
+      span.setAttribute('role', 'button');
+      span.tabIndex = 0;
+      const key = (span.id || '').replace('waifu-tool-', '');
+      span.setAttribute('aria-label', labels[key] || 'Live2D 工具');
+      span.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          span.click();
+        }
+      });
+    });
+  }
+
   function initLive2DRuntime() {
+    let waifuA11yTries = 0;
+    const waifuA11yTimer = setInterval(() => {
+      decorateLive2DControls();
+      if (++waifuA11yTries >= 12) clearInterval(waifuA11yTimer);
+    }, 500);
     // 模型没有 HitArea,点击画布时手动触发随机动作与表情
     const TAP_MOTIONS = ['Hammer', 'BubbleGum', 'SprayWater', 'OpenCase', 'Selfie', 'SelfieQuick', 'Ketchup'];
     document.addEventListener('click', e => {

@@ -3427,3 +3427,14 @@ html.dark .post-series-item-title:hover {
     line-height: 1.25;
   }
 }
+
+/* Live2D 工具栏:键盘聚焦时显示,并给出可见焦点 */
+#waifu-tool:focus-within {
+  opacity: 1;
+}
+
+#waifu-toggle:focus-visible,
+#waifu-tool span:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
