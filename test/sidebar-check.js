@@ -69,6 +69,20 @@ function check(name, cond, extra) {
   check('目录仍在', first.toc);
   check('标题锚点已生成', first.headingAnchors >= 3, String(first.headingAnchors));
   check('Markdown 原文链接存在', first.markdownLink);
+  const asideOpen = await page.evaluate(() => ({
+    open: document.documentElement.classList.contains('aside-open'),
+    inert: document.querySelector('.toc-content-container')?.hasAttribute('inert'),
+  }));
+  check('目录打开时侧栏可交互', asideOpen.open && !asideOpen.inert, JSON.stringify(asideOpen));
+  await page.evaluate(() => document.querySelector('.page-aside-toggle')?.click());
+  await sleep(350);
+  const asideClosed = await page.evaluate(() => ({
+    open: document.documentElement.classList.contains('aside-open'),
+    inert: document.querySelector('.toc-content-container')?.hasAttribute('inert'),
+  }));
+  check('关闭目录后侧栏不可聚焦', !asideClosed.open && asideClosed.inert, JSON.stringify(asideClosed));
+  await page.evaluate(() => document.querySelector('.page-aside-toggle')?.click());
+  await sleep(350);
   const md = await page.evaluate(async () => {
     const res = await fetch(location.pathname + 'index.md');
     return { status: res.status, text: (await res.text()).slice(0, 300) };
@@ -97,6 +111,17 @@ function check(name, cond, extra) {
       locked: document.body.classList.contains('code-fullscreen-open'),
     }));
     check('Esc 退出代码全屏', !off.full && !off.backdrop && !off.locked, JSON.stringify(off));
+    // 再点一次同一个按钮也应该退出,而不是把节点留在 body
+    await page.evaluate(() => document.querySelector('.code-fullscreen-btn').click());
+    await sleep(150);
+    await page.evaluate(() => document.querySelector('.code-container.code-fullscreen .code-fullscreen-btn').click());
+    await sleep(200);
+    const back = await page.evaluate(() => ({
+      full: !!document.querySelector('.code-container.code-fullscreen'),
+      inArticle: !!document.querySelector('.article-content .code-container'),
+      orphan: [...document.body.children].filter(el => el.classList && el.classList.contains('code-container')).length,
+    }));
+    check('再次点击按钮可退出代码全屏', !back.full && back.inArticle && back.orphan === 0, JSON.stringify(back));
   }
   check('无横向溢出', first.overflow <= 2, String(first.overflow));
   check('首屏 CLS < 0.12', first.cls < 0.12, first.cls.toFixed(4));

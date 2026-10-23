@@ -119,8 +119,130 @@ patchText('source/js/build/utils/scroll.js', [
   ],
 ]);
 
-// 4. Swup:去掉 SwupSlideTheme 的退出动画。
-//    旧流程是"先播旧页退出动画(约 320ms),再替换 DOM",首跳 click→replace
+// 3.5 TOC scrollspy:缓存每个标题的文档偏移,滚动时不再对所有标题
+//     调 getBoundingClientRect。原实现每次 scroll 读 10-30 次布局,是
+//     长文章滚动里 50-100ms 长任务的主要来源之一。
+patchText('source/js/layouts/toc.js', [
+  [
+    `        return target;
+      });
+    },`,
+    `        return target;
+      });
+      utils.offsets = utils.sections.map((element) =>
+        element ? element.getBoundingClientRect().top + window.scrollY : Infinity,
+      );
+    },`,
+    'toc source cached offsets',
+  ],
+  [
+    `    updateActiveTOCLink() {
+      if (!Array.isArray(utils.sections)) return;
+      let index = utils.sections.findIndex((element) => {
+        return element && element.getBoundingClientRect().top - 100 > 0;
+      });`,
+    `    updateActiveTOCLink() {
+      if (!Array.isArray(utils.sections)) return;
+      const y = window.scrollY + 100;
+      let index = Array.isArray(utils.offsets)
+        ? utils.offsets.findIndex((offset) => offset > y)
+        : utils.sections.findIndex((element) => {
+            return element && element.getBoundingClientRect().top - 100 > 0;
+          });`,
+    'toc source use cached offsets',
+  ],
+  [
+    `  window.addEventListener(
+    "scroll",
+    () => {
+      tocState?.updateActiveTOCLink();
+    },
+    { signal },
+  );`,
+    `  window.addEventListener(
+    "scroll",
+    () => {
+      tocState?.updateActiveTOCLink();
+    },
+    { signal },
+  );
+  window.addEventListener(
+    "resize",
+    () => {
+      tocState?.registerTOCScroll();
+    },
+    { signal },
+  );`,
+    'toc source resize refresh',
+  ],
+  [
+    `  utils.showTOCAside();
+  utils.registerTOCScroll();
+  utils.updateActiveTOCLink();`,
+    `  utils.showTOCAside();
+  utils.registerTOCScroll();
+  utils.updateActiveTOCLink();
+  // 字体/图片加载后高度可能变化,延迟再算一次偏移
+  setTimeout(() => utils.registerTOCScroll(), 800);`,
+    'toc source delayed refresh',
+  ],
+  [
+    `  if (navItems.length === 0) {
+    tocToggle.hideToggle();
+    tocContainer.remove();
+    document.querySelectorAll(".toc-marker").forEach((elem) => {
+      elem.remove();
+    });
+    tocState = null;
+    return null;
+  }`,
+    `  if (navItems.length === 0) {
+    tocToggle.hideToggle();
+    const sideStack = tocContainer.querySelector('.post-side-stack');
+    if (sideStack) {
+      const tocWrap = tocContainer.querySelector('.post-toc-wrap');
+      if (tocWrap) tocWrap.remove();
+    } else {
+      tocContainer.remove();
+    }
+    document.querySelectorAll(".toc-marker").forEach((elem) => {
+      elem.remove();
+    });
+    tocState = null;
+    return null;
+  }`,
+    'toc source keep sidebar cards',
+  ],
+]);
+patchText('source/js/build/layouts/toc.js', [
+  [
+    'registerTOCScroll(){l.sections=[...l.navLinks].map((e=>document.getElementById(decodeURI(e.getAttribute("href")).replace("#",""))))}',
+    'registerTOCScroll(){l.sections=[...l.navLinks].map((e=>document.getElementById(decodeURI(e.getAttribute("href")).replace("#",""))));l.offsets=l.sections.map((e=>e?e.getBoundingClientRect().top+window.scrollY:1/0))}',
+    'toc build cached offsets',
+  ],
+  [
+    'updateActiveTOCLink(){if(!Array.isArray(l.sections))return;let e=l.sections.findIndex((e=>e&&e.getBoundingClientRect().top-100>0));',
+    'updateActiveTOCLink(){if(!Array.isArray(l.sections))return;const y=window.scrollY+100;let e=Array.isArray(l.offsets)?l.offsets.findIndex((e=>e>y)):l.sections.findIndex((e=>e&&e.getBoundingClientRect().top-100>0));',
+    'toc build use cached offsets',
+  ],
+  [
+    'window.addEventListener("scroll",(()=>{n?.updateActiveTOCLink()}),{signal:e})',
+    'window.addEventListener("scroll",(()=>{n?.updateActiveTOCLink()}),{signal:e}),window.addEventListener("resize",(()=>{n?.registerTOCScroll()}),{signal:e})',
+    'toc build resize refresh',
+  ],
+  [
+    'return l.showTOCAside(),l.registerTOCScroll(),l.updateActiveTOCLink(),n=l,l}',
+    'return l.showTOCAside(),l.registerTOCScroll(),l.updateActiveTOCLink(),setTimeout((()=>l.registerTOCScroll()),800),n=l,l}',
+    'toc build delayed refresh',
+  ],
+  [
+    'if(0===c.length)return s.hideToggle(),r.remove(),document.querySelectorAll(".toc-marker").forEach((e=>{e.remove()})),n=null,null;',
+    'if(0===c.length){s.hideToggle();const w=r.querySelector(".post-side-stack");if(w){const t=r.querySelector(".post-toc-wrap");t&&t.remove()}else r.remove();document.querySelectorAll(".toc-marker").forEach((e=>{e.remove()}));return n=null,null}',
+    'toc build keep sidebar cards',
+  ],
+]);
+
+// 4. Swup:去掉 SwupSlideTheme 的退出动画。//    旧流程是"先播旧页退出动画(约 320ms),再替换 DOM",首跳 click→replace
 //    实测 426ms;改成内容立即替换、只播新页入场,click→replace 可降到 ~30ms。
 patchText('layout/components/swup.ejs', [
   [
@@ -211,6 +333,40 @@ patchText('source/js/build/utils/layout.js', [
     'export const initPageHeightHandle=e=>{if(e?.homeBanner_dom)return;const t=',
     'export const initPageHeightHandle=e=>{if(e?.homeBanner_dom)return;if(document.querySelector(".post-page-container"))return;const t=',
     'layout build skip page height on post',
+  ],
+]);
+
+// 7. SEO:canonical 保留大小写(标签页 /tags/Docker/ 不能变成 404 的
+//    /tags/docker/),html lang 取数组第一项,OG 图优先用文章封面。
+patchText('scripts/helpers/meta-helpers.js', [
+  [
+    "page.canonical_path.replace('index.html', '').toLowerCase()",
+    "page.canonical_path.replace('index.html', '')",
+    'canonical keep case',
+  ],
+]);
+patchText('layout/layout.ejs', [
+  [
+    '<html lang="<%= config.language %>">',
+    '<html lang="<%= Array.isArray(config.language) ? config.language[0] : config.language %>">',
+    'html lang first',
+  ],
+]);
+patchText('layout/components/header/head.ejs', [
+  [
+    'let ogImage = page.og_image || openGraphConfig?.image;',
+    'let ogImage = page.og_image || page.cover || page.banner || openGraphConfig?.image;',
+    'og image cover',
+  ],
+  [
+    'let ogDescription = page.og_description || openGraphConfig?.description || page.description || config.description;',
+    'let ogDescription = page.og_description || page.description || openGraphConfig?.description || config.description;',
+    'og description page first',
+  ],
+  [
+    "twitter_card: 'summary',",
+    "twitter_card: 'summary_large_image',",
+    'twitter large card',
   ],
 ]);
 

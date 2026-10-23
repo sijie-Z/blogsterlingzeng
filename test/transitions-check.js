@@ -131,6 +131,18 @@ async function waitIdle(page, timeout = 8000) {
     check('内容替换 < 150ms', navMarks.replace > 0 && navMarks.replace < 150, JSON.stringify(navMarks));
     check('导航完成 < 800ms', navMarks.end > 0 && navMarks.end < 800, JSON.stringify(navMarks));
     check('最长长任务 < 300ms', Math.max(0, ...(metrics.longtasks || [])) < 300, JSON.stringify(metrics));
+    const a11y = await page.evaluate(() => {
+      const trigger = document.querySelector('.search-popup-trigger');
+      return {
+        role: trigger?.getAttribute('role') || null,
+        tab: trigger?.getAttribute('tabindex') || null,
+        label: trigger?.getAttribute('aria-label') || null,
+        skip: !!document.querySelector('.skip-link'),
+        main: !!document.querySelector('#main-content'),
+      };
+    });
+    check('换页后搜索按钮仍可键盘操作', a11y.role === 'button' && a11y.tab === '0' && !!a11y.label, JSON.stringify(a11y));
+    check('skip link 与正文落点存在', a11y.skip && a11y.main, JSON.stringify(a11y));
     console.log('  帧指标', JSON.stringify(metrics));
     console.log('  导航耗时', JSON.stringify(navMarks));
   }
@@ -153,6 +165,9 @@ async function waitIdle(page, timeout = 8000) {
     check('导航完成', state.path === '/about', JSON.stringify(state));
     check('内容已渲染', state.text > 300, JSON.stringify(state));
     check('过渡类已清理', idle === true, JSON.stringify(state));
+    await sleep(300);
+    const announced = await page.evaluate(() => document.getElementById('route-announcer')?.textContent || '');
+    check('换页有路由播报', announced.includes('已导航到'), announced);
     console.log('  帧指标', JSON.stringify(metrics));
   }
 
@@ -204,8 +219,24 @@ async function waitIdle(page, timeout = 8000) {
     ).then(() => true).catch(() => false);
     const focusMs = Date.now() - searchStart;
     check('搜索框立即聚焦', focused && focusMs < 500, `focused=${focused} ${focusMs}ms`);
+    const dialog = await page.evaluate(() => {
+      const overlay = document.querySelector('.search-pop-overlay.active');
+      const input = overlay?.querySelector('.search-input');
+      return {
+        role: overlay?.getAttribute('role') || null,
+        modal: overlay?.getAttribute('aria-modal') || null,
+        label: input?.getAttribute('aria-label') || null,
+      };
+    });
+    check('搜索弹层有 dialog 语义', dialog.role === 'dialog' && dialog.modal === 'true' && !!dialog.label, JSON.stringify(dialog));
+    for (let i = 0; i < 4; i++) await page.keyboard.press('Tab');
+    const trapped = await page.evaluate(() => !!document.activeElement?.closest('.search-pop-overlay.active'));
+    check('Tab 焦点不离开搜索弹层', trapped);
     await page.keyboard.press('Escape');
-    await sleep(500);
+    await sleep(250);
+    const restored = await page.evaluate(() => document.activeElement?.classList.contains('search-popup-trigger'));
+    check('关闭后焦点回到搜索按钮', !!restored);
+    await sleep(300);
     const closed = await page.evaluate(() => !document.querySelector('.search-pop-overlay')?.classList.contains('active'));
     check('Esc 关闭搜索', closed);
   }

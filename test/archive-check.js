@@ -45,6 +45,17 @@ function check(name, cond, extra) {
   check('原归档列表仍在', state.archiveList);
   check('桌面无横向溢出', state.overflow <= 2, String(state.overflow));
 
+  const yearPage = await browser.newPage();
+  await yearPage.setViewport({ width: 1440, height: 1000 });
+  await yearPage.goto(`${BASE}/archives/2026/`, { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(800);
+  const yearState = await yearPage.evaluate(() => ({
+    heatmap: !!document.querySelector('.writing-heatmap'),
+    list: !!document.querySelector('.archive-container'),
+  }));
+  check('年归档页不重复注入全局热力图', !yearState.heatmap && yearState.list, JSON.stringify(yearState));
+  await yearPage.close();
+
   const mobile = await browser.newPage();
   await mobile.setViewport({ width: 390, height: 844 });
   const mErrors = [];

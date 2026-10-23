@@ -124,6 +124,8 @@
     if (!saved || !Number.isFinite(saved.y)) return;
     if (Date.now() - saved.ts > READING_POS_TTL) return;
     if (saved.percent < 0.05 || saved.percent > 0.92 || saved.y < 300) return;
+    // 浏览器后退/Swup 已恢复位置时不要再提示;整页刷新仍保留胶囊
+    if (window.__cjSpaVisit && window.scrollY > 300 && Math.abs(window.scrollY - saved.y) < 200) return;
     // Swup 换页后旧胶囊还在 DOM 里,不清掉就不会为新文章生成
     const oldPill = document.querySelector('.reading-resume');
     if (oldPill) oldPill.remove();
@@ -142,7 +144,10 @@
     pill.addEventListener('click', e => {
       if (e.target.closest('.reading-resume-close')) { dismiss(); return; }
       const reduced = window.__l2dReducedMotion || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-      window.scrollTo({ top: saved.y, behavior: reduced ? 'auto' : 'smooth' });
+      const max = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+      // 按百分比恢复,跨设备/文章变短时比绝对像素稳
+      const target = Number.isFinite(saved.percent) ? Math.round(saved.percent * max) : saved.y;
+      window.scrollTo({ top: Math.min(Math.max(0, target), max), behavior: reduced ? 'auto' : 'smooth' });
       dismiss();
     });
     requestAnimationFrame(() => pill.classList.add('show'));
@@ -203,6 +208,19 @@
     }, 700);
   }
 
+  function announceRoute() {
+    if (!window.__cjRouteAnnounced) {
+      window.__cjRouteAnnounced = true;
+      return;
+    }
+    const announcer = document.getElementById('route-announcer');
+    if (!announcer) return;
+    const heading = document.querySelector('.main-content h1, .article-content h1');
+    const text = (heading && heading.textContent.trim()) || document.title;
+    announcer.textContent = '';
+    setTimeout(() => { announcer.textContent = '已导航到：' + text; }, 100);
+  }
+
   function initSwupNavPause() {
     const attach = swup => {
       if (!swup || !swup.hooks || swup.__cjNavPause) return;
@@ -211,7 +229,11 @@
         closeCodeFullscreen();
         pauseLive2DForNav();
       });
-      swup.hooks.on('page:view', resumeLive2DAfterNav);
+      swup.hooks.on('page:view', () => {
+        window.__cjSpaVisit = true;
+        resumeLive2DAfterNav();
+        announceRoute();
+      });
     };
     if (window.swup && window.swup.hooks) {
       attach(window.swup);
@@ -333,19 +355,79 @@
       const input = document.querySelector('.search-pop-overlay.active .search-input');
       if (input && document.activeElement !== input) input.focus({ preventScroll: true });
     };
+    const prepareOverlay = () => {
+      const overlay = document.querySelector('.search-pop-overlay.active');
+      if (!overlay) return;
+      overlay.setAttribute('role', 'dialog');
+      overlay.setAttribute('aria-modal', 'true');
+      overlay.setAttribute('aria-label', '站内搜索');
+      const input = overlay.querySelector('.search-input');
+      if (input && !input.getAttribute('aria-label')) input.setAttribute('aria-label', '搜索文章');
+      const close = overlay.querySelector('.popup-btn-close');
+      if (close) {
+        close.setAttribute('role', 'button');
+        close.tabIndex = 0;
+        close.setAttribute('aria-label', '关闭搜索');
+        if (!close.__cjKey) {
+          close.__cjKey = true;
+          close.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              close.click();
+            }
+          });
+        }
+      }
+    };
     document.addEventListener('click', e => {
-      if (!e.target.closest('.search-popup-trigger')) return;
-      requestAnimationFrame(focusInput);
-      setTimeout(focusInput, 80);
+      const trigger = e.target.closest('.search-popup-trigger');
+      if (!trigger) return;
+      window.__cjSearchTrigger = trigger;
+      const run = () => { prepareOverlay(); focusInput(); };
+      requestAnimationFrame(run);
+      setTimeout(run, 80);
     }, true);
-    const overlay = document.querySelector('.search-pop-overlay');
-    if (overlay) {
-      new MutationObserver(() => {
-        if (!overlay.classList.contains('active')) return;
-        requestAnimationFrame(focusInput);
-        setTimeout(focusInput, 80);
-      }).observe(overlay, { attributes: true, attributeFilter: ['class'] });
+    if (!window.__cjSearchA11y) {
+      window.__cjSearchA11y = true;
+      document.addEventListener('keydown', e => {
+        const overlay = document.querySelector('.search-pop-overlay.active');
+        if (!overlay) return;
+        if (e.key === 'Tab') {
+          const focusables = [...overlay.querySelectorAll('a[href], button:not([disabled]), input, textarea, select, [tabindex]:not([tabindex="-1"])')]
+            .filter(el => el.getClientRects().length > 0);
+          if (!focusables.length) return;
+          const first = focusables[0];
+          const last = focusables[focusables.length - 1];
+          if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }, true);
+      const restoreFocus = () => {
+        if (!document.querySelector('.search-pop-overlay.active') && window.__cjSearchTrigger) {
+          try { window.__cjSearchTrigger.focus(); } catch (err) {}
+        }
+      };
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') setTimeout(restoreFocus, 80);
+      }, true);
+      document.addEventListener('click', e => {
+        if (!e.target.closest('.popup-btn-close') && !e.target.classList.contains('search-pop-overlay')) return;
+        setTimeout(restoreFocus, 80);
+      }, true);
     }
+  }
+
+  function syncDrawerA11y() {
+    const bar = document.querySelector('.navbar-bar');
+    const drawer = document.querySelector('.navbar-drawer');
+    const open = document.body.classList.contains('navbar-drawer-show');
+    if (drawer) drawer.toggleAttribute('inert', !open);
+    if (bar) bar.setAttribute('aria-expanded', String(open));
   }
 
   function initNavA11y() {
@@ -365,29 +447,39 @@
       });
     });
 
-    const bar = document.querySelector('.navbar-bar');
-    const drawer = document.querySelector('.navbar-drawer');
-    if (drawer && !drawer.dataset.cjA11y) {
-      drawer.dataset.cjA11y = '1';
-      const sync = () => {
-        const open = document.body.classList.contains('navbar-drawer-show');
-        drawer.toggleAttribute('inert', !open);
-        if (bar) bar.setAttribute('aria-expanded', String(open));
-      };
-      sync();
-      new MutationObserver(sync).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    // Swup 换页会替换 DOM,这里每次都重新同步当前节点;
+    // 全局 observer 只注册一次,避免每次换页叠加。
+    syncDrawerA11y();
+    if (!window.__cjDrawerA11yObserver) {
+      window.__cjDrawerA11yObserver = new MutationObserver(syncDrawerA11y);
+      window.__cjDrawerA11yObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
     }
+  }
+
+  function syncAsideA11y() {
+    const toc = document.querySelector('.toc-content-container');
+    if (!toc) return;
+    toc.toggleAttribute('inert', !document.documentElement.classList.contains('aside-open'));
   }
 
   function initAsideState() {
     // 主题切换目录后同步预置类,保持与首屏布局一致
-    document.addEventListener('click', e => {
-      if (!e.target.closest('.page-aside-toggle')) return;
-      setTimeout(() => {
-        const container = document.querySelector('.post-page-container');
-        document.documentElement.classList.toggle('aside-open', !!container && container.classList.contains('show-toc'));
-      }, 0);
-    });
+    syncAsideA11y();
+    if (!window.__cjAsideClick) {
+      window.__cjAsideClick = true;
+      document.addEventListener('click', e => {
+        if (!e.target.closest('.page-aside-toggle')) return;
+        setTimeout(() => {
+          const container = document.querySelector('.post-page-container');
+          document.documentElement.classList.toggle('aside-open', !!container && container.classList.contains('show-toc'));
+          syncAsideA11y();
+        }, 0);
+      });
+    }
+    if (!window.__cjAsideObserver) {
+      window.__cjAsideObserver = new MutationObserver(syncAsideA11y);
+      window.__cjAsideObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    }
   }
 
   function initLive2DRuntime() {
@@ -623,6 +715,11 @@
       });
       heading.appendChild(anchor);
     });
+    // Hexo 生成的空 headerlink 与我们的锚点重复,移出 Tab 顺序
+    document.querySelectorAll('.article-content a.headerlink').forEach(link => {
+      link.tabIndex = -1;
+      link.setAttribute('aria-hidden', 'true');
+    });
   }
 
   // ============================
@@ -663,8 +760,11 @@
         e.preventDefault();
         e.stopPropagation();
         const code = container.closest('.code-container') || container;
-        const on = code.classList.toggle('code-fullscreen');
-        if (!on) { closeCodeFullscreen(); return; }
+        if (code.classList.contains('code-fullscreen')) {
+          closeCodeFullscreen();
+          return;
+        }
+        code.classList.add('code-fullscreen');
         // 文章容器有 transform,position:fixed 会被限制在内容区;
         // 全屏时临时移到 body,关闭时原位插回。
         code.__cjOriginalParent = code.parentNode;
@@ -895,6 +995,29 @@
   // Theme switcher — 导航栏季节下拉 + 手电筒 + 秒表(移植自旧版)
   // ============================
   function initThemeSwitcher() {
+    // 换页后导航栏会被整体替换;旧秒表 interval 必须停掉,
+    // document 级关闭逻辑只注册一次并每次查询当前控件。
+    clearInterval(window.__cjTimerInterval);
+    window.__cjTimerInterval = null;
+    if (!window.__cjNavControlsGlobal) {
+      window.__cjNavControlsGlobal = true;
+      document.addEventListener('click', e => {
+        const controls = document.querySelector('.nb-controls');
+        if (!controls) return;
+        const dropdown = controls.querySelector('.nb-dropdown');
+        const themeBtn = controls.querySelector('.nb-theme-btn');
+        if (dropdown && themeBtn && !e.target.closest('.nb-theme-btn') && !e.target.closest('.nb-dropdown')) {
+          dropdown.classList.remove('show');
+          themeBtn.setAttribute('aria-expanded', 'false');
+        }
+        const panel = controls.querySelector('.nb-timer-panel');
+        const timerBtn = controls.querySelector('.nb-timer-btn');
+        if (panel && timerBtn && !panel.contains(e.target) && !e.target.closest('.nb-timer-btn')) {
+          panel.classList.remove('show');
+          timerBtn.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
     const navbar = document.querySelector('.navbar-content');
     if (!navbar || navbar.querySelector('.nb-controls')) return;
 
@@ -949,7 +1072,6 @@
         setDropdown(false);
       });
     });
-    document.addEventListener('click', () => setDropdown(false));
 
     // 秒表
     const timerPanel = controls.querySelector('.nb-timer-panel');
@@ -957,7 +1079,7 @@
     const startBtn = controls.querySelector('#nbStart');
     const pauseBtn = controls.querySelector('#nbPause');
     const resetBtn = controls.querySelector('#nbReset');
-    let seconds = 0, interval = null;
+    let seconds = 0;
 
     function fmt(s) {
       return String(Math.floor(s / 3600)).padStart(2, '0') + ':' +
@@ -970,23 +1092,20 @@
       e.currentTarget.setAttribute('aria-expanded', String(open));
     });
     startBtn.addEventListener('click', () => {
-      interval = setInterval(() => { seconds++; timerTime.textContent = fmt(seconds); }, 1000);
+      window.__cjTimerInterval = setInterval(() => { seconds++; timerTime.textContent = fmt(seconds); }, 1000);
       startBtn.style.display = 'none'; pauseBtn.style.display = '';
     });
     pauseBtn.addEventListener('click', () => {
-      clearInterval(interval);
+      clearInterval(window.__cjTimerInterval);
+      window.__cjTimerInterval = null;
       startBtn.style.display = ''; pauseBtn.style.display = 'none';
     });
     resetBtn.addEventListener('click', () => {
-      clearInterval(interval); seconds = 0;
+      clearInterval(window.__cjTimerInterval);
+      window.__cjTimerInterval = null;
+      seconds = 0;
       timerTime.textContent = '00:00:00';
       startBtn.style.display = ''; pauseBtn.style.display = 'none';
-    });
-    document.addEventListener('click', e => {
-      if (!timerPanel.contains(e.target) && !e.target.closest('.nb-timer-btn')) {
-        timerPanel.classList.remove('show');
-        controls.querySelector('.nb-timer-btn').setAttribute('aria-expanded', 'false');
-      }
     });
   }
 
@@ -1227,8 +1346,8 @@
         <div class="related-posts-list">
           ${list.map(p => {
             const cover = p.cover || RELATED_COVERS[p.categories[0]] || RELATED_PLACEHOLDER;
-            return `<a class="related-post-item" href="${p.path}" title="${p.title}">
-              <div class="related-post-cover" style="background-image:url('${cover}')"></div>
+            return `<a class="related-post-item" href="${esc(p.path)}" title="${esc(p.title)}">
+              <div class="related-post-cover" style="background-image:url('${esc(cover)}')"></div>
               <div class="related-post-info">
                 <div class="related-post-title">${esc(p.title)}</div>
                 <div class="related-post-meta"><span>${esc(p.categories[0] || '')}</span>${p.date ? ' · ' + p.date : ''}</div>
@@ -1377,8 +1496,8 @@
     });
     onceGlobal('themeToggle', initThemeToggle);
     onceGlobal('live2dRuntime', initLive2DRuntime);
-    onceGlobal('asideState', initAsideState);
-    onceGlobal('navA11y', initNavA11y);
+    initAsideState();
+    initNavA11y();
     onceGlobal('searchFocus', initSearchFocus);
     onceGlobal('swupNavPause', initSwupNavPause);
     initMouseFollower();

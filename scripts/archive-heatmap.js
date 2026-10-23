@@ -31,6 +31,8 @@ function textLength(html) {
 hexo.extend.filter.register('after_render:html', function (str, locals) {
   const page = locals && locals.page;
   if (!str || !page || !str.includes('<div class="archive-container')) return str;
+  // 年/月归档页只列局部文章，不要注入全局热力图
+  if (page.year || page.month) return str;
   if (page.current && page.current !== 1) return str;
 
   const posts = hexo.locals.get('posts').toArray()
@@ -53,32 +55,28 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
   const LEFT = 24;
   const TOP = 18;
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  // 本周周一
-  const monday = new Date(today);
-  const dow = (monday.getDay() + 6) % 7; // 0 = Monday
-  monday.setDate(monday.getDate() - dow);
-  // 往前 WEEKS-1 周
-  const start = new Date(monday);
-  start.setDate(start.getDate() - (WEEKS - 1) * 7);
+  // 用站点时区生成网格,避免 GitHub Actions(UTC)在凌晨构建时
+  // 与文章日期的 Asia/Shanghai 口径差一天。
+  const moment = require('moment-timezone');
+  const tz = hexo.config.timezone || 'Asia/Shanghai';
+  const today = moment.tz(tz).startOf('day');
+  const monday = today.clone().startOf('isoWeek');
+  const start = monday.clone().subtract(WEEKS - 1, 'weeks');
 
   const cells = [];
   const monthLabels = [];
   let lastMonth = -1;
   for (let w = 0; w < WEEKS; w++) {
-    const weekStart = new Date(start);
-    weekStart.setDate(start.getDate() + w * 7);
-    const month = weekStart.getMonth();
+    const weekStart = start.clone().add(w, 'weeks');
+    const month = weekStart.month();
     if (month !== lastMonth) {
       monthLabels.push(`<text class="wh-month" x="${LEFT + w * STEP}" y="10">${month + 1}月</text>`);
       lastMonth = month;
     }
     for (let d = 0; d < 7; d++) {
-      const date = new Date(weekStart);
-      date.setDate(weekStart.getDate() + d);
-      if (date > today) continue;
-      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      const date = weekStart.clone().add(d, 'days');
+      if (date.isAfter(today)) continue;
+      const key = date.format('YYYY-MM-DD');
       const count = counts.get(key) || 0;
       const level = count === 0 ? 0 : count === 1 ? 1 : count === 2 ? 2 : count <= 4 ? 3 : 4;
       const x = LEFT + w * STEP;

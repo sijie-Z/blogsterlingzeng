@@ -66,7 +66,7 @@ global:
   open_graph:
     enable: true
     image: /images/og-banner.jpg
-    description: "Sterling Zeng 的个人技术博客 - 记录编程、技术探索与成长"
+    description: "记录技术与生活的个人博客，分享编程经验、技术探索与成长感悟"
   google_analytics:
     enable: false
     id:
@@ -320,7 +320,7 @@ footer:
 inject:
   enable: true
   head:
-    - <link rel="stylesheet" href="/css/custom.css?v=20261022p">
+    - <link rel="stylesheet" href="/css/custom.css?v=20261022r">
   footer:
     - <script src="/live2d/autoload.js?v=20261022f"></script>
     - <div class="footer-extra-icons">
@@ -328,7 +328,7 @@ inject:
         <a href="https://github.com/sijie-Z" title="GitHub" aria-label="GitHub" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-github" aria-hidden="true"></i></a>
         <a href="mailto:1683039482@qq.com" title="邮件联系" aria-label="邮件联系"><i class="fa-regular fa-envelope" aria-hidden="true"></i></a>
       </div>
-    - <script src="/js/custom.js?v=20261022s" data-swup-reload-script></script>
+    - <script src="/js/custom.js?v=20261022x" data-swup-reload-script></script>
 # INJECT <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
 
 
