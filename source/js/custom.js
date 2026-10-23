@@ -6,6 +6,12 @@
 (function() {
   'use strict';
 
+  // 页脚数字由主题 runtime 每秒直接写文本,不需要 odometer 的数字滚动动画。
+  // 在 DOMContentLoaded 之前关掉自动初始化,避免一次 ~300ms 长任务。
+  if (window.Odometer && window.Odometer.options) {
+    window.Odometer.options.auto = false;
+  }
+
   // HTML 转义(供相关阅读与项目卡片共用)
   function esc(s) {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -65,6 +71,29 @@
       if (e.key === 'Escape' && document.body.classList.contains('flashlight-mode')) {
         toggleFlashlight();
       }
+    });
+  }
+
+  // APlayer 的图标按钮默认只有 SVG,补上可访问名称
+  function initAplayerA11y() {
+    const labels = {
+      'aplayer-icon-play': '播放',
+      'aplayer-icon-pause': '暂停',
+      'aplayer-icon-volume-up': '音量',
+      'aplayer-icon-volume-down': '静音',
+      'aplayer-icon-loop': '循环模式',
+      'aplayer-icon-order': '顺序播放',
+      'aplayer-icon-lrc': '歌词',
+      'aplayer-icon-menu': '播放列表',
+      'aplayer-icon-back': '上一首',
+      'aplayer-icon-forward': '下一首',
+    };
+    document.querySelectorAll('.aplayer button').forEach(btn => {
+      if (btn.dataset.cjA11y) return;
+      const cls = [...btn.classList].find(name => labels[name]);
+      if (!cls) return;
+      btn.dataset.cjA11y = '1';
+      btn.setAttribute('aria-label', labels[cls]);
     });
   }
 
@@ -1400,37 +1429,6 @@
   }
 
   // ============================
-  // Odometer — 等字体加载完成再初始化
-  // odometer 在 DOMContentLoaded 自动初始化时,4 套 Google 字体
-  // 尚未就绪,数字度量错误导致 ribbon 高度塌陷为 0——静止时数字
-  // 被裁剪不可见,仅滚动瞬间露出。这里阻止自动初始化,等
-  // document.fonts.ready 后再手动初始化,滚动效果正常且数字可见。
-  // ============================
-  function initOdometer() {
-    if (!window.Odometer) return;
-    // 阻止库的 DOMContentLoaded 自动初始化(它在 ready 时检查 options.auto)
-    window.Odometer.options.auto = false;
-    // 只在首屏初始化;换页后的页脚由主题 runtime 直接写文本,避免重复动画长任务
-    if (window.__odometerReady) return;
-    window.__odometerReady = true;
-
-    const start = () => {
-      document.querySelectorAll('.odometer').forEach(el => {
-        if (el.odometer) return;
-        try {
-          new window.Odometer({ el, format: '( ddd).dd', duration: 200 });
-        } catch (e) {}
-      });
-    };
-
-    if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(() => setTimeout(start, 50));
-    } else {
-      setTimeout(start, 500);
-    }
-  }
-
-  // ============================
   // Copy link button (article post-tools)
   // ============================
   function showToast(msg) {
@@ -2181,11 +2179,16 @@
   // Initialize all features
   // ============================
   function init() {
+    if (window.Odometer && window.Odometer.options) {
+      window.Odometer.options.auto = false;
+    }
     closeCodeFullscreen();
     // 全局监听在整个会话只注册一次(脚本每次换页都会重新执行)
     onceGlobal('smoothScroll', initSmoothScroll);
     onceGlobal('keyboard', initKeyboardShortcuts);
     initExternalLinks();
+    initAplayerA11y();
+    [1500, 4000, 7000].forEach(ms => setTimeout(initAplayerA11y, ms));
     onceGlobal('readingProgress', initReadingProgress);
     onceGlobal('readingResume', initReadingResume);
     onceGlobal('scrollHeightCache', initScrollHeightCache);
@@ -2223,7 +2226,6 @@
     initArticleStats();
     initPostStats();
     onceGlobal('like', initLikeHandler);
-    initOdometer();
   }
 
   // Run on DOM ready

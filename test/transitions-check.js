@@ -27,12 +27,16 @@ async function installMetrics(page) {
     requestAnimationFrame(loop);
     try {
       new PerformanceObserver(list => {
-        for (const e of list.getEntries()) window.__tm.longtasks.push(Math.round(e.duration));
+        for (const e of list.getEntries()) {
+          window.__tm.longtasks.push({ d: Math.round(e.duration), s: e.startTime });
+        }
       }).observe({ entryTypes: ['longtask'] });
     } catch (_) {}
     try {
       new PerformanceObserver(list => {
-        for (const e of list.getEntries()) window.__tm.loaf.push(Math.round(e.duration));
+        for (const e of list.getEntries()) {
+          window.__tm.loaf.push({ d: Math.round(e.duration), s: e.startTime });
+        }
       }).observe({ type: 'long-animation-frame', buffered: true });
     } catch (_) {}
   });
@@ -43,13 +47,17 @@ async function readMetrics(page) {
     window.__tm.stopped = true;
     const f = (window.__tm?.frames || []).filter(x => x > 0).sort((a, b) => a - b);
     const p = q => Math.round(f[Math.min(f.length - 1, Math.floor(f.length * q))] || 0);
+    // 只统计 installMetrics 之后的导航任务,避免把首屏字体/布局算进去
+    const after = list => (list || []).filter(x => x.s >= window.__tm.start - 10);
+    const longtasks = after(window.__tm.longtasks).map(x => x.d).slice(0, 6);
+    const loaf = after(window.__tm.loaf).map(x => x.d);
     return {
       frames: f.length,
       p50: p(0.5),
       p95: p(0.95),
       max: Math.round(f[f.length - 1] || 0),
-      longtasks: (window.__tm?.longtasks || []).slice(0, 6),
-      loafMax: Math.max(0, ...(window.__tm?.loaf || [])),
+      longtasks,
+      loafMax: Math.max(0, ...loaf),
     };
   });
 }
@@ -244,6 +252,10 @@ async function waitIdle(page, timeout = 8000) {
     await sleep(300);
     const closed = await page.evaluate(() => !document.querySelector('.search-pop-overlay')?.classList.contains('active'));
     check('Esc 关闭搜索', closed);
+    await page.waitForFunction(
+      () => !document.querySelector('.search-pop-overlay')?.classList.contains('active'),
+      { timeout: 2000 }
+    ).catch(() => {});
     await page.keyboard.down('Control');
     await page.keyboard.press('k');
     await page.keyboard.up('Control');

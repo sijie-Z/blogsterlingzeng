@@ -339,11 +339,6 @@ patchText('layout/components/swup.ejs', [
     '        containers: ["#swup"],\n        animationSelector: false,\n    });',
     'swup disable animation selector',
   ],
-  [
-    '        containers: ["#swup"],\n        animationSelector: false,',
-    '        containers: ["#swup"],\n        native: true,\n        animationSelector: false,',
-    'swup native view transitions',
-  ],
 ]);
 
 // 4.5 文章页统计行(阅读数 + 点赞)构建期渲染。
@@ -400,7 +395,7 @@ patchText('layout/components/plugins/aplayer.ejs', [
 <script>
 (function () {
   var loaded = false;
-  var timer = setTimeout(load, 6000);
+  var timer = setTimeout(load, 12000);
   function load() {
     if (loaded) return;
     loaded = true;
@@ -414,9 +409,7 @@ patchText('layout/components/plugins/aplayer.ejs', [
     };
     document.body.appendChild(core);
   }
-  ['pointerdown', 'keydown', 'touchstart', 'scroll'].forEach(function (ev) {
-    window.addEventListener(ev, load, { once: true, passive: true });
-  });
+  // 只在 12 秒后加载,避免用户点击导航/按钮时被播放器初始化打断
 })();
 </script>`,
     'aplayer defer',
@@ -424,18 +417,18 @@ patchText('layout/components/plugins/aplayer.ejs', [
 ]);
 
 // 5.1 归一旧版 aplayer 补丁(requestIdleCallback 常常 ~1s 就触发,
-//     仍然会和首屏抢主线程):改成首次交互 / 6s 超时。
+//     仍然会和首屏抢主线程):改成 12s 后加载,不再绑定用户交互。
 const aplayerFile = path.join(themeRoot, 'layout/components/plugins/aplayer.ejs');
 try {
   let ap = fs.readFileSync(aplayerFile, 'utf8');
   const before = ap;
   ap = ap.replace(
     "  var loaded = false;\n  function load() {\n    if (loaded) return;\n    loaded = true;\n",
-    "  var loaded = false;\n  var timer = setTimeout(load, 6000);\n  function load() {\n    if (loaded) return;\n    loaded = true;\n    clearTimeout(timer);\n"
+    "  var loaded = false;\n  var timer = setTimeout(load, 12000);\n  function load() {\n    if (loaded) return;\n    loaded = true;\n    clearTimeout(timer);\n"
   );
   ap = ap.replace(
     "  if ('requestIdleCallback' in window) requestIdleCallback(load, { timeout: 8000 });\n  else setTimeout(load, 2500);",
-    "  ['pointerdown', 'keydown', 'touchstart', 'scroll'].forEach(function (ev) {\n    window.addEventListener(ev, load, { once: true, passive: true });\n  });"
+    "  // 只在 12 秒后加载,避免用户点击导航/按钮时被播放器初始化打断\n"
   );
   if (ap !== before) {
     fs.writeFileSync(aplayerFile, ap, 'utf8');
@@ -477,12 +470,17 @@ patchText('source/js/build/tools/localSearch.js', [
 
 // 5.3 APlayer 初始化时会自己点击歌词图标;音频没有 lrc 时会弹出
 //     "LRC file request fails" 错误框,还会产生一次合成 click。
-//     直接移除这次自动点击。
+//     先移除自动点击;没有 lrc 时把 lrcType 设为 0,彻底不请求歌词。
 patchText('source/js/plugins/aplayer.js', [
   [
     '    document.querySelector(".aplayer-icon-lrc").click();\n',
     '',
     'aplayer remove auto lrc click',
+  ],
+  [
+    '      lrcType: 3,',
+    '      lrcType: audioList.some((item) => item.lrc) ? 3 : 0,',
+    'aplayer lrc only when present',
   ],
 ]);
 patchText('source/js/build/plugins/aplayer.js', [
@@ -490,6 +488,11 @@ patchText('source/js/build/plugins/aplayer.js', [
     ';document.querySelector(".aplayer-icon-lrc").click()',
     '',
     'aplayer remove auto lrc click build',
+  ],
+  [
+    'lrcType:3,audio:e',
+    'lrcType:e.some((t=>t.lrc))?3:0,audio:e',
+    'aplayer lrc only when present build',
   ],
 ]);
 

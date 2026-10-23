@@ -25,10 +25,10 @@ series_order: 4
 
 系列信息写在文章头部，只有两个字段：
 
-```yaml
+{% codeblock 文章 front matter lang:yaml mark:1 %}
 series: blog-engineering   # 系列 slug,同系列共用
 series_order: 4            # 可选,从 1 开始
-```
+{% endcodeblock %}
 
 系列自己的显示名和简介放在 `source/_data/series.yml`：
 

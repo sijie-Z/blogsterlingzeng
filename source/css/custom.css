@@ -2429,25 +2429,6 @@ html[data-theme-switching]::view-transition-new(*) {
   animation: none !important;
 }
 
-/* Swup native:页面切换交给浏览器做交叉淡入,固定导航不参与快照 */
-@media (prefers-reduced-motion: no-preference) {
-  ::view-transition-old(root),
-  ::view-transition-new(root) {
-    animation-duration: 180ms;
-    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  .navbar-container {
-    view-transition-name: site-header;
-  }
-
-  ::view-transition-group(site-header),
-  ::view-transition-old(site-header),
-  ::view-transition-new(site-header) {
-    animation: none;
-  }
-}
-
 html[data-theme-switching]::view-transition-old(root),
 html[data-theme-switching]::view-transition-new(root) {
   animation: none;
@@ -3208,6 +3189,18 @@ a.post-side-name:hover {
   user-select: none;
 }
 
+/* {% codeblock %} 的标题和 {% codeblock mark: %} 的行高亮 */
+.highlight-container figure.highlight figcaption {
+  color: var(--second-text-color);
+  font-size: 13px;
+  letter-spacing: 0.01em;
+}
+
+.highlight .line.marked {
+  background: color-mix(in srgb, var(--primary-color) 13%, transparent);
+  box-shadow: inset 2px 0 0 var(--primary-color);
+}
+
 /* ========================================
    FOOTNOTES
    ======================================== */
@@ -3259,6 +3252,65 @@ a.post-side-name:hover {
 /* 深色代码高亮的正则色在 #1e1e1e 上只有 2.9:1,提到 AA */
 .dark .article-content .highlight .regexp {
   color: #ce9178;
+}
+
+/* ========================================
+   HOME START — 首页三个面试入口
+   ======================================== */
+.home-start {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 1.6rem;
+}
+
+.home-start-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 15px 18px;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: var(--bg-card);
+  text-decoration: none !important;
+  background-image: none !important;
+  transition: transform 0.16s cubic-bezier(0.25, 0.46, 0.45, 0.94), border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.home-start-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--primary-color) 32%, var(--border-color));
+  box-shadow: var(--shadow-md, 0 8px 24px rgba(0, 0, 0, 0.08));
+}
+
+.home-start-kicker {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--primary-color);
+}
+
+.home-start-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.home-start-desc {
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+}
+
+@media (max-width: 640px) {
+  .home-start {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .home-start-card {
+    padding: 12px 14px;
+  }
 }
 
 /* ========================================
