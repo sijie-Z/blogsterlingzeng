@@ -1,0 +1,546 @@
+/* ========================================
+   SERIES — 系列徽章 / 文末系列卡 / 系列页
+   构建期输出，运行时 0 JS；折叠用原生 details
+   ======================================== */
+.post-series-badge {
+  margin: 0.25rem 0.5rem 1.4rem;
+  padding: 13px 16px 11px;
+  border: 1px solid var(--border-color);
+  border-left: 3px solid var(--primary-color);
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(135deg, rgba(37, 99, 235, 0.07), rgba(59, 130, 246, 0.02)),
+    var(--bg-card);
+  box-shadow: var(--shadow-sm);
+}
+
+.post-series-badge-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+}
+
+.post-series-kicker {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--primary-color);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.post-series-name,
+.post-series-card-title {
+  color: var(--text-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.post-series-card-title {
+  margin: 0;
+}
+
+.post-series-card-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.post-series-name:hover,
+.post-series-card-title a:hover {
+  color: var(--primary-color);
+}
+
+.post-series-name {
+  font-size: 0.95rem;
+}
+
+.post-series-count {
+  margin-left: auto;
+  color: var(--text-tertiary);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.post-series-progress {
+  height: 4px;
+  margin-top: 10px;
+  border-radius: 999px;
+  background: rgba(var(--card-sheen-rgb), 0.1);
+  overflow: hidden;
+}
+
+.post-series-progress > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+}
+
+.post-series-card {
+  margin: 2rem 0.5rem;
+  padding: 18px 18px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+}
+
+.post-series-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.post-series-card-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.post-series-card-title {
+  font-size: 1.08rem;
+  line-height: 1.4;
+}
+
+.post-series-nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.post-series-step {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--background-color);
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.post-series-step strong {
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.post-series-step:hover {
+  transform: translateY(-2px);
+  border-color: rgba(37, 99, 235, 0.35);
+  box-shadow: var(--shadow-sm);
+}
+
+.post-series-step.is-disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.post-series-step-label {
+  color: var(--text-tertiary);
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
+}
+
+.post-series-next {
+  text-align: right;
+  align-items: flex-end;
+}
+
+.post-series-details {
+  margin-top: 12px;
+  border-top: 1px solid var(--border-color);
+}
+
+.post-series-details summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+  font-weight: 500;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.post-series-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.post-series-details summary::before {
+  content: '▸';
+  margin-right: 8px;
+  color: var(--primary-color);
+  transition: transform var(--transition-fast);
+}
+
+.post-series-details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.post-series-list {
+  margin: 0 0 4px;
+  padding: 0;
+  list-style: none;
+}
+
+.post-series-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid transparent;
+}
+
+.post-series-list li.is-current {
+  border-left-color: var(--primary-color);
+  background: rgba(37, 99, 235, 0.07);
+}
+
+.post-series-idx {
+  flex: 0 0 auto;
+  color: var(--text-tertiary);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.post-series-item-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.post-series-item-title {
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  text-decoration: none;
+}
+
+a.post-series-item-title:hover {
+  color: var(--primary-color);
+}
+
+.post-series-item-meta {
+  color: var(--text-tertiary);
+  font-size: 0.74rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.post-series-current {
+  margin-left: auto;
+  flex: 0 0 auto;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--primary-color);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.post-series-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+  color: var(--primary-color);
+  font-size: 0.82rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.post-series-all:hover {
+  text-decoration: underline;
+}
+
+/* 系列页 / 系列总览 */
+.series-page-desc,
+.series-index-desc {
+  margin: 0 0 8px;
+  color: var(--text-secondary);
+  line-height: 1.75;
+}
+
+.series-page-meta,
+.series-index-meta {
+  color: var(--text-tertiary);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.series-page-list {
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.series-item + .series-item {
+  margin-top: 10px;
+}
+
+.series-item-link {
+  display: flex;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  color: inherit;
+  text-decoration: none;
+  transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.series-item-link:hover {
+  transform: translateY(-2px);
+  border-color: rgba(37, 99, 235, 0.35);
+  box-shadow: var(--shadow-md);
+}
+
+.series-item-idx {
+  flex: 0 0 auto;
+  color: var(--primary-color);
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.series-item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.series-item-title {
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.series-item-desc {
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+  line-height: 1.65;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.series-item-meta {
+  color: var(--text-tertiary);
+  font-size: 0.76rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.series-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 22px;
+  color: var(--primary-color);
+  font-size: 0.88rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.series-back:hover {
+  text-decoration: underline;
+}
+
+.series-index-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.series-index-card {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 18px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  color: inherit;
+  text-decoration: none;
+  transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.series-index-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(37, 99, 235, 0.35);
+  box-shadow: var(--shadow-md);
+}
+
+.series-index-kicker {
+  color: var(--primary-color);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.series-index-name {
+  color: var(--text-primary);
+  font-size: 1.12rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.series-index-desc {
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+  line-height: 1.65;
+}
+
+.series-index-meta {
+  margin-top: auto;
+  padding-top: 6px;
+}
+
+@media (min-width: 640px) {
+  .post-series-badge {
+    margin-left: 1.5rem;
+    margin-right: 1.5rem;
+  }
+
+  .post-series-card {
+    margin-left: 1.5rem;
+    margin-right: 1.5rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .post-series-badge,
+  .post-series-card {
+    margin-left: 2rem;
+    margin-right: 2rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .post-series-badge,
+  .post-series-card {
+    padding-left: 13px;
+    padding-right: 13px;
+  }
+
+  .post-series-nav {
+    grid-template-columns: 1fr;
+  }
+
+  .post-series-next {
+    text-align: left;
+    align-items: flex-start;
+  }
+
+  .post-series-count {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .post-series-card-head {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .series-index-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 归档页顶部的系列入口 */
+.archive-series {
+  margin: 4px 0 18px;
+}
+
+.archive-series-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.archive-series-title {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.archive-series-all {
+  color: var(--primary-color);
+  font-size: 0.82rem;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.archive-series-all:hover {
+  text-decoration: underline;
+}
+
+.archive-series-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.archive-series-card {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-color);
+  border-left: 3px solid var(--primary-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  color: inherit;
+  text-decoration: none;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.archive-series-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.archive-series-name {
+  color: var(--text-primary);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.archive-series-meta {
+  color: var(--text-tertiary);
+  font-size: 0.76rem;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 640px) {
+  .archive-series-grid {
+    grid-template-columns: 1fr;
+  }
+}

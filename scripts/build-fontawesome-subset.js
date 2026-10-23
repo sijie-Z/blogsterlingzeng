@@ -60,26 +60,33 @@ function buildCodepointMap() {
   return map;
 }
 
-const used = [...collectUsedNames()].filter(n => !UTILITY.has(n));
-const map = buildCodepointMap();
-const icons = used.filter(n => map.has(n)).sort();
-const codepoints = [...new Set(icons.map(n => map.get(n)))].sort();
-if (!codepoints.length) throw new Error('没有扫描到任何图标');
+function main() {
+  const used = [...collectUsedNames()].filter(n => !UTILITY.has(n));
+  const map = buildCodepointMap();
+  const icons = used.filter(n => map.has(n)).sort();
+  const codepoints = [...new Set(icons.map(n => map.get(n)))].sort();
+  if (!codepoints.length) throw new Error('没有扫描到任何图标');
 
-const unicodes = codepoints.map(c => 'U+' + c.toUpperCase().padStart(4, '0')).join(',');
-fs.mkdirSync(OUT_DIR, { recursive: true });
+  const unicodes = codepoints.map(c => 'U+' + c.toUpperCase().padStart(4, '0')).join(',');
+  fs.mkdirSync(OUT_DIR, { recursive: true });
 
-for (const weight of ['solid-900', 'regular-400', 'brands-400']) {
-  const input = path.join(FONT_SRC, `fa-${weight}.ttf`);
-  const output = path.join(OUT_DIR, `fa-${weight}.subset.woff2`);
-  const args = [input, `--unicodes=${unicodes}`, '--flavor=woff2', `--output-file=${output}`];
-  try {
-    execFileSync('pyftsubset', args, { stdio: 'inherit' });
-  } catch (err) {
-    execFileSync('python', ['-m', 'fontTools.subset', ...args], { stdio: 'inherit' });
+  for (const weight of ['solid-900', 'regular-400', 'brands-400']) {
+    const input = path.join(FONT_SRC, `fa-${weight}.ttf`);
+    const output = path.join(OUT_DIR, `fa-${weight}.subset.woff2`);
+    const args = [input, `--unicodes=${unicodes}`, '--flavor=woff2', `--output-file=${output}`];
+    try {
+      execFileSync('pyftsubset', args, { stdio: 'inherit' });
+    } catch (err) {
+      execFileSync('python', ['-m', 'fontTools.subset', ...args], { stdio: 'inherit' });
+    }
+    const kb = Math.round(fs.statSync(output).size / 1024);
+    console.log(`[fa-subset] ${path.basename(output)} ${kb} KB`);
   }
-  const kb = Math.round(fs.statSync(output).size / 1024);
-  console.log(`[fa-subset] ${path.basename(output)} ${kb} KB`);
+
+  console.log(`[fa-subset] ${icons.length} 个图标 / ${codepoints.length} 个码点`);
 }
 
-console.log(`[fa-subset] ${icons.length} 个图标 / ${codepoints.length} 个码点`);
+// 只在 `npm run build:fonts` 时执行;Hexo 启动加载 scripts/ 不应触发构建
+if (require.main === module) {
+  main();
+}

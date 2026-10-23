@@ -1,0 +1,7 @@
+blog-engineering:
+  name: 博客工程化
+  description: 从选型、运行时迁移到性能体检，把个人博客当成一个长期维护的工程。
+
+agent-rag:
+  name: Agent 与 RAG 实战
+  description: 从 RAG 知识库到多 Agent 协作，再到消融实验，记录检索、规划与执行的取舍。

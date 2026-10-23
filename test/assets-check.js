@@ -1,0 +1,179 @@
+/* 资源与 SEO 回归:响应式横幅 / WebP 纹理 / 系列收录 / JSON-LD */
+'use strict';
+
+const puppeteer = require('puppeteer-core');
+const { startServer } = require('./static-server');
+
+const CHROME = process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
+const PORT = Number(process.env.PORT || 4250);
+const BASE = `http://127.0.0.1:${PORT}`;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+let pass = 0, fail = 0;
+function check(name, cond, extra) {
+  if (cond) { pass++; console.log('  PASS', name); }
+  else { fail++; console.log('  FAIL', name, extra || ''); }
+}
+
+(async () => {
+  const server = await startServer(PORT);
+  const browser = await puppeteer.launch({
+    executablePath: CHROME, headless: true,
+    args: ['--no-sandbox', '--no-proxy-server', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--disable-dev-shm-usage'],
+    protocolTimeout: 60000,
+  });
+
+  console.log('=== 1. 桌面横幅 ===');
+  const page = await browser.newPage();
+  await page.evaluateOnNewDocument(() => localStorage.setItem('waifu-disabled', 'true'));
+  const musicRequests = [];
+  page.on('request', r => { if (r.url().endsWith('/music/123.mp3')) musicRequests.push(r.url()); });
+  await page.setViewport({ width: 1440, height: 900 });
+  await page.goto(BASE, { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(800);
+  const desktop = await page.evaluate(() => {
+    const img = document.querySelector('.home-banner-background img');
+    return {
+      srcset: img?.getAttribute('srcset') || '',
+      sizes: img?.getAttribute('sizes') || '',
+      current: img?.currentSrc || '',
+      natural: img ? [img.naturalWidth, img.naturalHeight] : null,
+    };
+  });
+  check('横幅有 srcset', /banner-light-960\.webp 960w/.test(desktop.srcset) && /1920w/.test(desktop.srcset), desktop.srcset);
+  check('横幅 sizes=100vw', desktop.sizes === '100vw', desktop.sizes);
+  check('桌面加载原图或 1280+', /banner-light(-1280)?\.webp/.test(desktop.current), desktop.current);
+  check('横幅有原始尺寸', desktop.natural?.[0] > 0, JSON.stringify(desktop.natural));
+
+  console.log('=== 2. 移动端按 DPR 选图 ===');
+  const mobile = await browser.newPage();
+  await mobile.evaluateOnNewDocument(() => localStorage.setItem('waifu-disabled', 'true'));
+  await mobile.setViewport({ width: 390, height: 844, deviceScaleFactor: 3 });
+  const bannerRequests = [];
+  mobile.on('request', r => {
+    if (r.url().includes('/images/banner-')) bannerRequests.push(r.url().replace(BASE, ''));
+  });
+  await mobile.goto(BASE, { waitUntil: 'networkidle2', timeout: 30000 });
+  await mobile.waitForFunction(() => {
+    const img = document.querySelector('.home-banner-background img');
+    return !!img && img.complete && img.naturalWidth > 0;
+  }, { timeout: 10000 }).catch(() => {});
+  const mobileImg = await mobile.evaluate(() => {
+    const img = document.querySelector('.home-banner-background img');
+    return { current: img?.currentSrc || '', width: img?.naturalWidth || 0, complete: !!img?.complete };
+  });
+  check('移动端 DPR3 选 1280 变体', /banner-light-1280\.webp/.test(mobileImg.current), mobileImg.current);
+  check('移动端不下载 1920 原图', !bannerRequests.includes('/images/banner-light.webp'), JSON.stringify(bannerRequests));
+  check('移动端变体已解码', mobileImg.complete && mobileImg.width > 0, JSON.stringify(mobileImg));
+  await mobile.close();
+
+  console.log('=== 3. 季节切换同步 srcset ===');
+  await page.click('.nb-theme-btn');
+  await page.waitForFunction(() => document.querySelector('.nb-dropdown')?.classList.contains('show'), { timeout: 5000 }).catch(() => {});
+  const autumn = await page.$('.nb-opt[data-season="autumn"]');
+  if (autumn) {
+    await autumn.click();
+    await sleep(1200);
+    const season = await page.evaluate(() => {
+      const img = document.querySelector('.home-banner-background img');
+      return {
+        season: document.documentElement.dataset.season,
+        src: img?.getAttribute('src') || '',
+        srcset: img?.getAttribute('srcset') || '',
+        current: img?.currentSrc || '',
+        natural: img?.naturalWidth || 0,
+      };
+    });
+    check('季节已切换', season.season === 'autumn', season.season);
+    check('季节图 srcset 已更新', /banner-autumn-960\.webp/.test(season.srcset) && /banner-autumn\.webp 1920w/.test(season.srcset), season.srcset);
+    check('季节图加载成功', season.natural > 0 && /banner-autumn/.test(season.current), JSON.stringify(season));
+  } else {
+    check('季节选项存在', false);
+  }
+
+  check('音乐不随页面预加载', musicRequests.length === 0, JSON.stringify(musicRequests));
+
+  console.log('=== 4. Live2D 纹理 ===');
+  const tex = await page.evaluate(async () => {
+    const webp = await fetch('/live2d/model/ds-whale-girl/textures/texture_00.webp');
+    const png = await fetch('/live2d/model/ds-whale-girl/textures/texture_00.png');
+    return { webp: webp.status, png: png.status };
+  });
+  check('WebP 纹理可访问', tex.webp === 200, JSON.stringify(tex));
+  check('原 PNG 保留为缓存回退', tex.png === 200, JSON.stringify(tex));
+
+  console.log('=== 5. 系列收录 ===');
+  const llms = await page.evaluate(async () => (await fetch('/llms.txt')).text());
+  const sitemap = await page.evaluate(async () => (await fetch('/sitemap.xml')).text());
+  check('llms.txt 有系列章节', llms.includes('## 系列') && llms.includes('/series/blog-engineering/'), llms.slice(-200));
+  check('sitemap 收录系列页', sitemap.includes('/series/') && sitemap.includes('/series/agent-rag/'), 'missing series in sitemap');
+  check('sitemap 不包含 404', !sitemap.includes('/404.html'), '404 found in sitemap');
+
+  console.log('=== 5.5 404 页面 ===');
+  const notFound = await page.goto(BASE + '/404.html', { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(300);
+  const nf = await page.evaluate(() => ({
+    code: document.querySelector('.not-found-code')?.textContent.trim() || '',
+    triggers: document.querySelectorAll('.not-found .search-popup-trigger').length,
+    links: [...document.querySelectorAll('.not-found-actions a')].map(a => a.getAttribute('href')),
+  }));
+  check('404 页面可访问', notFound && notFound.status() === 200, String(notFound && notFound.status()));
+  check('404 页面有搜索与返回入口', nf.code === '404' && nf.triggers === 1 && nf.links.includes('/series/'), JSON.stringify(nf));
+  await page.click('.not-found .search-popup-trigger');
+  const nfSearch = await page.waitForFunction(
+    () => document.querySelector('.search-pop-overlay')?.classList.contains('active'),
+    { timeout: 3000 }
+  ).then(() => true).catch(() => false);
+  check('404 页搜索按钮可用', nfSearch);
+  const robots = await page.evaluate(() => document.querySelector('meta[name="robots"]')?.content || '');
+  check('404 页面 noindex', robots.includes('noindex'), robots);
+  await page.keyboard.press('Escape');
+  await sleep(200);
+
+  console.log('=== 6. JSON-LD ===');
+  await page.goto(BASE, { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(400);
+  const ld = await page.evaluate(() => document.querySelector('script[type="application/ld+json"]')?.textContent || '');
+  check('首页有 WebSite JSON-LD', ld.includes('"WebSite"') && ld.includes('sterlingzeng.cn'), ld.slice(0, 120));
+  const homeLd = await page.evaluate(() => {
+    const scripts = [...document.querySelectorAll('script[type="application/ld+json"]')];
+    let ok = true;
+    for (const s of scripts) { try { JSON.parse(s.textContent); } catch (e) { ok = false; } }
+    return { count: scripts.length, ok };
+  });
+  check('首页 JSON-LD 可解析且唯一', homeLd.ok && homeLd.count === 1, JSON.stringify(homeLd));
+
+  await page.goto(BASE + '/2026/10/22/font-subset-and-cls/', { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(400);
+  const articleLd = await page.evaluate(() => {
+    try {
+      const data = JSON.parse(document.querySelector('script[type="application/ld+json"]').textContent);
+      return { ok: true, types: data['@graph'].map(x => x['@type']) };
+    } catch (e) { return { ok: false, types: [] }; }
+  });
+  check('文章 JSON-LD 有 BlogPosting + BreadcrumbList', articleLd.ok && articleLd.types.includes('BlogPosting') && articleLd.types.includes('BreadcrumbList'), JSON.stringify(articleLd));
+
+  await page.goto(BASE + '/series/blog-engineering/', { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(400);
+  const seriesLd = await page.evaluate(() => {
+    try {
+      const data = JSON.parse(document.querySelector('script[type="application/ld+json"]').textContent);
+      return { ok: true, types: data['@graph'].map(x => x['@type']) };
+    } catch (e) { return { ok: false, types: [] }; }
+  });
+  check('系列页有 CollectionPage JSON-LD', seriesLd.ok && seriesLd.types.includes('CollectionPage'), JSON.stringify(seriesLd));
+
+  const searchJs = await page.evaluate(async () => (await fetch('/js/build/tools/localSearch.js')).text());
+  check('搜索防抖补丁生效', searchJs.includes('__cjSearchTimer'), 'patch missing');
+
+  await page.goto(BASE + '/about/', { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(400);
+  const aboutLd = await page.evaluate(() => document.querySelector('script[type="application/ld+json"]')?.textContent || '');
+  check('关于页有 ProfilePage JSON-LD', aboutLd.includes('"ProfilePage"') && aboutLd.includes('"Person"'), aboutLd.slice(0, 120));
+
+  await browser.close();
+  server.close();
+
+  console.log(`\n结果: ${pass} 通过, ${fail} 失败`);
+  process.exit(fail > 0 ? 1 : 0);
+})().catch(e => { console.error('崩溃:', e); process.exit(1); });

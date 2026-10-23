@@ -56,6 +56,10 @@
 | 复制链接 | 文章页工具条复制当前链接 | `source/js/custom.js` |
 | Live2D 宠物 | DeepSeek 大肥鱼（Cubism 4.2 模型 / Cubism 5 Core 运行时，8 动作 / 44 表情） | `source/live2d/` |
 | 文章侧栏 | 作者卡 + 阅读进度环 + 标签 + 同分类 + 目录卡片（构建期渲染，无 CLS） | `scripts/post-sidebar.js` |
+| 系列文章 | `series` / `series_order` 声明，构建期生成系列总览与系列页；文章内显示进度徽章、系列内上下篇、折叠目录（0 运行时 JS） | `scripts/series.js` |
+| 响应式横幅 | 960 / 1280 / 1920 三档 WebP srcset，手机按 DPR 自动选图 | `scripts/responsive-images.js` |
+| 轻量模型纹理 | Live2D 主纹理重采样为 1024 WebP，1.7MB → 308KB | `source/live2d/model/ds-whale-girl/` |
+| 404 页面 | 自定义 404 + 快捷搜索入口（Ctrl K / 斜杠） | `source/404.md` |
 | 阅读体验 | 阅读位置记忆 + “继续阅读”胶囊、标题锚点复制、宽表格横向滚动 | `source/js/custom.js` |
 | 开放内容 | 每篇文章生成 `index.md` 原文，站点级 `llms.txt` 索引 | `scripts/markdown-route.js` |
 | 归档页 | 构建期写作足迹热力图（内联 SVG，零运行时） | `scripts/archive-heatmap.js` |
@@ -87,6 +91,24 @@
 | 代码块 | macOS 风格、JetBrains Mono 字体 |
 | 滚动条 | 自定义样式，兼容 WebKit + Firefox |
 | 焦点样式 | 键盘导航可见焦点（无障碍） |
+
+---
+
+## 工程亮点
+
+这个博客不只是“能打开”，每个改动都有可复现的测量和回归测试（本地 Chrome 实测，数字会随机器和网络波动）：
+
+| 指标 | 结果 | 做法 |
+|------|------|------|
+| 文章首屏 CLS | **0.0002**（修复前 0.061） | 统计行、系列卡、侧栏全部构建期渲染，运行时只改文本 |
+| 首页首屏 CLS | **~0.002**（修复前 0.074） | 导航控件先占位、横幅尺寸预置、字体子集 |
+| SPA 点击 → 内容替换 | **~15ms**（首跳曾 426ms） | 去掉旧页退出动画，内容先到，再播入场 |
+| SPA 整次导航 | **~134ms** | Swup 只替换 `#swup`，滚动即时归零 |
+| Live2D 主纹理 | **1.7MB → 308KB** | 2048 PNG 重采样为 1024 WebP |
+| 手机首屏横幅 | **63KB → 35KB**（亮色） | 960/1280/1920 srcset + DPR 选图 |
+| 自动化浏览器检查 | **220+ 项** | 跳转、侧栏、系列、阅读记忆、归档、平滑度、资源、内容 |
+
+**构建期优先**：系列页、写作热力图、文章侧栏、JSON-LD、Markdown 原文、llms.txt 全部在 `hexo generate` 阶段生成，运行时不发额外请求、不引入布局抖动。主题通过 `scripts/theme-patch.js` 做可审计的最小补丁（Swup、TOC、搜索防抖、APlayer 延迟加载等），补丁可重复执行。
 
 ---
 
@@ -146,9 +168,11 @@ npm test                    # 33 项端到端检查(含 8 个次级页面)
 npm run test:l2d            # Live2D 加载诊断(模型 / Core / 404)
 npm run test:smooth         # 26 项滚动与动效平滑度回归
 npm run test:content        # 文章 front matter / 站内链接 / 图片 / 文风检查
-npm run test:transitions    # 38 项 SPA 跳转 / 连点 / 前后退 / 搜索焦点 / 路由播报
+npm run test:transitions    # 44 项 SPA 跳转 / 连点 / 前后退 / 搜索焦点 / 路由播报
 npm run test:sidebar        # 30 项文章侧栏 / 进度 / 锚点 / 表格 / Markdown / 代码全屏
-npm run test:resume         # 6 项阅读位置记忆与“继续阅读”
+npm run test:series         # 48 项系列页 / 徽章 / 系列卡 / SPA / 移动端
+npm run test:assets         # 26 项响应式横幅 / WebP 纹理 / 系列收录 / JSON-LD
+npm run test:resume         # 7 项阅读位置记忆与“继续阅读”
 npm run test:archive        # 12 项归档写作热力图与移动端
 npm run profile:nav         # 第一次跳转的 CPU 采样诊断
 npm run perf                # 滚动性能探针(帧间隔 / 长任务 / 布局)
@@ -180,7 +204,8 @@ blogsterlingzeng/
 │   │   ├── links.yml                # 友链数据
 │   │   ├── essays.yml               # 说说数据
 │   │   ├── bookmarks.yml            # 书签数据
-│   │   └── masonry.yml              # 照片墙数据
+│   │   ├── masonry.yml              # 照片墙数据
+│   │   └── series.yml               # 系列文章元数据
 │   │
 │   ├── about/index.md               # 关于页面
 │   ├── projects/index.md            # 项目页面（GitHub API 展示）

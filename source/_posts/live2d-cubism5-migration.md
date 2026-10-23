@@ -10,6 +10,8 @@ tags:
   - 前端
 description: 站点只装了 Cubism 2 运行时，找到的大肥鱼模型却是 Cubism 4.2 格式。迁移到 Cubism 5 Core 用了一个晚上，顺带修掉了 Swup 重复执行、监听器叠加、中文锚点失效和一条脆弱的测试等待。
 cover: /images/cover-design.jpg
+series: blog-engineering
+series_order: 2
 ---
 
 博客左下角原来站着 bilibili 的 22 娘。

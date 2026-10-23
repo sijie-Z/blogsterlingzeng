@@ -11,6 +11,8 @@ tags:
   - Python
 description: 为了搞清楚 Agent 系统里"规划"和"执行"到底谁更重要,我做了 7 个对照实验。结论是:规划粒度决定性能(69%→93.1%),执行架构没那么重要,而且 LLM 天生就不想拆解任务。
 cover: /images/cover-algorithm.jpg
+series: agent-rag
+series_order: 3
 ---
 
 六十九。这是基线的覆盖率。

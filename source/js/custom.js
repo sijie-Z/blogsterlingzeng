@@ -46,11 +46,19 @@
   // ============================
   function initKeyboardShortcuts() {
     document.addEventListener('keydown', (e) => {
-      // Ctrl/Cmd + K: Open search
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-        e.preventDefault();
-        const searchBtn = document.querySelector('.search-popup-trigger');
-        if (searchBtn) searchBtn.click();
+      const isCmdK = (e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K');
+      const isSlash = e.key === '/' && !e.ctrlKey && !e.metaKey && !e.altKey;
+      if (isCmdK || isSlash) {
+        const tag = (document.activeElement && document.activeElement.tagName) || '';
+        const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(tag) ||
+          (document.activeElement && document.activeElement.isContentEditable);
+        const overlayOpen = !!document.querySelector('.search-pop-overlay.active');
+        if (!typing && !overlayOpen) {
+          e.preventDefault();
+          const searchBtn = document.querySelector('.desktop .search-popup-trigger') ||
+            document.querySelector('.search-popup-trigger');
+          if (searchBtn) searchBtn.click();
+        }
       }
 
       // Escape: 退出管中窥豹
@@ -349,6 +357,25 @@
     }).observe(waifu, { attributes: true, attributeFilter: ['class'] });
   }
 
+  // 搜索弹层关闭后把焦点还给触发按钮;MutationObserver 负责即时恢复
+  function restoreSearchFocus() {
+    if (document.querySelector('.search-pop-overlay.active')) return;
+    const trigger = window.__cjSearchTrigger;
+    if (!trigger) return;
+    try { trigger.focus({ preventScroll: true }); } catch (err) {}
+    window.__cjSearchTrigger = null;
+  }
+
+  // 弹层随 Swup 换页重建,每次 init 给当前 overlay 挂关闭观察
+  function observeSearchClose() {
+    const overlay = document.querySelector('.search-pop-overlay');
+    if (!overlay || overlay.__cjFocusObserved) return;
+    overlay.__cjFocusObserved = true;
+    new MutationObserver(() => {
+      if (!overlay.classList.contains('active')) restoreSearchFocus();
+    }).observe(overlay, { attributes: true, attributeFilter: ['class'] });
+  }
+
   function initSearchFocus() {
     // 主题延迟 500ms 才聚焦,这里点开立即聚焦,并在 80ms 后再确认一次
     const focusInput = () => {
@@ -407,17 +434,22 @@
           }
         }
       }, true);
-      const restoreFocus = () => {
-        if (!document.querySelector('.search-pop-overlay.active') && window.__cjSearchTrigger) {
-          try { window.__cjSearchTrigger.focus(); } catch (err) {}
-        }
+      // 只在“搜索按钮点开过、且还没归还焦点”时恢复;恢复后清空引用,
+      // 这样之后按 Esc 关闭代码全屏 / 手电筒不会被抢焦点。
+      const scheduleRestore = () => {
+        if (!window.__cjSearchTrigger) return;
+        setTimeout(restoreSearchFocus, 30);
+        setTimeout(restoreSearchFocus, 200);
       };
       document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') setTimeout(restoreFocus, 80);
+        if (e.key === 'Escape') scheduleRestore();
+      }, true);
+      document.addEventListener('keyup', e => {
+        if (e.key === 'Escape') scheduleRestore();
       }, true);
       document.addEventListener('click', e => {
         if (!e.target.closest('.popup-btn-close') && !e.target.classList.contains('search-pop-overlay')) return;
-        setTimeout(restoreFocus, 80);
+        setTimeout(restoreSearchFocus, 80);
       }, true);
     }
   }
@@ -428,6 +460,14 @@
     const open = document.body.classList.contains('navbar-drawer-show');
     if (drawer) drawer.toggleAttribute('inert', !open);
     if (bar) bar.setAttribute('aria-expanded', String(open));
+  }
+
+  // 搜索按钮随 Swup 换页重建;快捷键提示要每次 init 重新挂
+  function decorateSearchTriggers() {
+    document.querySelectorAll('.search-popup-trigger').forEach(t => {
+      t.setAttribute('aria-keyshortcuts', 'Control+K Meta+K');
+      t.setAttribute('title', '搜索文章 (Ctrl K)');
+    });
   }
 
   function initNavA11y() {
@@ -920,6 +960,18 @@
     space: '/images/banner-light.webp',
   };
 
+  // 和构建期注入的 srcset 保持一致;季节切换时 srcset 也要换,
+  // 否则浏览器会继续按旧的 srcset 选图,img.src 改了也不会生效。
+  function bannerSrcset(url) {
+    const base = url.replace(/\.webp$/, '');
+    return base + '-960.webp 960w, ' + base + '-1280.webp 1280w, ' + url + ' 1920w';
+  }
+
+  function setBannerSrc(img, url) {
+    img.srcset = bannerSrcset(url);
+    img.src = url;
+  }
+
   function autoSeason() {
     const month = new Date().getMonth() + 1;
     if (month >= 3 && month <= 5) return 'spring';
@@ -951,20 +1003,21 @@
       const url = SEASON_BANNERS[season];
       if (url) {
         document.querySelectorAll('.home-banner-background img').forEach(img => {
-          img.src = url;
+          setBannerSrc(img, url);
           img.style.display = '';
         });
         document.querySelectorAll('.home-banner-background').forEach(div => {
-          div.style.backgroundImage = 'url(' + url + ')';
+          // img 子节点已经按 srcset 选好尺寸,再给容器设背景会重复下载原图
+          if (!div.querySelector('img')) div.style.backgroundImage = 'url(' + url + ')';
         });
       }
     } else {
       // 自动模式:还原配置默认 banner(亮色=太空城市,暗色=赛博雨夜)
       document.querySelectorAll('.home-banner-background img').forEach(img => {
         const isDarkImg = img.classList.contains('dark:block');
-        img.src = isDarkImg
+        setBannerSrc(img, isDarkImg
           ? '/images/banner-dark.webp'
-          : '/images/banner-light.webp';
+          : '/images/banner-light.webp');
       });
       document.querySelectorAll('.home-banner-background').forEach(div => {
         div.style.backgroundImage = '';
@@ -985,12 +1038,22 @@
     if (seasonBannersPreloaded) return;
     if (!document.querySelector('.home-banner-background')) return;
     seasonBannersPreloaded = true;
+    // 按当前视口/DPR 预加载会被真正选中的那一档,避免手机上先拉
+    // 1920 原图、切过去又拉 1280 变体的双份流量
+    const need = Math.round(window.innerWidth * (window.devicePixelRatio || 1));
+    const pick = url => {
+      const base = url.replace(/\.webp$/, '');
+      if (need <= 960) return base + '-960.webp';
+      if (need <= 1280) return base + '-1280.webp';
+      return url;
+    };
     const loaded = {};
     Object.values(SEASON_BANNERS).forEach(url => {
-      if (loaded[url]) return;
-      loaded[url] = true;
+      const target = pick(url);
+      if (loaded[target]) return;
+      loaded[target] = true;
       const img = new Image();
-      img.src = url;
+      img.src = target;
     });
   }
 
@@ -1325,8 +1388,14 @@
     const path = window.location.pathname;
 
     const viewKey = 'views_' + path;
-    const views = parseInt(localStorage.getItem(viewKey) || '0') + 1;
-    localStorage.setItem(viewKey, views);
+    // 同一次页面停留里 init 只应计数一次;SPA 重新进入该路径仍会 +1
+    const alreadyCounted = window.__cjStatsPath === path;
+    let views = parseInt(localStorage.getItem(viewKey) || '0');
+    if (!alreadyCounted) {
+      views += 1;
+      localStorage.setItem(viewKey, views);
+      window.__cjStatsPath = path;
+    }
 
     const likeKey = 'likes_' + path;
     const likes = parseInt(localStorage.getItem(likeKey) || '0');
@@ -1413,7 +1482,10 @@
             </a>`;
           }).join('')}
         </div>`;
-      content.after(wrapper);
+      // 系列卡由构建期插在正文后面;相关阅读排在系列卡之后,
+      // 保持“正文 → 系列 → 相关阅读 → 版权”的固定顺序。
+      const seriesCard = content.parentElement.querySelector('.post-series-card');
+      (seriesCard || content).after(wrapper);
     }
 
     function relatedFor(all, current) {
@@ -1556,6 +1628,8 @@
     onceGlobal('live2dRuntime', initLive2DRuntime);
     initAsideState();
     initNavA11y();
+    decorateSearchTriggers();
+    observeSearchClose();
     onceGlobal('searchFocus', initSearchFocus);
     onceGlobal('swupNavPause', initSwupNavPause);
     initMouseFollower();

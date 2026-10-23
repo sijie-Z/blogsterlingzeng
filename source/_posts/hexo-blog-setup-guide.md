@@ -10,6 +10,8 @@ tags:
   - 工程实践
 description: 搭博客不只是技术活，更是一系列权衡取舍的过程。这篇文章记录了我在技术选型、主题选择、部署方案上的思考和决策过程。
 cover: /images/cover-tech.jpg
+series: blog-engineering
+series_order: 1
 ---
 
 ## 为什么要有自己的博客

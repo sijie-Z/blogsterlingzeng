@@ -36,6 +36,22 @@ hexo.extend.generator.register('llms-txt', function (locals) {
     const desc = String(post.description || '').replace(/\s+/g, ' ').trim();
     lines.push(`- [${post.title}](${root}/${post.path})${desc ? '：' + desc : ''}`);
   }
+
+  let seriesList = [];
+  try {
+    seriesList = hexo.__cjBuildSeries ? hexo.__cjBuildSeries().list : [];
+  } catch (e) {
+    hexo.log.warn('[llms] 系列数据不可用:' + e.message);
+    seriesList = [];
+  }
+  if (seriesList.length) {
+    lines.push('', '## 系列', '');
+    for (const group of seriesList) {
+      const desc = String(group.description || '').replace(/\s+/g, ' ').trim();
+      const seriesPath = hexo.__cjSeriesUrl ? hexo.__cjSeriesUrl(group.slug) : '/series/' + group.slug + '/';
+      lines.push(`- [${group.name}](${root}${seriesPath})${desc ? '：' + desc : ''}`);
+    }
+  }
   return { path: 'llms.txt', data: lines.join('\n') + '\n' };
 });
 

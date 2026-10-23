@@ -22,7 +22,9 @@
     "test:resume": "node test/resume-check.js",
     "test:archive": "node test/archive-check.js",
     "profile:nav": "node test/nav-profile.js",
-    "postinstall": "node scripts/theme-patch.js"
+    "postinstall": "node scripts/theme-patch.js",
+    "test:series": "node test/series-check.js",
+    "test:assets": "node test/assets-check.js"
   },
   "hexo": {
     "version": "7.3.0"

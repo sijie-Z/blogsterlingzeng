@@ -3,7 +3,7 @@
   "FileReferences": {
     "Moc": "model/c_0120.moc3",
     "Textures": [
-      "textures/texture_00.png",
+      "textures/texture_00.webp",
       "textures/texture_01.png"
     ],
     "Physics": "model/c_0120.physics3.json",

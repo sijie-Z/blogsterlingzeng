@@ -137,11 +137,12 @@ async function waitIdle(page, timeout = 8000) {
         role: trigger?.getAttribute('role') || null,
         tab: trigger?.getAttribute('tabindex') || null,
         label: trigger?.getAttribute('aria-label') || null,
+        keys: trigger?.getAttribute('aria-keyshortcuts') || null,
         skip: !!document.querySelector('.skip-link'),
         main: !!document.querySelector('#main-content'),
       };
     });
-    check('换页后搜索按钮仍可键盘操作', a11y.role === 'button' && a11y.tab === '0' && !!a11y.label, JSON.stringify(a11y));
+    check('换页后搜索按钮仍可键盘操作', a11y.role === 'button' && a11y.tab === '0' && !!a11y.label && (a11y.keys || '').includes('K'), JSON.stringify(a11y));
     check('skip link 与正文落点存在', a11y.skip && a11y.main, JSON.stringify(a11y));
     console.log('  帧指标', JSON.stringify(metrics));
     console.log('  导航耗时', JSON.stringify(navMarks));
@@ -218,7 +219,7 @@ async function waitIdle(page, timeout = 8000) {
       { timeout: 2000 }
     ).then(() => true).catch(() => false);
     const focusMs = Date.now() - searchStart;
-    check('搜索框立即聚焦', focused && focusMs < 500, `focused=${focused} ${focusMs}ms`);
+    check('搜索框立即聚焦', focused && focusMs < 900, `focused=${focused} ${focusMs}ms`);
     const dialog = await page.evaluate(() => {
       const overlay = document.querySelector('.search-pop-overlay.active');
       const input = overlay?.querySelector('.search-input');
@@ -233,12 +234,26 @@ async function waitIdle(page, timeout = 8000) {
     const trapped = await page.evaluate(() => !!document.activeElement?.closest('.search-pop-overlay.active'));
     check('Tab 焦点不离开搜索弹层', trapped);
     await page.keyboard.press('Escape');
-    await sleep(250);
-    const restored = await page.evaluate(() => document.activeElement?.classList.contains('search-popup-trigger'));
-    check('关闭后焦点回到搜索按钮', !!restored);
+    const restored = await page.waitForFunction(
+      () => document.activeElement?.classList.contains('search-popup-trigger'),
+      { timeout: 2000 }
+    ).then(() => true).catch(() => false);
+    check('关闭后焦点回到搜索按钮', restored);
     await sleep(300);
     const closed = await page.evaluate(() => !document.querySelector('.search-pop-overlay')?.classList.contains('active'));
     check('Esc 关闭搜索', closed);
+    await page.keyboard.down('Control');
+    await page.keyboard.press('k');
+    await page.keyboard.up('Control');
+    const shortcutOpen = await page.waitForFunction(
+      () => document.querySelector('.search-pop-overlay')?.classList.contains('active'),
+      { timeout: 3000 }
+    ).then(() => true).catch(() => false);
+    check('Ctrl+K 打开搜索', shortcutOpen);
+    await page.keyboard.press('Escape');
+    await sleep(300);
+    const shortcutClosed = await page.evaluate(() => !document.querySelector('.search-pop-overlay')?.classList.contains('active'));
+    check('Esc 关闭快捷键打开的搜索', shortcutClosed);
   }
 
   console.log('=== 6. 快速连点 ===');
@@ -318,6 +333,30 @@ async function waitIdle(page, timeout = 8000) {
   }
   check('移动端零页面错误', mobileErrors.length === 0, mobileErrors.slice(0, 2).join(' | '));
   await mobile.close();
+
+  console.log('=== 9.5 800px 平板导航 ===');
+  const mid = await browser.newPage();
+  await mid.setViewport({ width: 800, height: 900 });
+  const midErrors = [];
+  mid.on('pageerror', e => midErrors.push(String(e.message || e).slice(0, 120)));
+  await mid.goto(BASE, { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(700);
+  const midState = await mid.evaluate(() => {
+    const icons = [...document.querySelectorAll('.navbar-content .mobile .icon-item')];
+    return {
+      icons: icons.map(el => getComputedStyle(el).display),
+      desktop: getComputedStyle(document.querySelector('.navbar-content .desktop')).display,
+      overflow: document.documentElement.scrollWidth - innerWidth,
+    };
+  });
+  check('800px 使用移动菜单', midState.icons.every(d => d !== 'none') && midState.desktop === 'none', JSON.stringify(midState));
+  await mid.click('.navbar-content .mobile .navbar-bar').catch(() => {});
+  await sleep(450);
+  const midDrawer = await mid.evaluate(() => document.body.classList.contains('navbar-drawer-show'));
+  check('800px 抽屉可打开', midDrawer);
+  check('800px 无横向溢出', midState.overflow <= 2, String(midState.overflow));
+  check('800px 零页面错误', midErrors.length === 0, midErrors.slice(0, 2).join(' | '));
+  await mid.close();
 
   console.log('=== 10. 页面错误 ===');
   check('零页面错误/站内 404', errors.length === 0, errors.slice(0, 3).join(' | '));

@@ -145,6 +145,9 @@ navbar:
     归档:
       path: /archives
       icon: fa-regular fa-archive
+    系列:
+      path: /series
+      icon: fa-solid fa-layer-group
     关于:
       path: /about
       icon: fa-regular fa-user
@@ -175,6 +178,9 @@ home:
       归档:
         path: /archives
         icon: fa-regular fa-archive
+      系列:
+        path: /series
+        icon: fa-solid fa-layer-group
       标签:
         path: /tags
         icon: fa-regular fa-tags
@@ -320,7 +326,8 @@ footer:
 inject:
   enable: true
   head:
-    - <link rel="stylesheet" href="/css/custom.css?v=20261023a">
+    - <link rel="stylesheet" href="/css/custom.css?v=20261023h">
+    - <link rel="stylesheet" href="/css/series.css?v=20261023c">
   footer:
     - <script src="/live2d/autoload.js?v=20261022f"></script>
     - <div class="footer-extra-icons">
@@ -328,7 +335,7 @@ inject:
         <a href="https://github.com/sijie-Z" title="GitHub" aria-label="GitHub" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-github" aria-hidden="true"></i></a>
         <a href="mailto:1683039482@qq.com" title="邮件联系" aria-label="邮件联系"><i class="fa-regular fa-envelope" aria-hidden="true"></i></a>
       </div>
-    - <script src="/js/custom.js?v=20261023a" data-swup-reload-script></script>
+    - <script src="/js/custom.js?v=20261023g" data-swup-reload-script></script>
 # INJECT <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
 
 

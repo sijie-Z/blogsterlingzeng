@@ -24,6 +24,8 @@
 - 来源：[A8Chann/dsh-pet-live2d](https://github.com/A8Chann/dsh-pet-live2d)（v3.3.3）
 - 许可全文：[source/live2d/model/ds-whale-girl/LICENSE](source/live2d/model/ds-whale-girl/LICENSE)
 - 本地修改说明：[source/live2d/model/ds-whale-girl/NOTICE.txt](source/live2d/model/ds-whale-girl/NOTICE.txt)
+- 本站修改：主纹理由 2048×2048 PNG 重采样为 1024×1024 WebP（1.7MB → 308KB），
+  仅改变编码与分辨率，模型几何与贴图内容未改；衍生版本仍按 CC BY-NC-SA 4.0 分发。
 
 ## 4. Font Awesome 6.2.1 Pro — Font Awesome Pro License
 

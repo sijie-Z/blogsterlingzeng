@@ -249,6 +249,12 @@ try {
   if (tocSrc.includes(tocTail) && !tocSrc.includes('setTimeout(() => utils.registerTOCScroll(), 800);')) {
     tocSrc = tocSrc.replace(tocTail, tocTail + '\n  // 字体/图片加载后高度可能变化,延迟再算一次偏移\n  setTimeout(() => utils.registerTOCScroll(), 800);');
   }
+  if (!tocSrc.includes('__cjTocResizeBound')) {
+    console.warn('[theme-patch] TOC resize 监听未能重新注入,请检查主题模板');
+  }
+  if (!tocSrc.includes('setTimeout(() => utils.registerTOCScroll(), 800);')) {
+    console.warn('[theme-patch] TOC 延迟刷新未能重新注入,请检查主题模板');
+  }
   if (tocSrc !== before) {
     fs.writeFileSync(tocSourceFile, tocSrc, 'utf8');
     console.log('[theme-patch] 已归一 TOC 监听器');
@@ -276,6 +282,12 @@ try {
   const returnAnchor = 'return l.showTOCAside(),l.registerTOCScroll(),l.updateActiveTOCLink(),';
   if (tocBuild.includes(returnAnchor) && !tocBuild.includes('setTimeout((()=>l.registerTOCScroll()),800)')) {
     tocBuild = tocBuild.replace(returnAnchor, returnAnchor + 'setTimeout((()=>l.registerTOCScroll()),800),');
+  }
+  if (!tocBuild.includes('__cjTocResizeBound')) {
+    console.warn('[theme-patch] TOC 构建产物的 resize 监听未能重新注入');
+  }
+  if (!tocBuild.includes('setTimeout((()=>l.registerTOCScroll()),800)')) {
+    console.warn('[theme-patch] TOC 构建产物的延迟刷新未能重新注入');
   }
   if (tocBuild !== before) {
     fs.writeFileSync(tocBuildFile, tocBuild, 'utf8');
@@ -440,6 +452,86 @@ try {
   console.warn('[theme-patch] aplayer 归一失败:', e.message);
 }
 
+// 5.2 搜索输入防抖:主题对每个 input 事件都全量扫描 searchdb,
+//     中文输入法逐字触发时会有明显卡顿。70ms 足够覆盖连续输入。
+patchText('source/js/tools/localSearch.js', [
+  [
+    `const handleInput = (event) => {
+  if (!event.target.matches(".search-input")) {
+    return;
+  }
+
+  renderSearchResult(event.target);
+};`,
+    `const handleInput = (event) => {
+  if (!event.target.matches(".search-input")) {
+    return;
+  }
+
+  clearTimeout(window.__cjSearchTimer);
+  window.__cjSearchTimer = setTimeout(() => renderSearchResult(event.target), 70);
+};`,
+    'search input debounce',
+  ],
+]);
+patchText('source/js/build/tools/localSearch.js', [
+  [
+    'handleInput=t=>{t.target.matches(".search-input")&&renderSearchResult(t.target)}',
+    'handleInput=t=>{if(!t.target.matches(".search-input"))return;clearTimeout(window.__cjSearchTimer);window.__cjSearchTimer=setTimeout((()=>renderSearchResult(t.target)),70)}',
+    'search input debounce build',
+  ],
+]);
+
+// 5.3 APlayer 初始化时会自己点击歌词图标;音频没有 lrc 时会弹出
+//     "LRC file request fails" 错误框,还会产生一次合成 click。
+//     直接移除这次自动点击。
+patchText('source/js/plugins/aplayer.js', [
+  [
+    '    document.querySelector(".aplayer-icon-lrc").click();\n',
+    '',
+    'aplayer remove auto lrc click',
+  ],
+]);
+patchText('source/js/build/plugins/aplayer.js', [
+  [
+    ';document.querySelector(".aplayer-icon-lrc").click()',
+    '',
+    'aplayer remove auto lrc click build',
+  ],
+]);
+
+// 5.4 音乐只在用户点播放时再请求(2.5MB 的 mp3 不应随页面加载)
+patchText('source/js/plugins/aplayer.js', [
+  [
+    `      container: document.getElementById("aplayer"),
+      mini: true,`,
+    `      container: document.getElementById("aplayer"),
+      preload: "none",
+      mini: true,`,
+    'aplayer preload none mini',
+  ],
+  [
+    `      container: document.getElementById("aplayer"),
+      fixed: true,`,
+    `      container: document.getElementById("aplayer"),
+      preload: "none",
+      fixed: true,`,
+    'aplayer preload none fixed',
+  ],
+]);
+patchText('source/js/build/plugins/aplayer.js', [
+  [
+    'container:document.getElementById("aplayer"),mini:!0,audio:e',
+    'container:document.getElementById("aplayer"),preload:"none",mini:!0,audio:e',
+    'aplayer preload none mini build',
+  ],
+  [
+    'container:document.getElementById("aplayer"),fixed:!0,lrcType:3,audio:e',
+    'container:document.getElementById("aplayer"),preload:"none",fixed:!0,lrcType:3,audio:e',
+    'aplayer preload none fixed build',
+  ],
+]);
+
 // 6. 文章页不需要 initPageHeightHandle 的三次 getBoundingClientRect:
 //    它只用于"短页面把 footer 顶下去",文章页天然比视口长。
 patchText('source/js/utils/layout.js', [
@@ -500,7 +592,45 @@ patchText('layout/components/header/head.ejs', [
     "twitter_card: 'summary_large_image',",
     'twitter large card',
   ],
+  [
+    '    <meta name="robots" content="index,follow">',
+    `    <meta name="robots" content="<%= String(page.path || '').replace(/index\\.html$/, '') === '404.html' ? 'noindex,follow' : 'index,follow' %>">`,
+    'robots noindex 404',
+  ],
+  [
+    '    <meta name="googlebot" content="index,follow">',
+    `    <meta name="googlebot" content="<%= String(page.path || '').replace(/index\\.html$/, '') === '404.html' ? 'noindex,follow' : 'index,follow' %>">`,
+    'googlebot noindex 404',
+  ],
+  [
+    "String(page.path || '').replace(/index\\.html$/, '')",
+    "String(page.path || '').replace(/^\\/+/, '').replace(/index\\.html$/, '')",
+    'path normalize for robots/og',
+  ],
 ]);
+
+// 4.7 og:url 归一:旧补丁把 url 行追加在 image 之后,重复执行会叠加。
+//     这里先清掉所有旧行,再只在 image: ogImage 后插入一份。
+const headFile = path.join(themeRoot, 'layout/components/header/head.ejs');
+try {
+  let head = fs.readFileSync(headFile, 'utf8');
+  const before = head;
+  head = head.replace(
+    /(?:\n[ \t]*\/\/ og:url[^\n]*)?\n[ \t]*url: \(config\.url \|\| ''\)[^\n]*,/g,
+    ''
+  );
+  const imageMarker = '            image: ogImage,';
+  const ogUrl = `\n            // og:url 用和 canonical 一致的目录 URL,不要带 index.html\n            url: (config.url || '').replace(/\\/+$/, '') + '/' + String(page.path || '').replace(/^\\/+/, '').replace(/index\\.html$/, ''),`;
+  if (head.includes(imageMarker) && !head.includes("url: (config.url || '')")) {
+    head = head.replace(imageMarker, imageMarker + ogUrl);
+  }
+  if (head !== before) {
+    fs.writeFileSync(headFile, head, 'utf8');
+    console.log('[theme-patch] 已归一 og:url');
+  }
+} catch (e) {
+  console.warn('[theme-patch] og:url 归一失败:', e.message);
+}
 
 const target = path.join(
   __dirname, '..', 'node_modules',
