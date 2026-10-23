@@ -118,8 +118,8 @@
 |------|------|------|
 | 框架 | Hexo | 7.3.0 |
 | 主题 | hexo-theme-redefine | 2.9.0 |
-| 样式 | 自定义 CSS | 2000+ 行 |
-| 脚本 | 自定义 JS | 500+ 行 |
+| 样式 | 自定义 CSS | ~3400 行 |
+| 脚本 | 自定义 JS | ~1600 行 |
 | 静态资源 | 本地自托管 | - |
 | 搜索 | hexo-generator-searchdb | - |
 | 字数 | hexo-wordcount | - |
@@ -219,9 +219,11 @@ blogsterlingzeng/
 │   ├── categories/index.md          # 分类页面
 │   ├── tags/index.md                # 标签页面
 │   ├── robots.txt                   # 爬虫规则
+│   ├── 404.md                       # 自定义 404
 │   │
-│   ├── css/custom.css               # 自定义样式 (2000+ 行)
-│   ├── js/custom.js                 # 自定义脚本
+│   ├── css/custom.css               # 自定义样式 (~3400 行)
+│   ├── css/series.css               # 系列阅读样式
+│   ├── js/custom.js                 # 自定义脚本 (~1600 行)
 │   ├── live2d/                      # Live2D 组件 + DeepSeek 大肥鱼模型
 │   ├── fontawesome/webfonts/        # FontAwesome 子集字体
 │   └── images/                      # 图片资源
@@ -492,11 +494,10 @@ cover: /images/cover.jpg
 
 **步骤：**
 
-1. 编辑 `deploy.sh`，确认服务器信息：
+1. 服务器地址通过环境变量传入，不写进仓库：
    ```bash
-   SERVER_USER="root"
-   SERVER_IP="YOUR_SERVER_IP"          # 服务器 IP,或用 DEPLOY_HOST 环境变量
-   SERVER_DIR="/www/wwwroot/sterlingzeng.cn"
+   export DEPLOY_HOST="YOUR_SERVER_IP"
+   export DEPLOY_USER="root"           # 可选，默认 root
    ```
 
 2. 在 Git Bash 中运行：
