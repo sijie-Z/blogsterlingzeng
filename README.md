@@ -45,7 +45,7 @@
 | 文章系统 | Markdown 写作，分类、标签、目录、代码高亮 | `source/_posts/` |
 | 响应式设计 | 桌面端和移动端自适应 | `source/css/custom.css` |
 | 暗色模式 | 自动跟随系统 / 手动切换 | `_config.redefine.yml` |
-| 本地搜索 | 全文搜索，支持中文 | `hexo-generator-searchdb` |
+| 本地搜索 | 全文搜索，支持中文；索引覆盖文章与关于/项目/简历等页面 | `hexo-generator-searchdb` |
 | 字数统计 | 显示字数和预估阅读时间 | `hexo-wordcount` |
 | SPA 导航 | 页面无刷新切换，体验流畅 | `swup.js` |
 | 阅读进度 | 顶部渐变进度条 | `source/js/custom.js` |
@@ -175,11 +175,11 @@ npm run test:l2d            # Live2D 加载诊断(模型 / Core / 404)
 npm run test:smooth         # 26 项滚动与动效平滑度回归
 npm run test:content        # 文章 front matter / 站内链接 / 图片 / 文风检查
 npm run test:transitions    # 44 项 SPA 跳转 / 连点 / 前后退 / 搜索焦点 / 路由播报
-npm run test:sidebar        # 36 项文章侧栏 / 进度 / 锚点 / 表格 / Markdown / 代码全屏
+npm run test:sidebar        # 37 项文章侧栏 / 进度 / 锚点 / 表格 / 面包屑 / 代码全屏
 npm run test:series         # 53 项系列页 / 徽章 / 系列卡 / SPA / 移动端
 npm run test:assets         # 39 项响应式横幅 / WebP 纹理 / JSON Feed / 图标子集 / JSON-LD
 npm run test:search         # 17 项搜索 combobox / 方向键 / Enter / 空态 / IME
-npm run test:a11y           # 61 项无障碍:名称 / alt / 列表语义 / 标题 / 地标
+npm run test:a11y           # 62 项无障碍:名称 / alt / 列表语义 / 标题 / 地标
 npm run test:resume         # 7 项阅读位置记忆与“继续阅读”
 npm run test:archive        # 12 项归档写作热力图与移动端
 npm run profile:nav         # 第一次跳转的 CPU 采样诊断

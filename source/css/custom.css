@@ -2456,6 +2456,69 @@ html[data-theme-switching]::view-transition-new(root) {
 
 
 /* ========================================
+   TIMELINE
+   ======================================== */
+.cj-timeline {
+  position: relative;
+  margin: 1.4rem 0 0.5rem;
+  padding: 0 0 0 1.55rem;
+  list-style: none;
+}
+
+.cj-timeline::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 12%, transparent));
+}
+
+.cj-timeline li {
+  position: relative;
+  margin: 0 0 1.15rem;
+  padding: 0;
+}
+
+.cj-timeline li:last-child {
+  margin-bottom: 0;
+}
+
+.cj-timeline li::before {
+  content: "";
+  position: absolute;
+  left: -1.55rem;
+  top: 0.42rem;
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--background-color);
+  border-radius: 50%;
+  background: var(--primary-color);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary-color) 35%, transparent);
+}
+
+.cj-timeline-date {
+  display: block;
+  margin-bottom: 2px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--primary-color);
+}
+
+.cj-timeline-body {
+  color: var(--default-text-color);
+  line-height: 1.75;
+}
+
+.cj-timeline-body > p:last-child {
+  margin-bottom: 0;
+}
+
+/* ========================================
    RESUME
    ======================================== */
 .resume-page > h2:first-child {
@@ -3143,6 +3206,77 @@ a.post-side-name:hover {
   opacity: 1;
   pointer-events: none;
   user-select: none;
+}
+
+/* ========================================
+   BREADCRUMBS
+   ======================================== */
+.cj-breadcrumbs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0.15rem 0 0.65rem;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--text-tertiary);
+}
+
+.cj-breadcrumbs a {
+  color: var(--text-tertiary);
+  text-decoration: none;
+  background: none !important;
+  transition: color 0.15s ease;
+}
+
+.cj-breadcrumbs a:hover {
+  color: var(--primary-color);
+}
+
+.cj-breadcrumbs-sep {
+  opacity: 0.45;
+}
+
+.cj-breadcrumbs [aria-current="page"] {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--second-text-color);
+}
+
+/* ========================================
+   IMAGE VIEWER CAPTION
+   ======================================== */
+.image-viewer-caption {
+  position: fixed;
+  left: 50%;
+  bottom: 86px;
+  transform: translateX(-50%);
+  z-index: 10002;
+  max-width: min(78vw, 720px);
+  padding: 8px 14px;
+  border: 1px solid var(--shadow-color-1);
+  border-radius: 8px;
+  background: var(--background-color-transparent-80, rgba(15, 23, 42, 0.8));
+  color: var(--default-text-color);
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  pointer-events: none;
+}
+
+.image-viewer-caption[hidden] {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .image-viewer-caption {
+    bottom: 104px;
+    max-width: 86vw;
+    font-size: 12px;
+  }
 }
 
 /* 代码块全屏 */

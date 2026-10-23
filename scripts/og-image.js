@@ -33,7 +33,7 @@ function generatedImage(page) {
     if (/^series\/?(index\.html)?$/.test(route)) {
       return exists('page-series.jpg') ? '/images/og/page-series.jpg' : '';
     }
-    const match = route.match(/^series\/([a-z0-9-]+)\//);
+    const match = route.match(/^series\/([a-z0-9-]+)(?:\/|$)/);
     if (match && exists(`series-${match[1]}.jpg`)) return `/images/og/series-${match[1]}.jpg`;
     return '';
   }

@@ -55,21 +55,16 @@ RAG / LangGraph / 向量数据库 / LoRA 微调 / 评测设计
 
 ## 📅 时间线
 
-**2026.10** — 博客上线系列阅读与系列订阅；字体子集化、CLS 与滚动性能优化；文章更新到 21 篇
-
-**2026.09** — 升入大四；博客 HTTPS 上线（Cloudflare）；NFT Launchpad Kit v1.0.0 发布并转向 Agent-Native 方向
-
-**2026.08** — MiQroGate 推进至 Phase 1 G7.4（响应缓存）；DocMind Agent 消融实验完成；博客补齐项目复盘
-
-**2026.07** — NLP 训练实验框架（BERT → LoRA 微调 Qwen2.5）；GeoAI Assistant 产品化
-
-**2026.06** — A 股反转研究封档：IC 曲线全负，80 日反转 Alpha 的“信号存在 ≠ 策略可投资”
-
-**2026.05** — 博客上线，发布首批文章与项目展示
-
-**2026.04** — 完成 DocMind RAG 系统、MindPilot 多 Agent 平台、GeoData 安全系统
-
-**2025.09** — 开始系统接触 AI Agent 与 RAG
+{% timeline %}
+2026.10 :: 博客上线系列阅读与系列订阅；字体子集化、CLS 与滚动性能优化；文章更新到 21 篇
+2026.09 :: 升入大四；博客 HTTPS 上线（Cloudflare）；NFT Launchpad Kit v1.0.0 发布并转向 Agent-Native 方向
+2026.08 :: MiQroGate 推进至 Phase 1 G7.4（响应缓存）；DocMind Agent 消融实验完成；博客补齐项目复盘
+2026.07 :: NLP 训练实验框架（BERT → LoRA 微调 Qwen2.5）；GeoAI Assistant 产品化
+2026.06 :: A 股反转研究封档：IC 曲线全负，80 日反转 Alpha 的“信号存在 ≠ 策略可投资”
+2026.05 :: 博客上线，发布首批文章与项目展示
+2026.04 :: 完成 DocMind RAG 系统、MindPilot 多 Agent 平台、GeoData 安全系统
+2025.09 :: 开始系统接触 AI Agent 与 RAG
+{% endtimeline %}
 
 ---
 

@@ -55,6 +55,8 @@ function check(name, cond, extra) {
     tags: document.querySelectorAll('.post-side-tag').length,
     cat: !!document.querySelector('.post-side-cat-card'),
     toc: !!document.querySelector('.post-toc'),
+    breadcrumbs: document.querySelectorAll('.cj-breadcrumbs a').length,
+    breadcrumbCurrent: document.querySelector('.cj-breadcrumbs [aria-current="page"]')?.textContent || '',
     headingAnchors: document.querySelectorAll('.article-content h2 .heading-anchor').length,
     markdownLink: !!document.querySelector('.post-side-author-links a[aria-label="查看 Markdown 原文"]'),
     copyMd: (() => {
@@ -72,6 +74,7 @@ function check(name, cond, extra) {
   check('标签卡有标签', first.tags >= 2, String(first.tags));
   check('同分类卡存在', first.cat);
   check('目录仍在', first.toc);
+  check('面包屑包含首页/分类/当前页', first.breadcrumbs >= 2 && first.breadcrumbCurrent.length > 4, JSON.stringify({ n: first.breadcrumbs, cur: first.breadcrumbCurrent }));
   check('标题锚点已生成', first.headingAnchors >= 3, String(first.headingAnchors));
   check('Markdown 原文链接存在', first.markdownLink);
   check('复制 Markdown 按钮存在', first.copyMd && first.copyMd.label === '复制 Markdown 原文' && /\/index\.md$/.test(first.copyMd.url || ''), JSON.stringify(first.copyMd));

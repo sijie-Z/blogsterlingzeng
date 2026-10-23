@@ -74,6 +74,29 @@ HTTP_PROXY=http://127.0.0.1:7897 HTTPS_PROXY=http://127.0.0.1:7897 git push orig
 
 Cloudflare **全自动**(Universal SSL),无需任何操作,自动续期。
 
+## 缓存头(建议)
+
+静态资源带版本号或内容哈希时，重复访问的最大收益来自 `immutable` 缓存。Nginx 站点配置可加：
+
+```nginx
+# 带版本号的静态资源:一年强缓存
+location ~* \.(?:js|css|woff2|webp|avif|jpg|jpeg|png|svg|mp3|webm)$ {
+    expires 1y;
+    add_header Cache-Control "public, max-age=31536000, immutable";
+}
+
+# HTML 始终回源校验,避免发布后看到旧页面
+location ~* \.html$ {
+    add_header Cache-Control "no-cache";
+}
+```
+
+注意：
+
+- 只对**带版本号/哈希**的 URL 用 `immutable`；`/css/custom.css?v=...`、`/fontawesome/webfonts/*.subset.woff2?v=...` 属于这一类，`/images/og/*.jpg` 目前没有版本号，改图后需要换文件名或退回普通缓存。
+- GitHub Pages 不能自定义响应头；如果走 Cloudflare 代理，可在 Transform Rule 里补同样的 `Cache-Control`。
+- 改完用 `curl -I https://sterlingzeng.cn/css/custom.css?v=...` 核对实际响应头。
+
 ## 已知问题与历史教训
 
 | 问题 | 原因 | 解决 |

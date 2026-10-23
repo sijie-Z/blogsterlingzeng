@@ -25,7 +25,7 @@ function generatedOg(page) {
   const has = name => fs.existsSync(path.join(dir, name));
   if (page.series_page) {
     if (/^series\/?(index\.html)?$/.test(route)) return has('page-series.jpg') ? '/images/og/page-series.jpg' : '';
-    const match = route.match(/^series\/([a-z0-9-]+)\//);
+    const match = route.match(/^series\/([a-z0-9-]+)(?:\/|$)/);
     return match && has(`series-${match[1]}.jpg`) ? `/images/og/series-${match[1]}.jpg` : '';
   }
   const slug = page.slug || path.basename(String(page.source || ''), path.extname(String(page.source || '')));

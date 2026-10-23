@@ -114,6 +114,16 @@ async function audit(page) {
     focus: document.activeElement?.classList.contains('image-viewer-close') || false,
   }));
   check('Enter 打开图片查看器并聚焦关闭', viewerOpen.active && focusedClose && viewerOpen.focus, JSON.stringify(viewerOpen));
+  await sleep(400);
+  const viewerCaption = await page.evaluate(() => {
+    const img = document.querySelector('.image-viewer-container.active .image-viewer-frame img');
+    const cap = document.querySelector('.image-viewer-container.active .image-viewer-caption');
+    return {
+      text: (cap && cap.textContent || '').trim(),
+      describedBy: img?.getAttribute('aria-describedby') || '',
+    };
+  });
+  check('图片查看器显示说明并关联', viewerCaption.text.length > 4 && viewerCaption.describedBy === 'image-viewer-caption', JSON.stringify(viewerCaption));
   await page.keyboard.press('Escape');
   await sleep(500);
   const viewerClosed = await page.evaluate(() => ({

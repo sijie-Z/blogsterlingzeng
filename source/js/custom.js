@@ -1075,14 +1075,33 @@
         if (!img || img.closest('.image-viewer-container')) return;
         window.__cjLastImage = img;
         // 主题在 click 里同步打开弹层,下一帧把焦点送到关闭按钮
+        const syncCaption = () => {
+          const maskNow = document.querySelector('.image-viewer-container.active');
+          if (!maskNow) return;
+          const viewerImg = maskNow.querySelector('.image-viewer-frame img');
+          const fig = img.closest('figure');
+          const figcaption = fig && fig.querySelector('figcaption');
+          const text = ((figcaption && figcaption.textContent) || img.alt || (viewerImg && viewerImg.alt) || '').trim();
+          let cap = maskNow.querySelector('.image-viewer-caption');
+          if (!cap) {
+            cap = document.createElement('div');
+            cap.className = 'image-viewer-caption';
+            cap.id = 'image-viewer-caption';
+            maskNow.appendChild(cap);
+          }
+          if (viewerImg) viewerImg.setAttribute('aria-describedby', 'image-viewer-caption');
+          cap.textContent = text;
+          cap.hidden = !text;
+        };
+
         const focusClose = () => {
           const maskNow = document.querySelector('.image-viewer-container.active');
           if (!maskNow || maskNow.contains(document.activeElement)) return;
           const btn = maskNow.querySelector('.image-viewer-close');
           if (btn) btn.focus({ preventScroll: true });
         };
-        setTimeout(focusClose, 80);
-        setTimeout(focusClose, 320);
+        setTimeout(() => { syncCaption(); focusClose(); }, 80);
+        setTimeout(() => { syncCaption(); focusClose(); }, 320);
       }, true);
     }
 
@@ -1095,6 +1114,27 @@
       close.setAttribute('role', 'button');
       close.setAttribute('aria-label', '关闭图片查看器');
     }
+
+    const syncViewerCaption = () => {
+      const viewerImg = mask.querySelector('.image-viewer-frame img');
+      if (!viewerImg) return;
+      const text = (viewerImg.alt || '').trim();
+      let cap = mask.querySelector('.image-viewer-caption');
+      if (!cap) {
+        cap = document.createElement('div');
+        cap.className = 'image-viewer-caption';
+        cap.id = 'image-viewer-caption';
+        mask.appendChild(cap);
+      }
+      viewerImg.setAttribute('aria-describedby', 'image-viewer-caption');
+      cap.textContent = text;
+      cap.hidden = !text;
+    };
+    mask.addEventListener('click', e => {
+      if (e.target.closest('.image-viewer-prev, .image-viewer-next')) {
+        setTimeout(syncViewerCaption, 100);
+      }
+    });
     if (!mask.__cjSwipe) {
       mask.__cjSwipe = true;
       let startX = 0, startY = 0, tracking = false;
