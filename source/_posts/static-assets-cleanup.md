@@ -50,7 +50,7 @@ solid.min.css           0.5KB
 regular.min.css         0.5KB
 ```
 
-字体已经做过子集（14KB 的 woff2），但 **CSS 类名没有**。`fontawesome.min.css` 里每个图标都有一条 `.fa-xxx:before { content: "\fxxx" }`，全站实际只用到 77 个。
+字体已经做过子集（14KB 的 woff2，过程见[《从 971KB 到 179KB》](/2026/10/22/font-subset-and-cls/)），但 **CSS 类名没有**。`fontawesome.min.css` 里每个图标都有一条 `.fa-xxx:before { content: "\fxxx" }`，全站实际只用到 77 个。
 
 于是写了一个构建期脚本，思路分三步：
 
@@ -128,7 +128,7 @@ Swup 4 支持 `native: true`，用浏览器原生 View Transition 做页面交�
 |---|---:|---:|
 | 首页 FontAwesome CSS | ~200KB | 65KB |
 | 客户端 moment | 375KB | 0 |
-| 部署体积 | 33MB+ | 25MB（含 28 张 OG 卡） |
+| 部署体积 | 33MB+ | 25MB（含 28 张 OG 卡；横幅和 Live2D 纹理的瘦身见[另一篇](/2026/10/23/responsive-banner-live2d-texture/)） |
 | 文章首屏 CLS | ~0.0002 | 0.0001 |
 | 点击 → 内容替换 | 15–40ms | 21–43ms |
 | 首屏长任务 | ~300ms（odometer） | 仍有 250–300ms 的整页布局，待继续排查 |
