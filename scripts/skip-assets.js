@@ -21,6 +21,18 @@ hexo.extend.filter.register('after_generate', function () {
       try { hexo.route.remove(path); } catch (e) {}
     }
   }
+  const theme = hexo.theme.config || {};
+  const plugins = theme.plugins || {};
+  const extras = [];
+  if (!(plugins.mermaid && plugins.mermaid.enable)) {
+    extras.push('js/libs/mermaid.min.js', 'js/build/libs/mermaid.min.js');
+  }
+  if (!(theme.comment && theme.comment.system === 'waline')) {
+    extras.push('js/libs/waline.js', 'js/build/libs/waline.js');
+  }
+  for (const path of extras) {
+    try { if (hexo.route.get(path)) hexo.route.remove(path); } catch (e) {}
+  }
   for (const path of SKIP) {
     try {
       if (hexo.route.get(path)) {

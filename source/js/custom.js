@@ -1038,6 +1038,31 @@
       close.setAttribute('role', 'button');
       close.setAttribute('aria-label', '关闭图片查看器');
     }
+    if (!mask.__cjSwipe) {
+      mask.__cjSwipe = true;
+      let startX = 0, startY = 0, tracking = false;
+      mask.addEventListener('touchstart', e => {
+        if (e.touches.length !== 1) { tracking = false; return; }
+        if (e.target.closest('.image-viewer-prev, .image-viewer-next, .image-viewer-close, .image-viewer-exif-panel, .image-viewer-exif-toggle')) {
+          tracking = false;
+          return;
+        }
+        tracking = true;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+      }, { passive: true });
+      mask.addEventListener('touchend', e => {
+        if (!tracking) return;
+        tracking = false;
+        const touch = e.changedTouches && e.changedTouches[0];
+        if (!touch) return;
+        const dx = touch.clientX - startX;
+        const dy = touch.clientY - startY;
+        if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.4) return;
+        const btn = mask.querySelector(dx > 0 ? '.image-viewer-prev' : '.image-viewer-next');
+        if (btn) btn.click();
+      }, { passive: true });
+    }
     new MutationObserver(() => {
       if (mask.classList.contains('active')) {
         requestAnimationFrame(() => {

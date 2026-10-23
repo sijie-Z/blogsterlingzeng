@@ -153,20 +153,24 @@ function check(name, cond, extra) {
   const articleLd = await page.evaluate(() => {
     try {
       const data = JSON.parse(document.querySelector('script[type="application/ld+json"]').textContent);
-      return { ok: true, types: data['@graph'].map(x => x['@type']) };
+      const first = data['@graph'][0];
+      return { ok: true, types: data['@graph'].map(x => x['@type']), series: first.isPartOf?.name || '', position: first.position || 0, parts: (first.hasPart || []).length };
     } catch (e) { return { ok: false, types: [] }; }
   });
   check('文章 JSON-LD 有 BlogPosting + BreadcrumbList', articleLd.ok && articleLd.types.includes('BlogPosting') && articleLd.types.includes('BreadcrumbList'), JSON.stringify(articleLd));
+  check('文章 JSON-LD 关联系列与序号', articleLd.series === '博客工程化' && articleLd.position === 3, JSON.stringify(articleLd));
 
   await page.goto(BASE + '/series/blog-engineering/', { waitUntil: 'networkidle2', timeout: 30000 });
   await sleep(400);
   const seriesLd = await page.evaluate(() => {
     try {
       const data = JSON.parse(document.querySelector('script[type="application/ld+json"]').textContent);
-      return { ok: true, types: data['@graph'].map(x => x['@type']) };
+      const first = data['@graph'][0];
+      return { ok: true, types: data['@graph'].map(x => x['@type']), series: first.isPartOf?.name || '', position: first.position || 0, parts: (first.hasPart || []).length };
     } catch (e) { return { ok: false, types: [] }; }
   });
   check('系列页有 CollectionPage JSON-LD', seriesLd.ok && seriesLd.types.includes('CollectionPage'), JSON.stringify(seriesLd));
+  check('系列页 JSON-LD 列出 5 篇文章', seriesLd.parts === 5, JSON.stringify(seriesLd));
   const ogUrl = await page.evaluate(() => ({
     og: document.querySelector('meta[property="og:url"]')?.content || '',
     canonical: document.querySelector('link[rel="canonical"]')?.href || '',

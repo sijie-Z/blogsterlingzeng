@@ -22,6 +22,25 @@ function iso(date) {
   }
 }
 
+function seriesSlug(page) {
+  const raw = page && page.series;
+  if (!raw) return '';
+  const value = typeof raw === 'string'
+    ? raw
+    : (raw.slug || raw.id || raw.name || '');
+  return String(value || '').trim().toLowerCase();
+}
+
+function seriesGroup(page) {
+  const slug = seriesSlug(page);
+  if (!slug || !hexo.__cjBuildSeries) return null;
+  try {
+    return hexo.__cjBuildSeries().groups.get(slug) || null;
+  } catch (e) {
+    return null;
+  }
+}
+
 function jsonLdScript(data) {
   const json = JSON.stringify(data)
     .replace(/</g, '\\u003c')
@@ -104,6 +123,16 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
           },
         }],
       };
+      const match = pagePath.match(/^series\/([a-z0-9-]+)\/$/);
+      const group = match && seriesGroup({ series: match[1] });
+      if (group && group.entries) {
+        data['@graph'][0].hasPart = group.entries.map(entry => ({
+          '@type': 'BlogPosting',
+          '@id': root + '/' + String(entry.post.path || '').replace(/^\/+/, '') + '#article',
+          headline: String(entry.post.title || ''),
+          url: root + '/' + String(entry.post.path || '').replace(/^\/+/, ''),
+        }));
+      }
       return str.replace('</head>', () => jsonLdScript(data));
     }
     return str;
@@ -163,6 +192,19 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
     position: items.length + 1,
     name: String(page.title),
   });
+
+  const group = seriesGroup(page);
+  if (group && hexo.__cjSeriesUrl) {
+    const seriesPath = hexo.__cjSeriesUrl(group.slug);
+    article.isPartOf = {
+      '@type': 'CreativeWorkSeries',
+      '@id': root + seriesPath + '#series',
+      name: group.name,
+      url: root + seriesPath,
+    };
+    const entry = group.byId && group.byId.get(String(page._id));
+    if (entry) article.position = entry.index;
+  }
 
   const data = {
     '@context': 'https://schema.org',
