@@ -68,7 +68,7 @@ test/                    11 套 Puppeteer / Node 检查
 | 首页首屏 CLS | 0.002–0.004 |
 | 点击 → 内容替换 | 15–43ms |
 | 点击 → 导航结束 | 134–246ms |
-| 首屏 long task | 冷启动偶发 250–300ms（字体就绪后的整页布局）；导航单次 120–190ms 来自 Swup 解析长文 HTML |
+| 首屏 long task | 冷启动约 180ms（字体 preload 后）；导航单次 120–190ms 来自 Swup 解析长文 HTML |
 | 手机横幅（亮色） | 35KB / 960w（原图 63KB / 1920w） |
 | Live2D 主纹理 | 308KB WebP（原 1.7MB PNG） |
 | FontAwesome CSS | 65KB 类名子集（原 4 个文件约 200KB） |
@@ -103,7 +103,7 @@ test/                    11 套 Puppeteer / Node 检查
 | `test:transitions` | 44 | SPA 跳转、连点、前进后退、搜索焦点、路由播报、800px 导航 |
 | `test:sidebar` | 38 | 侧栏卡片、进度环、锚点、表格、Markdown、代码全屏、面包屑、移动目录 |
 | `test:series` | 53 | 系列页、徽章/系列卡、Atom、归档入口、SPA、移动端 |
-| `test:assets` | 40 | 响应式横幅、WebP 纹理、sitemap/llms、JSON-LD、JSON Feed、图标子集、OG 元数据、APlayer |
+| `test:assets` | 41 | 响应式横幅、WebP 纹理、sitemap/llms、JSON-LD、JSON Feed、图标子集、OG 元数据、APlayer |
 | `test:a11y` | 64 | 名称、alt、列表语义、标题、地标、图片查看器键盘/双指缩放、脚注、项目/简历页 |
 | `test:search` | 18 | combobox/listbox、方向键、Enter、空态、IME、SPA |
 | `test:smooth` | 26 | 滚动、Live2D 暂停、reduced-motion、移动端溢出 |
@@ -112,7 +112,7 @@ test/                    11 套 Puppeteer / Node 检查
 | `test:archive` | 12 | 归档热力图与移动端 |
 | `test:content` | 22 篇 | front matter、站内链接、图片、文风硬规则 |
 
-合计 335 项浏览器检查和 22 篇文章的内容检查。所有套件在本机通过；CI 目前只跑不依赖浏览器的 `test:content`。
+合计 336 项浏览器检查和 22 篇文章的内容检查。所有套件在本机通过；CI 目前只跑不依赖浏览器的 `test:content`。
 
 ## 7. 已知边界
 

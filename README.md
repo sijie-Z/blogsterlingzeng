@@ -94,6 +94,7 @@
 | 文章卡片 | 圆角、悬浮上移、边框高亮 |
 | 标题装饰 | 左侧渐变色条 |
 | 链接动画 | 悬浮时下划线展开 |
+| 字体加载 | 首屏标题/正文字体 woff2 preload，避免 swap 后的整页重排 | `scripts/font-preload.js` |
 | 代码块 | macOS 风格、JetBrains Mono 字体 |
 | 滚动条 | 自定义样式，兼容 WebKit + Firefox |
 | 焦点样式 | 键盘导航可见焦点（无障碍） |
@@ -179,7 +180,7 @@ npm run test:content        # 文章 front matter / 站内链接 / 图片 / 文�
 npm run test:transitions    # 44 项 SPA 跳转 / 连点 / 前后退 / 搜索焦点 / 路由播报
 npm run test:sidebar        # 38 项文章侧栏 / 进度 / 锚点 / 表格 / 面包屑 / 代码全屏
 npm run test:series         # 53 项系列页 / 徽章 / 系列卡 / SPA / 移动端
-npm run test:assets         # 40 项响应式横幅 / WebP 纹理 / JSON Feed / 图标子集 / JSON-LD
+npm run test:assets         # 41 项响应式横幅 / WebP 纹理 / JSON Feed / 图标子集 / JSON-LD
 npm run test:search         # 18 项搜索 combobox / 方向键 / Enter / 空态 / IME
 npm run test:a11y           # 64 项无障碍:名称 / alt / 列表语义 / 标题 / 地标 / 脚注
 npm run test:resume         # 7 项阅读位置记忆与“继续阅读”

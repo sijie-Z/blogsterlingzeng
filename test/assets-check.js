@@ -45,6 +45,11 @@ function check(name, cond, extra) {
   check('桌面加载原图或 1280+', /banner-light(-1280)?\.webp/.test(desktop.current), desktop.current);
   check('横幅有原始尺寸', desktop.natural?.[0] > 0, JSON.stringify(desktop.natural));
 
+  const fontPreloads = await page.evaluate(() =>
+    [...document.querySelectorAll('link[rel="preload"][as="font"]')].map(link => link.getAttribute('href') || '')
+  );
+  check('首屏标题/正文字体已 preload', fontPreloads.some(h => h.includes('Chillax-Variable.woff2')) && fontPreloads.some(h => h.includes('GeistVF.woff2')), JSON.stringify(fontPreloads));
+
   console.log('=== 2. 移动端按 DPR 选图 ===');
   const mobile = await browser.newPage();
   await mobile.evaluateOnNewDocument(() => localStorage.setItem('waifu-disabled', 'true'));
@@ -77,8 +82,9 @@ function check(name, cond, extra) {
   await page.waitForFunction(() => document.querySelector('.nb-dropdown')?.classList.contains('show'), { timeout: 5000 }).catch(() => {});
   const autumn = await page.$('.nb-opt[data-season="autumn"]');
   if (autumn) {
-    await autumn.click();
-    await sleep(1200);
+    await page.evaluate(() => document.querySelector('.nb-opt[data-season="autumn"]')?.click());
+    await page.waitForFunction(() => document.documentElement.dataset.season === 'autumn', { timeout: 3000 }).catch(() => {});
+    await sleep(1500);
     const season = await page.evaluate(() => {
       const img = document.querySelector('.home-banner-background img');
       return {
