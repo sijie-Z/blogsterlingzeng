@@ -26,7 +26,9 @@ hexo.extend.filter.register('after_generate', function () {
     if (!xml) return;
     let out = xml
       .replace(/<url>\/\/([^<]+)<\/url>/g, '<url>/$1</url>')
-      .replace(/<url>([^<]*?)\/index\.html<\/url>/g, '<url>$1/</url>');
+      .replace(/<url>([^<]*?)\/index\.html<\/url>/g, '<url>$1/</url>')
+      // 404 页不应该出现在搜索结果里
+      .replace(/<entry>[\s\S]*?<url>\/404\.html<\/url>[\s\S]*?<\/entry>\s*/g, '');
     hexo.route.set('search.xml', out);
   });
 });
