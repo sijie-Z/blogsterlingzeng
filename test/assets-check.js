@@ -162,6 +162,11 @@ function check(name, cond, extra) {
     } catch (e) { return { ok: false, types: [] }; }
   });
   check('系列页有 CollectionPage JSON-LD', seriesLd.ok && seriesLd.types.includes('CollectionPage'), JSON.stringify(seriesLd));
+  const ogUrl = await page.evaluate(() => ({
+    og: document.querySelector('meta[property="og:url"]')?.content || '',
+    canonical: document.querySelector('link[rel="canonical"]')?.href || '',
+  }));
+  check('系列页 og:url 与 canonical 一致', ogUrl.og && !ogUrl.og.endsWith('index.html') && ogUrl.og === ogUrl.canonical, JSON.stringify(ogUrl));
 
   const searchJs = await page.evaluate(async () => (await fetch('/js/build/tools/localSearch.js')).text());
   check('搜索防抖补丁生效', searchJs.includes('__cjSearchTimer'), 'patch missing');

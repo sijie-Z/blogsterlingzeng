@@ -111,6 +111,14 @@ function check(name, cond, extra) {
   check('归档系列卡链接正确', archiveSeries.cards.some(c => c.href === SERIES), JSON.stringify(archiveSeries.cards));
   check('归档系列卡显示篇数/时长', archiveSeries.cards.every(c => /篇\s*[·・]\s*约\s*\d+\s*分钟/.test(c.text)), JSON.stringify(archiveSeries.cards));
   check('归档页无横向溢出', archiveSeries.overflow <= 2, String(archiveSeries.overflow));
+  await page.goto(BASE + '/archives/2026/10/', { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(400);
+  const monthSeries = await page.evaluate(() => document.querySelectorAll('.archive-series').length);
+  check('月归档不重复系列块', monthSeries === 0, String(monthSeries));
+  await page.goto(BASE + '/archives/page/2/', { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(400);
+  const pageSeries = await page.evaluate(() => document.querySelectorAll('.archive-series').length);
+  check('分页归档不重复系列块', pageSeries === 0, String(pageSeries));
 
   console.log('=== 3. 文章内徽章与系列卡 ===');
   await page.goto(BASE + ARTICLE, { waitUntil: 'networkidle2', timeout: 30000 });
