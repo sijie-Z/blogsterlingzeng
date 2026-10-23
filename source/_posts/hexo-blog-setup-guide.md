@@ -28,17 +28,11 @@ series_order: 1
 
 ## 技术选型：我比较了什么
 
-### WordPress
-
-最老牌的 CMS，功能强大，插件丰富。但对我来说太重了——我只需要一个写文章的地方，不需要用户管理、电商插件、SEO 套件。而且 PHP + MySQL 的部署成本比静态站点高得多。
-
-### Hugo
-
-用 Go 写的静态站点生成器，速度极快。但它的模板语言 Go Template 让我很不舒服——语法奇怪，调试困难。社区也没有 Hexo 活跃。
-
-### Jekyll
-
-GitHub Pages 原生支持，部署最简单。但 Ruby 生态我不熟悉，而且构建速度比 Hexo 慢。
+| 方案 | 生态 | 优点 | 我不选它的原因 |
+|---|---|---|---|
+| WordPress | PHP + MySQL | 功能最全，插件最多 | 对写文章来说太重，部署成本高 |
+| Hugo | Go | 构建速度极快 | Go Template 语法不熟，调试困难，社区不如 Hexo 活跃 |
+| Jekyll | Ruby | GitHub Pages 原生支持 | Ruby 生态不熟，构建比 Hexo 慢 |
 
 ### Hexo
 

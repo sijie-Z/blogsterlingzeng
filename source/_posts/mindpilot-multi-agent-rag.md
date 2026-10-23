@@ -25,6 +25,17 @@ series_order: 2
 
 所以我做了 MindPilot — 一个支持多 Agent 协作的 RAG 平台。核心思想是：**把一个大任务拆成多个小任务，每个小任务由专门的 Agent 负责。**
 
+两个系统的差别可以并排放：
+
+| 维度 | DocMind | MindPilot |
+|---|---|---|
+| 编排 | 单 Agent | LangGraph 多 Agent 状态机 |
+| 意图识别 | 单一入口 | Intent Agent 分流 |
+| 检索 | 混合检索 | 混合检索 + BGE Reranker 精排 |
+| 自检 | 无 | Judge Agent + RAGAS |
+| 多模态 | 文本 | GLM-4V 图片理解 |
+| 接入端 | Web | Web / QQ / 飞书 |
+
 <!-- more -->
 
 ## 多 Agent 架构
@@ -60,13 +71,23 @@ MindPilot 的 Agent 编排基于 LangGraph 的状态机模型：
  返回   重新检索/换策略
 ```
 
+### Agent 职责
+
+| Agent | 负责什么 | 不通过时 |
+|---|---|---|
+| Intent Agent | 判断是知识检索、闲聊还是翻译 | 交给人设/闲聊/翻译 Agent |
+| RAG Agent | 混合检索、重排、生成 | Judge 打回后重新检索 |
+| Judge Agent | 用 RAGAS 评估回答质量 | 触发换检索策略重试 |
+
 ### Self-RAG 自检
 
 这是 MindPilot 和 DocMind 最大的区别。生成回答后，Judge Agent 会用 RAGAS 指标评估：
 
-- **Faithfulness** — 回答是否忠实于检索到的内容
-- **Answer Relevance** — 回答是否与问题相关
-- **Context Relevance** — 检索到的内容是否与问题相关
+| 指标 | 检查什么 | 低分动作 |
+|---|---|---|
+| Faithfulness | 回答是否忠实于检索到的内容 | 重新生成或缩小上下文 |
+| Answer Relevance | 回答是否与问题相关 | 改写查询后重试 |
+| Context Relevance | 检索到的内容是否与问题相关 | 换检索策略重试 |
 
 如果分数不够高，系统会自动调整检索策略重新尝试。不是每次都能成功，但比"生成了就返回"好得多。
 
