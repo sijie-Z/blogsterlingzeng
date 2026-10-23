@@ -180,7 +180,7 @@ npm run test:transitions    # 44 项 SPA 跳转 / 连点 / 前后退 / 搜索焦
 npm run test:sidebar        # 37 项文章侧栏 / 进度 / 锚点 / 表格 / 面包屑 / 代码全屏
 npm run test:series         # 53 项系列页 / 徽章 / 系列卡 / SPA / 移动端
 npm run test:assets         # 40 项响应式横幅 / WebP 纹理 / JSON Feed / 图标子集 / JSON-LD
-npm run test:search         # 17 项搜索 combobox / 方向键 / Enter / 空态 / IME
+npm run test:search         # 18 项搜索 combobox / 方向键 / Enter / 空态 / IME
 npm run test:a11y           # 63 项无障碍:名称 / alt / 列表语义 / 标题 / 地标 / 脚注
 npm run test:resume         # 7 项阅读位置记忆与“继续阅读”
 npm run test:archive        # 12 项归档写作热力图与移动端

@@ -75,6 +75,18 @@ async function typeQuery(page, text) {
   check('结果项 id 唯一且移出 Tab 序列', a11y.uniqueIds && a11y.anchorsOut, JSON.stringify(a11y));
   check('结果数量有播报', /找到 \d+ 个结果/.test(a11y.status), a11y.status);
 
+  await page.evaluate(() => {
+    const input = document.querySelector('.search-input');
+    input.value = '';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await typeQuery(page, '简历');
+  await sleep(700);
+  const pageHrefs = await page.evaluate(() =>
+    [...document.querySelectorAll('#search-result li a[href]')].map(a => a.getAttribute('href'))
+  );
+  check('页面结果使用目录 URL', pageHrefs.includes('/resume/') && !pageHrefs.some(h => h.includes('index.html')), JSON.stringify(pageHrefs.slice(0, 5)));
+
   console.log('=== 2. 方向键高亮 ===');
   await page.keyboard.press('ArrowDown');
   await sleep(150);
