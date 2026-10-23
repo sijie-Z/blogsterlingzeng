@@ -302,6 +302,8 @@ hexo.extend.generator.register('series-pages', function () {
       content: renderSeriesPage(group),
       series_page: true,
       comment: false,
+      // 社交分享优先用系列最新文章的封面
+      og_image: group.latest.cover || group.latest.banner || undefined,
     },
   }));
   routes.push({

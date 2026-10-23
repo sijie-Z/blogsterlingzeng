@@ -94,6 +94,7 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
           url,
           name: String(page.title || ''),
           description: String(page.description || ''),
+          image: page.og_image ? absUrl(root, page.og_image) : root + '/images/og-banner.jpg',
           inLanguage: 'zh-CN',
           isPartOf: {
             '@type': 'WebSite',
