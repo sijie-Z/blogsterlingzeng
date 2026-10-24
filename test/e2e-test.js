@@ -46,7 +46,8 @@ function check(name, cond, extra) {
     const opts = await page.$$('.nb-opt');
     check('下拉选项数 = 7', opts.length === 7, '实际 ' + opts.length);
     if (opts.length >= 3) {
-      await opts[2].click();
+      // 选项用 DOM click:View Transition 的快照层仍在时,真实坐标点击会被吞掉
+      await page.evaluate(() => document.querySelector('.nb-opt[data-season="summer"]').click());
       await new Promise(r => setTimeout(r, 1200));
       const season = await page.evaluate(() => document.documentElement.dataset.season);
       check('点击夏季后 data-season=summer', season === 'summer', '实际 ' + season);
@@ -55,9 +56,13 @@ function check(name, cond, extra) {
     const spaceOpt = await page.$('.nb-opt[data-season="space"]');
     check('太空站选项存在', !!spaceOpt);
     if (spaceOpt) {
-      await page.evaluate(() => document.querySelector('.nb-theme-btn').click());
+      await page.evaluate(() => {
+        const dropdown = document.querySelector('.nb-dropdown');
+        if (!dropdown.classList.contains('show')) document.querySelector('.nb-theme-btn').click();
+      });
       await page.waitForFunction(() => document.querySelector('.nb-dropdown').classList.contains('show'), { timeout: 5000 }).catch(() => {});
-      await spaceOpt.click();
+      await new Promise(r => setTimeout(r, 300));
+      await page.evaluate(() => document.querySelector('.nb-opt[data-season="space"]').click());
       await page.waitForFunction(() => document.documentElement.dataset.season === 'space', { timeout: 15000 }).catch(() => {});
       await page.waitForFunction(() => !document.documentElement.hasAttribute('data-theme-switching'), { timeout: 15000 }).catch(() => {});
       const spaceState = await page.evaluate(() => ({
