@@ -59,6 +59,9 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
     url,
     key,
   };
+  // GB/T 7714 的引用日期取构建当天
+  const now = new Date();
+  data.accessed = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   const json = JSON.stringify(data).replace(/</g, '\\u003c');
 
   let out = str;

@@ -105,7 +105,7 @@ test/                    12 套 Puppeteer / Node 检查
 | 公式复制 | `scripts/math.js` 包一层 `.katex-block`，按钮读取 MathML `annotation` 里的 TeX 源码 | 0 请求 |
 | 阅读设置 | 侧栏三档字号 + 专注模式；head 内联脚本在首屏前应用，字号不闪动 | 0 请求 |
 | Live2D | 默认不加载；显式“召唤宠物”后才拉模型，选择写入 localStorage | 用户点击前 0 请求 |
-| 引用与分享 | head 输出 `citation_*`；侧栏菜单复制 Markdown / BibTeX / APA / 链接；body JSON 随 Swup 换页更新 | 0 请求 |
+| 引用与分享 | head 输出 `citation_*`；侧栏菜单复制 Markdown / BibTeX / APA / GB/T 7714 / RIS / 链接；body JSON 随 Swup 换页更新 | 0 请求 |
 | 反向链接 | 构建期扫描所有文章正文内链，目标文章底部列出来源与上下文 | 0 请求 |
 
 边注的宽屏阈值是 1680px：正文 957px + 左页边 235px，低于这个宽度放不下 212px 的注释列，因此降级为底部卡片。底部卡片、边注、预览卡都挂在 `body` 上，避免正文祖先的 `transform`（Swup 入场）把 `position: fixed` 变成相对定位。
@@ -142,13 +142,13 @@ test/                    12 套 Puppeteer / Node 检查
 | `test:search` | 20 | combobox/listbox、方向键、Enter、空态、IME、SPA |
 | `test:smooth` | 26 | 滚动、Live2D 暂停、reduced-motion、移动端溢出 |
 | `test` | 34 | 端到端页面、主题切换、Live2D 显式召唤、次级页面 |
-| `test:features` | 76 | 边注、内链预览、公式复制、脚注预览、阅读设置、引用菜单、反向链接 |
+| `test:features` | 78 | 边注、内链预览、公式复制、脚注预览、阅读设置、引用菜单、反向链接 |
 | `test:resume` | 7 | 阅读位置记忆与继续阅读 |
 | `test:archive` | 16 | 归档热力图与移动端 |
 | `test:content` | 22 篇 | front matter、站内链接、图片、OG 卡、文风硬规则 |
 | `test:links` | 99 HTML | 构建产物站内 href 断链检查 |
 
-合计 434 项浏览器检查、22 篇文章的内容检查和 99 个 HTML 的内链检查。所有套件在本机通过；CI 目前只跑不依赖浏览器的 `test:content`。
+合计 436 项浏览器检查、22 篇文章的内容检查和 99 个 HTML 的内链检查。所有套件在本机通过；CI 目前只跑不依赖浏览器的 `test:content`。
 
 ## 8. 已知边界
 
@@ -170,7 +170,6 @@ test/                    12 套 Puppeteer / Node 检查
 
 1. **按页拆 CSS/JS**：style.css / custom.css / FontAwesome 子集仍有未使用字节，可在构建期按页面类型拆包。
 2. **内容哈希替代手写版本号**：现在靠 `?v=` 手工推进，改成构建期内容哈希可以彻底消除缓存不一致。
-3. **更多引用格式**：在 Markdown / BibTeX / APA 之外补 GB/T 7714、RIS，并补 `citation_abstract_html_url`。
-4. **动态 OG 接入 CI**：标题常改时把 `tools/gen-og-images.js` 放进写作流程或 CI，避免图片和标题漂移。
-5. **CI**：跑 `test:content` + 构建，浏览器套件留在本地或 self-hosted runner。
-6. **Cloudflare 缓存规则落地**：`docs/DEPLOYMENT.md` 已给出精确的 Transform Rule / Cache Rule 配置，待在控制台执行并 `curl -I` 验证。
+3. **动态 OG 接入 CI**：标题常改时把 `tools/gen-og-images.js` 放进写作流程或 CI，避免图片和标题漂移。
+4. **CI**：跑 `test:content` + 构建，浏览器套件留在本地或 self-hosted runner。
+5. **Cloudflare 缓存规则落地**：`docs/DEPLOYMENT.md` 已给出精确的 Transform Rule / Cache Rule 配置，待在控制台执行并 `curl -I` 验证。

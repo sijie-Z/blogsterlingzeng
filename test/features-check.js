@@ -380,7 +380,7 @@ function check(name, cond, extra) {
       expanded: document.getElementById('mobile-cite').getAttribute('aria-expanded'),
     };
   });
-  check('窄屏引用菜单可打开', !!mobileCiteMenu && mobileCiteMenu.items >= 4 && mobileCiteMenu.inViewport && mobileCiteMenu.expanded === 'true', JSON.stringify(mobileCiteMenu));
+  check('窄屏引用菜单可打开', !!mobileCiteMenu && mobileCiteMenu.items >= 6 && mobileCiteMenu.inViewport && mobileCiteMenu.expanded === 'true', JSON.stringify(mobileCiteMenu));
   await page.keyboard.press('Escape');
   await sleep(250);
   check('窄屏 Esc 关闭引用菜单', await page.evaluate(() => !document.querySelector('.cite-menu')));
@@ -466,7 +466,7 @@ function check(name, cond, extra) {
       inViewport: r.top >= 0 && r.left >= 0 && r.right <= innerWidth && r.bottom <= innerHeight,
     };
   });
-  check('引用菜单可打开', !!citeMenu && citeMenu.role === 'menu' && citeMenu.items >= 4 && citeMenu.inViewport, JSON.stringify(citeMenu));
+  check('引用菜单可打开', !!citeMenu && citeMenu.role === 'menu' && citeMenu.items >= 6 && citeMenu.inViewport, JSON.stringify(citeMenu));
   check('菜单打开后焦点在第一项', !!citeMenu && citeMenu.focused === '复制 Markdown 引用', citeMenu && citeMenu.focused);
   check('菜单同步 aria-expanded', !!citeMenu && citeMenu.expanded === 'true', citeMenu && citeMenu.expanded);
 
@@ -512,6 +512,32 @@ function check(name, cond, extra) {
   await sleep(900);
   const markdownCitation = await page.evaluate(() => navigator.clipboard.readText().catch(() => ''));
   check('复制 Markdown 引用', markdownCitation.includes('[我做了一个 RAG 知识库系统') && markdownCitation.includes('https://sterlingzeng.cn/2026/05/10/docmind-rag-knowledge-base/'), JSON.stringify(markdownCitation.slice(0, 60)));
+
+  await page.click('.post-side-share');
+  await sleep(250);
+  const formatButtons = await page.$$('.cite-menu button');
+  let gbtButton = null;
+  for (const handle of formatButtons) {
+    const text = await handle.evaluate(el => el.textContent);
+    if (text.includes('GB/T')) gbtButton = handle;
+  }
+  if (gbtButton) await gbtButton.click();
+  await sleep(900);
+  const gbtCitation = await page.evaluate(() => navigator.clipboard.readText().catch(() => ''));
+  check('复制 GB/T 7714 引用', gbtCitation.includes('[EB/OL]') && gbtCitation.includes('DocMind') && /\(\d{4}-\d{2}-\d{2}\)\[/.test(gbtCitation), JSON.stringify(gbtCitation.slice(0, 60)));
+
+  await page.click('.post-side-share');
+  await sleep(250);
+  const risButtons = await page.$$('.cite-menu button');
+  let risButton = null;
+  for (const handle of risButtons) {
+    const text = await handle.evaluate(el => el.textContent);
+    if (text.includes('RIS')) risButton = handle;
+  }
+  if (risButton) await risButton.click();
+  await sleep(900);
+  const risCitation = await page.evaluate(() => navigator.clipboard.readText().catch(() => ''));
+  check('复制 RIS 记录', risCitation.startsWith('TY  - JOUR') && risCitation.includes('UR  - https://') && risCitation.trim().endsWith('ER  -'), JSON.stringify(risCitation.slice(0, 40)));
 
   // 菜单打开时换页:菜单必须收起,且后续复制的是新文章
   await page.click('.post-side-share');

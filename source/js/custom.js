@@ -607,7 +607,17 @@
       '}',
     ].join('\n');
     const apa = `${apaAuthor(data.author)} (${data.year}, ${data.monthName} ${data.day}). ${data.title}. ${data.site}. ${data.url}`;
-    return { markdown, bibtex, apa, link: data.url };
+    const gbt = `${data.author}. ${data.title}[EB/OL]. (${data.date})[${data.accessed || data.date}]. ${data.url}.`;
+    const ris = [
+      'TY  - JOUR',
+      `AU  - ${data.author}`,
+      `TI  - ${data.title}`,
+      `PY  - ${data.year}`,
+      `DA  - ${data.date}`,
+      `UR  - ${data.url}`,
+      'ER  - ',
+    ].join('\n');
+    return { markdown, bibtex, apa, gbt, ris, link: data.url };
   }
 
   // 状态放在 DOM 上:脚本每次 SPA 换页都会重新执行,
@@ -680,6 +690,8 @@
       { label: '复制 Markdown 引用', text: formats.markdown, toast: 'Markdown 引用已复制' },
       { label: '复制 BibTeX', text: formats.bibtex, toast: 'BibTeX 已复制' },
       { label: '复制 APA 引用', text: formats.apa, toast: 'APA 引用已复制' },
+      { label: '复制 GB/T 7714 引用', text: formats.gbt, toast: 'GB/T 7714 引用已复制' },
+      { label: '复制 RIS', text: formats.ris, toast: 'RIS 已复制' },
       { label: '复制本文链接', text: formats.link, toast: '链接已复制' },
     ];
 
