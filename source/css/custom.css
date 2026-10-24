@@ -4151,3 +4151,12 @@ html.dark .post-series-item-title:hover {
 .post-series-count {
   color: var(--second-text-color);
 }
+
+/* 查看器按钮保证 44×44 触控面积 */
+.image-viewer-close,
+.image-viewer-prev,
+.image-viewer-next,
+.image-viewer-exif-toggle {
+  min-width: 44px;
+  min-height: 44px;
+}
