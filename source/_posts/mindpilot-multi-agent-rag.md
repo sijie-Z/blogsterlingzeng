@@ -9,7 +9,7 @@ tags:
   - 大模型
   - Python
 description: MindPilot 是一个支持多模态文档理解、多 Agent 协作编排的 RAG 平台。这篇文章记录了从单 Agent 到多 Agent 的架构演进过程。
-cover: /images/cover-tech.jpg
+cover: /images/cover-tech.webp
 series: agent-rag
 series_order: 2
 ---

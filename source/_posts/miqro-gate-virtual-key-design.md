@@ -11,7 +11,7 @@ tags:
   - 系统设计
   - 安全
 description: 企业内部用 AI 编程工具时，API Key 怎么管？MiQroGate 把真实 Key 虚拟化成可独立轮换、吊销、计量的 Virtual Key。这是它的完整设计记录。
-cover: /images/cover-code.jpg
+cover: /images/cover-code.webp
 sticky: 3
 ---
 

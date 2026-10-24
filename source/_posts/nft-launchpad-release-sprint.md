@@ -9,7 +9,7 @@ tags:
   - Solidity
   - Web3
 description: 一个功能完整的 NFT 发行平台，发布 v1.0.0 前发现:CI 从未运行过、真实密钥躺在仓库里、构建被开关吞掉错误、两份文档各说各的测试数。这是用 16 个 issue 还工程债的记录。
-cover: /images/cover-git.jpg
+cover: /images/cover-git.webp
 ---
 
 我的 CI 从来没有跑过。

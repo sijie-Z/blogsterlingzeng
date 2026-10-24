@@ -9,7 +9,7 @@ tags:
   - LoRA
   - BERT
 description: 一张 RTX 3050(4GB 显存)能训练出自己的问答模型吗？从 BERT 分类到 LoRA 微调 Qwen,这个框架记录了完整的四阶段实验，包括一次诚实的失败。
-cover: /images/cover-devops.jpg
+cover: /images/cover-devops.webp
 ---
 
 四 GB。这是我手头唯一的显卡显存。一张 RTX 3050。

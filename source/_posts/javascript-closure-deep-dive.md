@@ -10,7 +10,7 @@ tags:
   - 闭包
   - 编程思维
 description: 闭包不是语法特性，而是一种思维方式。这篇文章记录了我从"闭包是什么"到"闭包为什么重要"的完整认知过程。
-cover: /images/cover-code.jpg
+cover: /images/cover-code.webp
 ---
 
 ## 我被闭包坑过

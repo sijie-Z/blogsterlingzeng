@@ -11,7 +11,7 @@ tags:
   - 量化交易
   - Python
 description: 从数据获取到因子构建、组合优化、回测验证，一个完整的 A 股多因子量化研究平台是怎么搭起来的。
-cover: /images/cover-algorithm.jpg
+cover: /images/cover-algorithm.webp
 ---
 
 ## 为什么做这个

@@ -257,7 +257,7 @@ articles:
     title: 推荐阅读
     limit: 3
     mobile_limit: 2
-    placeholder: /images/cover-tech.jpg
+    placeholder: /images/cover-tech.webp
     skip_dirs: []
 
 # 文章页右侧信息卡(构建期渲染,不产生 CLS)

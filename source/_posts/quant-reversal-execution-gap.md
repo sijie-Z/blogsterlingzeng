@@ -11,7 +11,7 @@ tags:
   - 研究方法
   - Python
 description: 研究发现 A 股存在强反转 Alpha(80 日窗口 IC=-0.081),理想执行下夏普 0.45;换成真实的月频调仓，同一个信号变成 -0.27。0.72 的差距，就是"信号存在"和"策略可投资"之间的距离。
-cover: /images/cover-algorithm.jpg
+cover: /images/cover-algorithm.webp
 ---
 
 零点四五。这是同一个信号在理想执行下的夏普比率。

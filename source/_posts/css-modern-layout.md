@@ -10,7 +10,7 @@ tags:
   - 布局
   - 前端开发
 description: CSS 布局的演进不只是 API 的变化，更是思维方式的升级。从 float 的"hack 思维"到 Grid 的"设计思维"，记录我的认知转变过程。
-cover: /images/cover-design.jpg
+cover: /images/cover-design.webp
 ---
 
 ## 那些年，我被 float 支配的恐惧

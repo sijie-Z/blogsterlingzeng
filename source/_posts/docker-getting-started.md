@@ -7,7 +7,7 @@ tags:
   - Docker
   - 工程实践
 description: Docker 不只是一个部署工具，它改变了我思考"环境"和"依赖"的方式。这篇文章记录了我从"在我机器上能跑"到"在任何机器上都能跑"的认知转变。
-cover: /images/cover-devops.jpg
+cover: /images/cover-devops.webp
 ---
 
 ## "在我机器上能跑"

@@ -2252,16 +2252,16 @@
   // 数据源:构建时生成的 /related-data.json
   // ============================
   const RELATED_COVERS = {
-    前端开发: '/images/cover-design.jpg',
-    后端开发: '/images/cover-code.jpg',
-    算法与数据结构: '/images/cover-algorithm.jpg',
-    开发工具: '/images/cover-git.jpg',
-    项目实战: '/images/cover-code.jpg',
-    技术思考: '/images/cover-tech.jpg',
-    生活随笔: '/images/cover-tech.jpg',
-    学习笔记: '/images/cover-tech.jpg',
+    前端开发: '/images/cover-design.webp',
+    后端开发: '/images/cover-code.webp',
+    算法与数据结构: '/images/cover-algorithm.webp',
+    开发工具: '/images/cover-git.webp',
+    项目实战: '/images/cover-code.webp',
+    技术思考: '/images/cover-tech.webp',
+    生活随笔: '/images/cover-tech.webp',
+    学习笔记: '/images/cover-tech.webp',
   };
-  const RELATED_PLACEHOLDER = '/images/cover-tech.jpg';
+  const RELATED_PLACEHOLDER = '/images/cover-tech.webp';
 
   function initRelatedPosts() {
     const content = document.querySelector('.article-content');

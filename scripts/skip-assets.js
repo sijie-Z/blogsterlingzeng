@@ -61,6 +61,8 @@ hexo.extend.filter.register('after_generate', function () {
   for (const route of hexo.route.list()) {
     if (/^js\/libs\//.test(route) || /^pet\//.test(route)) extras.push(route);
     if (/^fonts\/.*\.(?:woff|ttf|eot)$/i.test(route)) extras.push(route);
+    // 文章封面已换成同尺寸 WebP,原 JPG 不再被页面引用
+    if (/^images\/cover-[a-z]+\.jpg$/i.test(route)) extras.push(route);
   }
   for (const path of extras) {
     try { if (hexo.route.get(path)) hexo.route.remove(path); } catch (e) {}

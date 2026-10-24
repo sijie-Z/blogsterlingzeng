@@ -8,7 +8,7 @@ tags:
   - Hexo
   - 博客
 description: 博客看起来已经很快了，但首屏仍加载了 200KB 用不到的图标 CSS、375KB 的 moment 和 8.4MB 没人引用的字体。这篇文章记录一次“删依赖”而不是“加缓存”的性能清理，以及一次被测量否决的 View Transition 改造。
-cover: /images/cover-tech.jpg
+cover: /images/cover-tech.webp
 series: blog-engineering
 series_order: 5
 ---
