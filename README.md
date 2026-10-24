@@ -250,12 +250,12 @@ blogsterlingzeng/
 │       ├── banner-winter.webp       # 冬季横幅
 │       ├── og-banner.jpg            # 社交分享图 (118KB)
 │       ├── og/                      # 每篇文章/系列/页面的 1200×630 OG 卡
-│       ├── cover-tech.jpg           # 文章封面 (53KB)
-│       ├── cover-code.jpg           # 文章封面 (73KB)
-│       ├── cover-design.jpg         # 文章封面 (122KB)
-│       ├── cover-devops.jpg         # 文章封面 (26KB)
-│       ├── cover-algorithm.jpg      # 文章封面 (33KB)
-│       └── cover-git.jpg            # 文章封面 (84KB)
+│       ├── cover-tech.webp          # 文章封面 (24KB)
+│       ├── cover-code.webp          # 文章封面 (42KB)
+│       ├── cover-design.webp        # 文章封面 (54KB)
+│       ├── cover-devops.webp        # 文章封面 (7KB)
+│       ├── cover-algorithm.webp     # 文章封面 (11KB)
+│       └── cover-git.webp           # 文章封面 (48KB)
 │
 ├── node_modules/hexo-theme-redefine/ # Redefine 主题(npm 安装,postinstall 打补丁)
 ├── scripts/                          # 构建期脚本(系列/侧栏/热力图/SEO)
