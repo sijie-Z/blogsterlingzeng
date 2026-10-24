@@ -65,7 +65,9 @@ test/                    11 套 Puppeteer / Node 检查
 | 指标 | 数值 |
 |---|---|
 | 文章首屏 CLS | 0.0001 |
-| 首页首屏 CLS | 0.002–0.004 |
+| 首页首屏 CLS | 0.02–0.04（偶发首屏内容布局位移） |
+| 文章 LCP（本地 Chrome） | 约 0.45–0.49s |
+| 移动端文章滚动 CLS | 约 0.007（相关阅读占位后） |
 | 点击 → 内容替换 | 15–43ms |
 | 点击 → 导航结束 | 134–246ms |
 | 首屏 long task | 冷启动约 180ms（字体 preload 后）；导航单次 120–190ms 来自 Swup 解析长文 HTML |
@@ -73,7 +75,8 @@ test/                    11 套 Puppeteer / Node 检查
 | Live2D 主纹理 | 308KB WebP（原 1.7MB PNG） |
 | FontAwesome CSS | 65KB 类名子集（原 4 个文件约 200KB） |
 | 移除的脚本 | moment 375KB（essays 页改用 Intl） |
-| 部署产物 | 25MB（含 28 张 OG 卡；移除全量 webfonts / source map 后，原 33MB+） |
+| 部署产物 | 25MB（含 29 张 OG 卡；移除全量 webfonts / source map 后，原 33MB+） |
+| Live2D | 3MB 模型在首次交互或 10s 后才加载，不占首屏网络 |
 
 ### 关键取舍
 

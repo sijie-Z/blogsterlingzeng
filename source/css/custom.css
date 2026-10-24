@@ -1139,7 +1139,7 @@ html:not(.dark) .post-toc-count {
   /* 给右下角固定的侧边工具留出安全区,避免压住正文 */
   .post-page-container .article-content,
   .page-template-content {
-    padding-right: 28px;
+    padding-right: 38px;
   }
 }
 

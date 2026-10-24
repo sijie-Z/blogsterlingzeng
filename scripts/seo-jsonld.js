@@ -201,7 +201,9 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
       name: String(config.title || authorName),
       logo: {
         '@type': 'ImageObject',
-        url: root + '/images/favicon.png',
+        url: root + '/images/avatar.jpg',
+        width: 840,
+        height: 840,
       },
     },
     image: [image],
