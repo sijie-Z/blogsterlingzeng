@@ -1,6 +1,7 @@
 ---
 title: 我做了一个 A 股量化研究平台——从因子到回测的完整流水线
-date: 2026-05-10 10:00:00
+date: 
+sticky: 3
 updated: 2026-10-24 00:30:00
 series: quant-research
 series_order: 1

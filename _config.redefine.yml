@@ -144,18 +144,18 @@ navbar:
     项目:
       path: /projects
       icon: fa-brands fa-github
-    归档:
-      path: /archives
-      icon: fa-regular fa-archive
+    简历:
+      path: /resume
+      icon: fa-regular fa-file-lines
     系列:
       path: /series
       icon: fa-solid fa-layer-group
     关于:
       path: /about
       icon: fa-regular fa-user
-    简历:
-      path: /resume
-      icon: fa-regular fa-file-lines
+    归档:
+      path: /archives
+      icon: fa-regular fa-archive
     友链:
       path: /friends
       icon: fa-regular fa-users
@@ -180,6 +180,9 @@ home:
       项目:
         path: /projects
         icon: fa-brands fa-github
+      简历:
+        path: /resume
+        icon: fa-regular fa-file-lines
       归档:
         path: /archives
         icon: fa-regular fa-archive

@@ -1,6 +1,7 @@
 ---
 title: 我做了一个 RAG 知识库系统——DocMind 项目记录
-date: 2026-05-10 11:00:00
+date: 
+sticky: 2
 categories:
   - 项目实战
 tags:

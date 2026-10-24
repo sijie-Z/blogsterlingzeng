@@ -204,6 +204,102 @@ html.dark .navbar-container.scrolled .navbar-content {
   color: var(--primary-color) !important;
 }
 
+/* 图片查看器控件必须在图片之上;缩放后的图片会盖住按钮 */
+.image-viewer-close,
+.image-viewer-prev,
+.image-viewer-next,
+.image-viewer-exif-toggle {
+  z-index: 10003;
+}
+
+.image-viewer-frame {
+  z-index: 1;
+}
+
+/* 搜索结果标题保持行内,避免高亮 <b> 打乱阅读顺序 */
+#search-result .search-result-title {
+  display: block;
+}
+
+@media (max-width: 880px) {
+  /* 小屏上页脚不再拦截正文控件的点击;滚到底部才恢复链接 */
+  footer.footer .info-container {
+    pointer-events: none;
+  }
+
+  footer.footer.at-bottom .info-container {
+    pointer-events: auto;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* APlayer 固定播放器让出页脚高度 */
+  .aplayer.aplayer-fixed,
+  .aplayer-fixed .aplayer-body {
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* 主要触控目标统一到 44px */
+  .navbar-content .mobile .icon-item,
+  .navbar-bar,
+  .article-stats .like-btn,
+  .copy-link-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .post-tags-box a,
+  .post-series-name,
+  .post-series-card-title a,
+  .post-series-item-title,
+  .cj-breadcrumbs a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  footer.footer .info-container a,
+  .footer-extra-icons a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}
+
+/* 769-880 平板窄屏:不要同时保留桌面目录和侧栏 */
+@media (min-width: 769px) and (max-width: 880px) {
+  .home-banner-container {
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+  }
+
+  .post-page-container .main-content,
+  .post-page-container .main-content-container {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  .toc-content-container,
+  .page-aside-toggle {
+    display: none !important;
+  }
+
+  html.aside-open .post-page-container .article-content-container {
+    width: 100% !important;
+  }
+
+  html.aside-open .post-page-container .toc-content-container {
+    display: none !important;
+  }
+}
+
+/* 移动端架构图提示可以横向滑动 */
+@media (max-width: 768px) {
+  .project-arch figcaption::after {
+    content: " · 左右滑动查看";
+    color: var(--primary-color);
+  }
+}
+
 /* ========================================
    HOME BANNER — Cinematic
    ======================================== */
@@ -2355,6 +2451,12 @@ html.aside-open .post-page-container .toc-content-container {
 
 html.aside-open .post-page-container .article-content-container {
   width: calc(100% - 210px) !important;
+}
+
+@media (min-width: 769px) and (max-width: 880px) {
+  html.aside-open .post-page-container .article-content-container {
+    width: 100% !important;
+  }
 }
 
 @media (max-width: 768px) {

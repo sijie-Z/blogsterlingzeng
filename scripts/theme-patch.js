@@ -686,6 +686,11 @@ patchText('source/js/build/main.js', [
 
 patchText('layout/components/header/head.ejs', [
   [
+    '<meta name="viewport" content="width=device-width, initial-scale=1">',
+    '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">',
+    'viewport fit cover',
+  ],
+  [
     `    <!--- Fontawesome Part-->
     <%- renderCSS('fontawesome/fontawesome.min.css') %>
     <%- renderCSS('fontawesome/brands.min.css') %>
