@@ -4046,6 +4046,139 @@ html.cj-focus .focus-exit {
   }
 }
 
+/* ========================================
+   CITATION MENU — 引用与分享
+   ======================================== */
+.cite-menu {
+  position: fixed;
+  z-index: 160;
+  min-width: 190px;
+  padding: 6px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--background-color);
+  box-shadow: var(--shadow-xl, 0 20px 48px rgba(0, 0, 0, 0.18));
+}
+
+.cite-menu button {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.82rem;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.cite-menu button:hover {
+  color: var(--text-primary);
+  background: var(--third-background-color, rgba(148, 163, 184, 0.14));
+}
+
+.cite-menu button:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: -2px;
+  color: var(--text-primary);
+  background: var(--third-background-color, rgba(148, 163, 184, 0.14));
+}
+
+/* ========================================
+   BACKLINKS — 引用本文的文章
+   ======================================== */
+.cj-backlinks {
+  margin: 2.4rem 2rem 0.6rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.cj-backlinks-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.cj-backlinks-title {
+  font-size: 1.02rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.cj-backlinks-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary-color) 12%, transparent);
+  color: var(--primary-color);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.cj-backlinks ul {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cj-backlinks li {
+  margin: 0;
+  padding-left: 12px;
+  border-left: 2px solid color-mix(in srgb, var(--primary-color) 26%, transparent);
+}
+
+.cj-backlinks li a {
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.cj-backlinks li a:hover {
+  color: var(--primary-color);
+}
+
+.cj-backlinks li p {
+  margin: 3px 0 0;
+  font-size: 0.82rem;
+  line-height: 1.65;
+  color: var(--text-tertiary);
+}
+
+@media (max-width: 768px) {
+  .cj-backlinks {
+    margin-left: 1.5rem;
+    margin-right: 1.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .cj-backlinks {
+    margin-left: 0.75rem;
+    margin-right: 0.75rem;
+  }
+}
+
+@media print {
+  .cite-menu {
+    display: none !important;
+  }
+
+  .cj-backlinks {
+    break-inside: avoid;
+  }
+}
+
 /* 深色代码高亮的正则色在 #1e1e1e 上只有 2.9:1,提到 AA */
 .dark .article-content .highlight .regexp {
   color: #ce9178;

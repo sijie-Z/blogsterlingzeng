@@ -11,7 +11,9 @@
 - **脚注悬停预览**：复用构建期 `#fn-*`，悬停或聚焦脚注引用时显示正文，不打断阅读。
 - **公式复制**：块级公式右上角出现 TeX 按钮，读取 MathML `annotation` 的源码写入剪贴板。
 - **阅读设置**：侧栏三档字号 + 专注模式（隐藏目录/相关阅读、正文居中、Esc 或底部按钮退出）；≤880px 用左下角 Aa 打开底部设置卡。head 内联脚本在首屏前应用，刷新不闪字号。
-- **测试**：新增 `test:features` 51 项；浏览器检查合计 409 项，22 篇内容检查，99 个 HTML 内链检查。
+- **引用与分享**：head 输出 `citation_title` / `citation_author` / `citation_publication_date` 等 Highwire 元数据；侧栏分享按钮改为菜单，可复制 Markdown 引用、BibTeX、APA 和链接；引用 JSON 放在正文里，Swup 换页后自动更新。
+- **反向链接**：构建期扫描 22 篇文章的正文内链，在目标文章底部列出“引用本文的文章”和引用处上下文；17 篇有至少一条来源，没有来源的文章不渲染空区块。
+- **测试**：新增 `test:features`，目前 69 项；浏览器检查合计 427 项，22 篇内容检查，99 个 HTML 内链检查。
 
 ## 这一轮已完成
 
@@ -47,12 +49,11 @@
 
 1. **按页拆 CSS/JS**：style.css / custom.css / FontAwesome 子集仍有未使用字节；可在构建期按页面类型拆包，或对非文章页移除 imageViewer。
 2. **Cloudflare 缓存头落地**：`docs/DEPLOYMENT.md` 已给出精确的 Transform Rule（`immutable`）和 Cache Rule（HTML 回源），待在控制台执行并用 `curl -I` 验证。
-3. **Cite / BibTeX**：构建期生成 `citation_title` 等 Highwire meta，侧栏提供复制 Markdown 引用 / BibTeX。
-4. **反向链接**：构建期扫描每篇正文内链，在文末列出“引用本文的文章”和上下文。
-5. **代码行全局锚点**：`#cb1-L3` 已可用；跨代码块 `#L3` 需要处理重复 id，价值一般。
-6. **图片查看器**：双指缩放/说明/键盘已完成；旋转与双指平移可按需扩展 Pointer Events。
-7. **动态 OG**：目前本地生成后提交；标题常改时可把 `tools/gen-og-images.js` 接进写作流程或 CI。
-8. **清理确认（未删除）**：`source/pet/` 的 2.7MB WebM 已进入版本库但构建时跳过部署；`.claude/launch.json` 仍未跟踪。是否移出版本库/删除需你明确确认。
+3. **更多引用格式**：在 Markdown / BibTeX / APA 之外补 GB/T 7714、RIS，并补 `citation_abstract_html_url`。
+4. **代码行全局锚点**：`#cb1-L3` 已可用；跨代码块 `#L3` 需要处理重复 id，价值一般。
+5. **图片查看器**：双指缩放/说明/键盘已完成；旋转与双指平移可按需扩展 Pointer Events。
+6. **动态 OG**：目前本地生成后提交；标题常改时可把 `tools/gen-og-images.js` 接进写作流程或 CI。
+7. **清理确认（未删除）**：`source/pet/` 的 2.7MB WebM 已进入版本库但构建时跳过部署；`.claude/launch.json` 仍未跟踪。是否移出版本库/删除需你明确确认。
 
 ## 已知边界
 

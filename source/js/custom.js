@@ -555,6 +555,193 @@
     applyReadingPrefs();
   }
 
+  // ============================
+  // Citation menu — Markdown / BibTeX / APA / 链接 / 系统分享
+  // ============================
+  let citeMenu = null;
+  let citeTrigger = null;
+
+  function citationData() {
+    const el = document.getElementById('cj-citation');
+    if (!el) return null;
+    try { return JSON.parse(el.textContent || '{}'); } catch (e) { return null; }
+  }
+
+  function apaAuthor(name) {
+    const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+    if (parts.length < 2) return String(name || '');
+    const last = parts.pop();
+    const initials = parts.map(part => part.charAt(0).toUpperCase() + '.').join(' ');
+    return `${last}, ${initials}`;
+  }
+
+  function citationFormats(data) {
+    const markdown = `[${data.title}](${data.url}) — ${data.author}, ${data.date}`;
+    const bibtex = [
+      `@misc{${data.key},`,
+      `  author = {${data.author}},`,
+      `  title = {${data.title}},`,
+      `  year = {${data.year}},`,
+      `  month = {${data.month}},`,
+      `  day = {${data.day}},`,
+      `  url = {${data.url}},`,
+      `  note = {${data.site}}`,
+      '}',
+    ].join('\n');
+    const apa = `${apaAuthor(data.author)} (${data.year}, ${data.monthName} ${data.day}). ${data.title}. ${data.site}. ${data.url}`;
+    return { markdown, bibtex, apa, link: data.url };
+  }
+
+  function closeCitationMenu(restoreFocus) {
+    if (!citeMenu) return;
+    const trigger = citeTrigger;
+    citeMenu.remove();
+    citeMenu = null;
+    citeTrigger = null;
+    if (trigger) {
+      trigger.setAttribute('aria-expanded', 'false');
+      if (restoreFocus) {
+        try { trigger.focus({ preventScroll: true }); } catch (e) {}
+      }
+    }
+  }
+  window.__cjCloseCitationMenu = () => closeCitationMenu(false);
+
+  function copyCitation(text, message) {
+    let settled = false;
+    const done = () => {
+      if (settled) return;
+      settled = true;
+      showToast(message);
+      announceAction(message);
+      closeCitationMenu(true);
+    };
+    const fallback = () => {
+      if (settled) return;
+      settled = true;
+      fallbackCopy(text, () => {
+        showToast(message);
+        announceAction(message);
+        closeCitationMenu(true);
+      }, () => {
+        showToast('复制失败，请手动选择');
+        closeCitationMenu(true);
+      });
+    };
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(done).catch(fallback);
+      // 页面在后台/失焦时 Clipboard 可能一直 pending,别让菜单看起来没反应
+      setTimeout(() => { if (!settled) fallback(); }, 600);
+    } else {
+      fallback();
+    }
+  }
+
+  function openCitationMenu(trigger) {
+    const data = citationData();
+    if (!data || !data.url) {
+      const url = window.location.href;
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(url).then(() => showToast('链接已复制')).catch(() => showToast('请复制地址栏链接'));
+      } else {
+        showToast('请复制地址栏链接');
+      }
+      return;
+    }
+    if (citeMenu && citeTrigger === trigger) {
+      closeCitationMenu(true);
+      return;
+    }
+    closeCitationMenu(false);
+
+    const formats = citationFormats(data);
+    const items = [
+      { label: '复制 Markdown 引用', text: formats.markdown, toast: 'Markdown 引用已复制' },
+      { label: '复制 BibTeX', text: formats.bibtex, toast: 'BibTeX 已复制' },
+      { label: '复制 APA 引用', text: formats.apa, toast: 'APA 引用已复制' },
+      { label: '复制本文链接', text: formats.link, toast: '链接已复制' },
+    ];
+
+    const menu = document.createElement('div');
+    menu.className = 'cite-menu';
+    menu.setAttribute('role', 'menu');
+    menu.setAttribute('aria-label', '引用与分享本文');
+    menu.style.visibility = 'hidden';
+
+    items.forEach(item => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.setAttribute('role', 'menuitem');
+      btn.textContent = item.label;
+      btn.addEventListener('click', () => copyCitation(item.text, item.toast));
+      menu.appendChild(btn);
+    });
+
+    if (navigator.share) {
+      const share = document.createElement('button');
+      share.type = 'button';
+      share.setAttribute('role', 'menuitem');
+      share.textContent = '系统分享…';
+      share.addEventListener('click', () => {
+        closeCitationMenu(true);
+        navigator.share({ title: data.title, url: data.url }).catch(() => {});
+      });
+      menu.appendChild(share);
+    }
+
+    document.body.appendChild(menu);
+    citeMenu = menu;
+    citeTrigger = trigger;
+    trigger.setAttribute('aria-expanded', 'true');
+
+    const rect = trigger.getBoundingClientRect();
+    const width = menu.offsetWidth;
+    const height = menu.offsetHeight;
+    const left = Math.min(Math.max(12, rect.right - width), Math.max(12, window.innerWidth - width - 12));
+    let top = rect.bottom + 8;
+    if (top + height > window.innerHeight - 12) top = rect.top - height - 8;
+    if (top < 12) top = 12;
+    menu.style.left = Math.round(left) + 'px';
+    menu.style.top = Math.round(top) + 'px';
+    menu.style.visibility = '';
+
+    const first = menu.querySelector('button');
+    if (first) {
+      try { first.focus({ preventScroll: true }); } catch (e) {}
+    }
+  }
+
+  function initCitationMenu() {
+    document.addEventListener('click', e => {
+      if (!citeMenu) return;
+      if (citeMenu.contains(e.target) || (citeTrigger && citeTrigger.contains(e.target))) return;
+      closeCitationMenu(false);
+    });
+
+    document.addEventListener('keydown', e => {
+      if (!citeMenu) return;
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeCitationMenu(true);
+        return;
+      }
+      if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) return;
+      const buttons = [...citeMenu.querySelectorAll('button')];
+      const index = buttons.indexOf(document.activeElement);
+      if (index === -1) return;
+      e.preventDefault();
+      let next = index;
+      if (e.key === 'ArrowDown') next = (index + 1) % buttons.length;
+      if (e.key === 'ArrowUp') next = (index - 1 + buttons.length) % buttons.length;
+      if (e.key === 'Home') next = 0;
+      if (e.key === 'End') next = buttons.length - 1;
+      try { buttons[next].focus({ preventScroll: true }); } catch (err) {}
+    });
+
+    window.addEventListener('scroll', () => closeCitationMenu(false), { passive: true });
+    window.addEventListener('resize', () => closeCitationMenu(false), { passive: true });
+  }
+
   // APlayer 的图标按钮默认只有 SVG,补上可访问名称
   function initAplayerA11y() {
     const labels = {
@@ -774,6 +961,7 @@
         if (window.__cjHideLinkPreview) window.__cjHideLinkPreview();
         if (window.__cjHideFootnotePreview) window.__cjHideFootnotePreview();
         if (window.__cjCloseReadSheet) window.__cjCloseReadSheet();
+        if (window.__cjCloseCitationMenu) window.__cjCloseCitationMenu();
         pauseLive2DForNav();
       });
       swup.hooks.on('page:view', () => {
@@ -1654,14 +1842,8 @@
     document.addEventListener('click', e => {
       const btn = e.target.closest('.post-side-share');
       if (!btn) return;
-      const url = window.location.href;
-      if (navigator.share) {
-        navigator.share({ title: document.title, url }).catch(() => {});
-      } else if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(url).then(() => showToast('链接已复制')).catch(() => showToast('请复制地址栏链接'));
-      } else {
-        showToast('请复制地址栏链接');
-      }
+      e.preventDefault();
+      openCitationMenu(btn);
     }, true);
     const attach = swup => {
       if (!swup || !swup.hooks || swup.__cjSidebarHook) return;
@@ -3003,6 +3185,7 @@
     onceGlobal('mathCopy', initMathCopy);
     onceGlobal('footnotePreview', initFootnotePreview);
     onceGlobal('readingPrefs', initReadingPrefs);
+    onceGlobal('citationMenu', initCitationMenu);
     applyReadingPrefs();
     initExternalLinks();
     initAplayerA11y();

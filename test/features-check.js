@@ -361,7 +361,122 @@ function check(name, cond, extra) {
     localStorage.removeItem('cj-focus');
   });
 
-  console.log('=== 8. 页面错误 ===');
+  console.log('=== 8. 引用与反向链接 ===');
+  await page.setViewport({ width: 1440, height: 1000 });
+  await page.goto(BASE + '/2026/05/10/docmind-rag-knowledge-base/', { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(1400);
+
+  const backlinks = await page.evaluate(() => {
+    const section = document.querySelector('.cj-backlinks');
+    if (!section) return null;
+    return {
+      count: section.querySelectorAll('li').length,
+      badge: section.querySelector('.cj-backlinks-count')?.textContent || '',
+      excerpt: section.querySelector('li p')?.textContent || '',
+      links: [...section.querySelectorAll('li a')].map(a => a.getAttribute('href')),
+      inArticle: !!section.closest('.article-content-container'),
+    };
+  });
+  check('目标文章显示反向链接', !!backlinks && backlinks.count >= 3 && backlinks.inArticle, JSON.stringify(backlinks && backlinks.count));
+  check('反向链接带上下文', !!backlinks && backlinks.excerpt.length > 20, backlinks && backlinks.excerpt.slice(0, 30));
+  check('反向链接计数与条目一致', !!backlinks && backlinks.badge === String(backlinks.count), JSON.stringify(backlinks && { badge: backlinks.badge, count: backlinks.count }));
+
+  const backlinkStatus = await page.evaluate(async urls => {
+    const out = [];
+    for (const url of urls.slice(0, 3)) {
+      const res = await fetch(url);
+      out.push(res.status);
+    }
+    return out;
+  }, backlinks ? backlinks.links : []);
+  check('反向链接目标可访问', backlinkStatus.length > 0 && backlinkStatus.every(s => s === 200), JSON.stringify(backlinkStatus));
+
+  const citation = await page.evaluate(() => {
+    const el = document.getElementById('cj-citation');
+    return {
+      data: el ? JSON.parse(el.textContent) : null,
+      meta: [...document.querySelectorAll('meta[name^="citation_"]')].map(m => ({ name: m.name, content: m.content })),
+      share: (() => {
+        const btn = document.querySelector('.post-side-share');
+        return btn ? { haspopup: btn.getAttribute('aria-haspopup'), expanded: btn.getAttribute('aria-expanded') } : null;
+      })(),
+    };
+  });
+  const metaNames = citation.meta.map(m => m.name);
+  check('citation meta 完整', ['citation_title', 'citation_author', 'citation_publication_date', 'citation_language'].every(n => metaNames.includes(n)), JSON.stringify(metaNames));
+  check('citation 日期格式正确', citation.meta.find(m => m.name === 'citation_publication_date')?.content === '2026/05/10', citation.meta.find(m => m.name === 'citation_publication_date')?.content);
+  check('citation JSON 与页面一致', !!citation.data && citation.data.title.includes('DocMind') && citation.data.url.startsWith('https://'), JSON.stringify(citation.data && { title: citation.data.title, url: citation.data.url }));
+  check('分享按钮声明菜单', !!citation.share && citation.share.haspopup === 'menu' && citation.share.expanded === 'false', JSON.stringify(citation.share));
+
+  await page.click('.post-side-share');
+  await sleep(300);
+  const citeMenu = await page.evaluate(() => {
+    const el = document.querySelector('.cite-menu');
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    return {
+      role: el.getAttribute('role'),
+      items: el.querySelectorAll('[role="menuitem"]').length,
+      focused: document.activeElement && document.activeElement.textContent,
+      expanded: document.querySelector('.post-side-share').getAttribute('aria-expanded'),
+      inViewport: r.top >= 0 && r.left >= 0 && r.right <= innerWidth && r.bottom <= innerHeight,
+    };
+  });
+  check('引用菜单可打开', !!citeMenu && citeMenu.role === 'menu' && citeMenu.items >= 4 && citeMenu.inViewport, JSON.stringify(citeMenu));
+  check('菜单打开后焦点在第一项', !!citeMenu && citeMenu.focused === '复制 Markdown 引用', citeMenu && citeMenu.focused);
+  check('菜单同步 aria-expanded', !!citeMenu && citeMenu.expanded === 'true', citeMenu && citeMenu.expanded);
+
+  await page.keyboard.press('ArrowDown');
+  const secondFocus = await page.evaluate(() => document.activeElement && document.activeElement.textContent);
+  check('方向键在菜单内移动', secondFocus === '复制 BibTeX', secondFocus);
+
+  await page.keyboard.press('Escape');
+  await sleep(250);
+  const menuEsc = await page.evaluate(() => ({
+    menu: !!document.querySelector('.cite-menu'),
+    expanded: document.querySelector('.post-side-share').getAttribute('aria-expanded'),
+    focusBack: document.activeElement === document.querySelector('.post-side-share'),
+  }));
+  check('Esc 关闭菜单并回到按钮', !menuEsc.menu && menuEsc.expanded === 'false' && menuEsc.focusBack, JSON.stringify(menuEsc));
+
+  await page.click('.post-side-share');
+  await sleep(250);
+  await page.evaluate(() => {
+    [...document.querySelectorAll('.cite-menu button')]
+      .find(btn => btn.textContent.includes('BibTeX')).click();
+  });
+  await sleep(900);
+  const bib = await page.evaluate(async () => ({
+    clip: await navigator.clipboard.readText().catch(() => ''),
+    menu: !!document.querySelector('.cite-menu'),
+  }));
+  check('复制 BibTeX 到剪贴板', /@misc\{sterling2026docmind/.test(bib.clip) && bib.clip.includes('DocMind'), JSON.stringify(bib.clip.slice(0, 50)));
+  check('复制后菜单关闭', !bib.menu, JSON.stringify(bib.menu));
+
+  await page.click('.post-side-share');
+  await sleep(250);
+  await page.evaluate(() => {
+    [...document.querySelectorAll('.cite-menu button')]
+      .find(btn => btn.textContent.includes('Markdown')).click();
+  });
+  await sleep(900);
+  const markdownCitation = await page.evaluate(() => navigator.clipboard.readText().catch(() => ''));
+  check('复制 Markdown 引用', markdownCitation.includes('[我做了一个 RAG 知识库系统') && markdownCitation.includes('https://sterlingzeng.cn/2026/05/10/docmind-rag-knowledge-base/'), JSON.stringify(markdownCitation.slice(0, 60)));
+
+  const spaTarget = await page.evaluate(() => document.querySelector('.cj-backlinks a')?.getAttribute('href'));
+  await page.click('.cj-backlinks a');
+  await sleep(1600);
+  const afterSpa = await page.evaluate(() => {
+    const el = document.getElementById('cj-citation');
+    return { path: location.pathname, title: el ? JSON.parse(el.textContent).title : '' };
+  });
+  check('SPA 换页后引用数据更新', afterSpa.path === spaTarget && !afterSpa.title.includes('DocMind'), JSON.stringify(afterSpa));
+
+  await page.goto(BASE + '/2026/08/28/docmind-agent-causal-study/', { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(1000);
+  check('无反向链接的文章不渲染空区块', await page.evaluate(() => !document.querySelector('.cj-backlinks')));
+
+  console.log('=== 9. 页面错误 ===');
   check('零页面错误', errors.length === 0, errors.join(' | '));
 
   await browser.close();

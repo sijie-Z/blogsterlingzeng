@@ -18,6 +18,8 @@ scripts/                 构建期脚本（Hexo 启动时加载）
 ├── post-sidebar.js      文章右侧作者卡/阅读设置/标签/同分类；文章页 data-cj-post 标记
 ├── marginnote.js        {% margin %} 边注：宽屏页边，窄屏底部卡片
 ├── link-preview.js      站内链接预览数据 link-preview.json
+├── citation.js          citation_* 元数据 + 引用菜单 JSON
+├── backlinks.js         扫描正文内链，生成“引用本文的文章”
 ├── math.js              $...$ / $$...$$ 构建期 KaTeX MathML + 复制按钮
 ├── footnotes.js         [^id] 脚注：doc-noteref / doc-endnotes
 ├── markdown-route.js    /<path>/index.md 与 llms.txt
@@ -103,10 +105,14 @@ test/                    12 套 Puppeteer / Node 检查
 | 公式复制 | `scripts/math.js` 包一层 `.katex-block`，按钮读取 MathML `annotation` 里的 TeX 源码 | 0 请求 |
 | 阅读设置 | 侧栏三档字号 + 专注模式；head 内联脚本在首屏前应用，字号不闪动 | 0 请求 |
 | Live2D | 默认不加载；显式“召唤宠物”后才拉模型，选择写入 localStorage | 用户点击前 0 请求 |
+| 引用与分享 | head 输出 `citation_*`；侧栏菜单复制 Markdown / BibTeX / APA / 链接；body JSON 随 Swup 换页更新 | 0 请求 |
+| 反向链接 | 构建期扫描所有文章正文内链，目标文章底部列出来源与上下文 | 0 请求 |
 
 边注的宽屏阈值是 1680px：正文 957px + 左页边 235px，低于这个宽度放不下 212px 的注释列，因此降级为底部卡片。底部卡片、边注、预览卡都挂在 `body` 上，避免正文祖先的 `transform`（Swup 入场）把 `position: fixed` 变成相对定位。
 
 内链预览只在 `(hover: hover) and (pointer: fine)` 且宽度 ≥1024px 时启用；移动端点击直接跳转。脚注和预览卡都支持 `focusin`，键盘 Tab 到引用时同样显示。
+
+引用元数据放在静态 HTML 的 head 里，服务爬虫和首屏；引用菜单实际读的是正文里的 JSON，因为 Swup 只替换 `#swup`，head 不会随换页更新。反向链接只扫描每篇文章的渲染正文（`post.content`），不把导航、相关阅读、系列卡算进去；当前 22 篇里有 17 篇至少被引用一次，没有来源的文章不渲染空区块。
 
 ## 6. 无障碍
 
@@ -119,6 +125,7 @@ test/                    12 套 Puppeteer / Node 检查
 - **目录**：桌面 TOC 当前项有 `aria-current="location"`；移动端使用原生 `<details>` 目录。
 - **边注/预览**：边注按钮带 `aria-controls`，卡片是 `role="dialog"`，打开时焦点进入关闭按钮，Esc 收起后焦点回到引用；内链/脚注预览是 `role="tooltip"` + `pointer-events: none`，不抢鼠标也不打断读屏。
 - **阅读设置**：字号和专注按钮使用 `aria-pressed`；窄屏设置卡打开后焦点进入关闭按钮，Esc 关闭。
+- **引用菜单**：`role="menu"` / `menuitem`，打开后焦点进入第一项，↑/↓/Home/End 移动，Esc 关闭并把焦点还给分享按钮。
 - **对比度**：浅色/深色/四季主题的次要文字统一到 WCAG AA 以上。
 
 验证：axe-core 4.10 在桌面和移动端扫描首页、文章页、归档、系列总览、系列页、关于、项目、简历、404，WCAG A/AA 标签下 **0 条违规**。回归测试另覆盖标题唯一性、图片 alt、链接/按钮名称、列表语义、地标和 skip link。
@@ -135,13 +142,13 @@ test/                    12 套 Puppeteer / Node 检查
 | `test:search` | 20 | combobox/listbox、方向键、Enter、空态、IME、SPA |
 | `test:smooth` | 26 | 滚动、Live2D 暂停、reduced-motion、移动端溢出 |
 | `test` | 34 | 端到端页面、主题切换、Live2D 显式召唤、次级页面 |
-| `test:features` | 51 | 边注、内链预览、公式复制、脚注预览、阅读设置（桌面/窄屏） |
+| `test:features` | 69 | 边注、内链预览、公式复制、脚注预览、阅读设置、引用菜单、反向链接 |
 | `test:resume` | 7 | 阅读位置记忆与继续阅读 |
 | `test:archive` | 16 | 归档热力图与移动端 |
 | `test:content` | 22 篇 | front matter、站内链接、图片、OG 卡、文风硬规则 |
 | `test:links` | 99 HTML | 构建产物站内 href 断链检查 |
 
-合计 409 项浏览器检查、22 篇文章的内容检查和 99 个 HTML 的内链检查。所有套件在本机通过；CI 目前只跑不依赖浏览器的 `test:content`。
+合计 427 项浏览器检查、22 篇文章的内容检查和 99 个 HTML 的内链检查。所有套件在本机通过；CI 目前只跑不依赖浏览器的 `test:content`。
 
 ## 8. 已知边界
 
@@ -150,6 +157,9 @@ test/                    12 套 Puppeteer / Node 检查
 - **mermaid/waline**：当前配置未启用，构建时移除；重新启用会自动保留对应文件。
 - **边注阈值**：≥1680px 才放进左页边；更窄时只能点开底部卡片，因为正文左侧只剩约 143px。
 - **内链预览**：只在桌面 hover / 键盘聚焦时出现，触屏直接跳转；每次悬停会额外请求一张封面图。
+- **引用元数据**：`citation_*` 只存在静态 HTML 的 head 里，Swup 换页不会更新 head；引用菜单读正文 JSON，所以复制内容始终是当前文章。
+- **反向链接**：只扫描文章正文，不把页面（关于/项目/简历）算作来源；最多展示 5 条，计数显示全部。
+- **剪贴板**：后台标签页里 `navigator.clipboard` 可能一直 pending，600ms 后回退到 `execCommand`；两者都失败时提示手动选择。
 - **阅读设置**：只改正文字号，标题仍走主题的 rem 阶梯；专注模式只作用于文章页，离开文章自动收起。
 - **构建缓存**：`scripts/` 里的 tag/renderer 改动不会让 Hexo 的文章缓存失效（缓存按源文件内容哈希）；改标签或渲染器后需要重建缓存或改动文章内容才会重新渲染。
 - **Live2D**：默认不加载，用户点击“召唤宠物”后才请求；暂停/恢复仍由滚动自动管理，没有常驻可见控件。
@@ -159,7 +169,7 @@ test/                    12 套 Puppeteer / Node 检查
 
 1. **按页拆 CSS/JS**：style.css / custom.css / FontAwesome 子集仍有未使用字节，可在构建期按页面类型拆包。
 2. **内容哈希替代手写版本号**：现在靠 `?v=` 手工推进，改成构建期内容哈希可以彻底消除缓存不一致。
-3. **Cite / BibTeX + Highwire meta**：给文章生成 `citation_title` 等元数据，并在侧栏提供复制引用。
-4. **反向链接**：构建期扫描正文内链，在文末列出“引用本文的文章”。
-5. **CI**：在 CI 里跑 `test:content` + 构建，浏览器套件留在本地或 self-hosted runner。
+3. **更多引用格式**：在 Markdown / BibTeX / APA 之外补 GB/T 7714、RIS，并补 `citation_abstract_html_url`。
+4. **动态 OG 接入 CI**：标题常改时把 `tools/gen-og-images.js` 放进写作流程或 CI，避免图片和标题漂移。
+5. **CI**：跑 `test:content` + 构建，浏览器套件留在本地或 self-hosted runner。
 6. **Cloudflare 缓存规则落地**：`docs/DEPLOYMENT.md` 已给出精确的 Transform Rule / Cache Rule 配置，待在控制台执行并 `curl -I` 验证。
