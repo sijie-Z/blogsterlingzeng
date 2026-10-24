@@ -6,8 +6,7 @@ categories:
   - 前端开发
 tags:
   - Hexo
-  - 系列
-  - 构建期
+  - 博客
   - SEO
   - 可访问性
 description: 22 篇文章里只有 14 篇能顺着读。给 Hexo 加一套构建期生成的系列阅读：front matter 约定、系列页、文章徽章、Atom 订阅和结构化数据，运行时不发一个请求。

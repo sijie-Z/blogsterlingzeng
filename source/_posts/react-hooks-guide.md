@@ -9,7 +9,7 @@ tags:
   - React
   - Hooks
   - 设计模式
-  - 前端架构
+  - 前端开发
 description: Hooks 改变的不只是写法，而是思考组件的方式。这篇文章记录了我对 Hooks 从"语法糖"到"编程范式"的认知升级。
 cover: /images/cover-design.jpg
 ---

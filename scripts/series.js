@@ -501,6 +501,17 @@ hexo.extend.filter.register('after_generate', function () {
   });
 });
 
+// series.css 只在会出现系列 UI 的页面加载
+hexo.extend.filter.register('after_render:html', function (str, locals) {
+  const page = locals && locals.page;
+  if (!str || !page || str.includes('data-series-css')) return str;
+  const route = String(page.path || '').replace(/^\/+/, '');
+  const needs = page.series || page.series_page || route.startsWith('archives/');
+  if (!needs || !str.includes('</head>')) return str;
+  return str.replace('</head>', () =>
+    '<link data-series-css rel="stylesheet" href="/css/series.css?v=20261023d">\n</head>');
+});
+
 module.exports = {
   buildSeries,
   seriesUrl,

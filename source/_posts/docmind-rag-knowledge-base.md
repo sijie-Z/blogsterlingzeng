@@ -9,7 +9,6 @@ tags:
   - AI
   - FastAPI
   - Vue
-  - 向量数据库
 description: DocMind 是一个基于 RAG 架构的全栈智能知识库系统。这篇文章记录了从需求分析到技术实现的完整过程，以及踩过的坑。
 cover: /images/cover-code.jpg
 series: agent-rag

@@ -6,9 +6,7 @@ categories:
 tags:
   - 性能优化
   - Hexo
-  - FontAwesome
-  - 长任务
-  - 构建期
+  - 博客
 description: 博客看起来已经很快了，但首屏仍加载了 200KB 用不到的图标 CSS、375KB 的 moment 和 8.4MB 没人引用的字体。这篇文章记录一次“删依赖”而不是“加缓存”的性能清理，以及一次被测量否决的 View Transition 改造。
 cover: /images/cover-tech.jpg
 series: blog-engineering
@@ -131,7 +129,13 @@ Swup 4 支持 `native: true`，用浏览器原生 View Transition 做页面交�
 | 部署体积 | 33MB+ | 22MB（含 31 张 OG 卡；横幅和 Live2D 纹理的瘦身见[另一篇](/2026/10/23/responsive-banner-live2d-texture/)） |
 | 文章首屏 CLS | ~0.0002 | 0.0001 |
 | 点击 → 内容替换 | 15–40ms | 21–43ms |
-| 首屏长任务 | ~300ms（odometer） | 仍有 250–300ms 的整页布局，待继续排查 |
+| 首屏长任务 | ~300ms（odometer） | 约 180ms（字体 preload 后） |
+
+{% gallery %}
+/images/og/miqro-gate-virtual-key-design.jpg | MiQroGate 的 OG 卡
+/images/og/quant-reversal-execution-gap.jpg | 量化执行复盘的 OG 卡
+/images/og/docmind-agent-causal-study.jpg | DocMind 消融实验的 OG 卡
+{% endgallery %}
 
 最后一行是诚实的：首屏在字体就绪后仍有一次整页 layout，来源是浏览器内部的样式/布局重算，不是某个 JS 函数。下一步要减少首屏的 backdrop-filter 和固定层，或者把字体切换策略从 `swap` 改成 `optional`。这次先记录，不硬凑一个“0 长任务”的结论。
 

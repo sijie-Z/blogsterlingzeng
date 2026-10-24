@@ -5,7 +5,6 @@ categories:
   - 开发工具
 tags:
   - Git
-  - 团队协作
   - 工程实践
 description: Git 命令谁都会敲，但真正难的是团队协作。这篇文章记录了我在实际项目中踩过的坑和总结的经验。
 cover: /images/cover-git.jpg

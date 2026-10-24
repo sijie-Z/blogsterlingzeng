@@ -10,9 +10,6 @@ categories:
 tags:
   - 量化交易
   - Python
-  - 多因子模型
-  - 回测
-  - A股
 description: 从数据获取到因子构建、组合优化、回测验证，一个完整的 A 股多因子量化研究平台是怎么搭起来的。
 cover: /images/cover-algorithm.jpg
 ---

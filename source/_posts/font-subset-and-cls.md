@@ -5,9 +5,7 @@ categories:
   - 前端开发
 tags:
   - 性能优化
-  - 字体
   - CSS
-  - Web Vitals
 description: 字体请求 971KB，文章首屏 CLS 0.486。一次体检把 FontAwesome 从 805KB 裁到 13KB，把 CLS 压到 0.058，顺手修掉了导航高度、图片尺寸和移动端页脚。
 cover: /images/cover-tech.jpg
 series: blog-engineering

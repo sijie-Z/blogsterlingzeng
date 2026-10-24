@@ -7,9 +7,7 @@ categories:
 tags:
   - Web3
   - Solidity
-  - NFT
   - Next.js
-  - 智能合约
 description: NFT Launchpad Kit 是一个一站式 NFT 发行平台，支持 6 种铸造模式。这篇文章记录了智能合约设计、Gas 优化和安全防护的完整过程。
 cover: /images/cover-devops.jpg
 ---

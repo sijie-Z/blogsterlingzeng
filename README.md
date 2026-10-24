@@ -55,6 +55,8 @@
 | 简历页 | 一页式 HTML 简历，可打印 / 存 PDF | `source/resume/` |
 | 复制 Markdown | 侧栏一键复制文章 Markdown 原文 | `scripts/post-sidebar.js` |
 | 脚注 | `[^id]` 语法，构建期生成 doc-noteref / doc-endnotes | `scripts/footnotes.js` |
+| 数学公式 | `$...$` / `$$...$$` 构建期 KaTeX MathML，无客户端 JS/字体 | `scripts/math.js` |
+| 图片集 | `{% gallery %}` 图片网格，复用查看器与懒加载 | `scripts/gallery.js` |
 | 首页入口 | 项目 / 简历 / 系列三张快速卡片，构建期插入 | `scripts/home-start.js` |
 | 项目架构图 | MiQroGate / DocMind 内联 SVG，跟随主题配色，移动端可横向滚动 | `source/projects/index.md` |
 | 相关阅读 | 标签相似度推荐（前端渲染，无原生依赖） | `scripts/related-posts.js` |
@@ -62,7 +64,7 @@
 | Sitemap | `sitemap.xml` + `robots.txt` | `hexo-generator-sitemap` |
 | 复制链接 | 文章页工具条复制当前链接 | `source/js/custom.js` |
 | Live2D 宠物 | DeepSeek 大肥鱼（Cubism 4.2 模型 / Cubism 5 Core 运行时，8 动作 / 44 表情） | `source/live2d/` |
-| 文章侧栏 | 作者卡 + 阅读进度环 + 标签 + 同分类 + 目录卡片（构建期渲染，无 CLS） | `scripts/post-sidebar.js` |
+| 文章侧栏 | 作者卡 + 阅读进度环 + 标签 + 相关文章 + 目录卡片（构建期渲染，无 CLS） | `scripts/post-sidebar.js` |
 | 系列文章 | `series` / `series_order` 声明，构建期生成系列总览、系列页与 Atom 订阅；文章内显示进度徽章、系列内上下篇、折叠目录（0 运行时 JS） | `scripts/series.js` |
 | 响应式横幅 | 960 / 1280 / 1920 三档 WebP srcset，手机按 DPR 自动选图 | `scripts/responsive-images.js` |
 | 轻量模型纹理 | Live2D 主纹理重采样为 1024 WebP，1.7MB → 308KB | `source/live2d/model/ds-whale-girl/` |
@@ -178,7 +180,7 @@ npm test                    # 33 项端到端检查(含 8 个次级页面)
 npm run test:l2d            # Live2D 加载诊断(模型 / Core / 404)
 npm run test:smooth         # 26 项滚动与动效平滑度回归
 npm run test:content        # 文章 front matter / 站内链接 / 图片 / OG 卡 / 文风检查
-npm run test:links          # 构建产物内链检查（129 个 HTML）
+npm run test:links          # 构建产物内链检查（99 个 HTML）
 npm run test:transitions    # 46 项 SPA 跳转 / 连点 / 前后退 / 搜索焦点 / 路由播报
 npm run test:sidebar        # 39 项文章侧栏 / 进度 / 锚点 / 表格 / 面包屑 / 代码全屏
 npm run test:series         # 53 项系列页 / 徽章 / 系列卡 / SPA / 移动端

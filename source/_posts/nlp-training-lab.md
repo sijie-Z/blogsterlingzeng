@@ -4,11 +4,10 @@ date: 2026-08-28 14:00:00
 categories:
   - 学习笔记
 tags:
-  - NLP
+  - 大模型
   - PyTorch
   - LoRA
   - BERT
-  - 大模型微调
 description: 一张 RTX 3050(4GB 显存)能训练出自己的问答模型吗？从 BERT 分类到 LoRA 微调 Qwen,这个框架记录了完整的四阶段实验，包括一次诚实的失败。
 cover: /images/cover-devops.jpg
 ---

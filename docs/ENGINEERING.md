@@ -75,9 +75,9 @@ test/                    11 套 Puppeteer / Node 检查
 | Live2D 主纹理 | 308KB WebP（原 1.7MB PNG） |
 | FontAwesome CSS | 65KB 类名子集（原 4 个文件约 200KB） |
 | 移除的脚本 | moment 375KB（essays 页改用 Intl） |
-| 首屏请求（首页） | 58 个；search.xml / Live2D / APlayer 均不在首屏请求 |
+| 首屏请求（首页） | 58 个；search.xml / APlayer 不在首屏请求 |
 | 部署产物 | 22MB（含 31 张 OG 卡；移除全量 webfonts / source map / 重复 js/libs 后，原 33MB+） |
-| Live2D | 3MB 模型在首次交互或 10s 后才加载，不占首屏网络 |
+| Live2D | 3MB 模型在页面 load 后空闲初始化，不参与首屏内容 |
 
 ### 关键取舍
 
@@ -115,9 +115,9 @@ test/                    11 套 Puppeteer / Node 检查
 | `test:resume` | 7 | 阅读位置记忆与继续阅读 |
 | `test:archive` | 16 | 归档热力图与移动端 |
 | `test:content` | 22 篇 | front matter、站内链接、图片、OG 卡、文风硬规则 |
-| `test:links` | 129 HTML | 构建产物站内 href 断链检查 |
+| `test:links` | 99 HTML | 构建产物站内 href 断链检查 |
 
-合计 357 项浏览器检查、22 篇文章的内容检查和 129 个 HTML 的内链检查。所有套件在本机通过；CI 目前只跑不依赖浏览器的 `test:content`。
+合计 357 项浏览器检查、22 篇文章的内容检查和 99 个 HTML 的内链检查。所有套件在本机通过；CI 目前只跑不依赖浏览器的 `test:content`。
 
 ## 7. 已知边界
 

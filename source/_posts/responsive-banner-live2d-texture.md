@@ -5,8 +5,6 @@ categories:
   - 前端开发
 tags:
   - 性能优化
-  - WebP
-  - 响应式图片
   - Live2D
   - Hexo
 description: 手机首屏横幅 63KB 却下载 1920 原图，Live2D 主纹理 1.7MB 只显示 200px。两次修改遵循同一条原则：按实际显示尺寸交付资源。

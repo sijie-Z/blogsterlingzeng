@@ -335,9 +335,8 @@ inject:
   enable: true
   head:
     - <link rel="stylesheet" href="/css/custom.css?v=20261023i">
-    - <link rel="stylesheet" href="/css/series.css?v=20261023d">
   footer:
-    - <script src="/live2d/autoload.js?v=20261024a"></script>
+    - <script src="/live2d/autoload.js?v=20261024d"></script>
     - <div class="footer-extra-icons">
         <a href="/atom.xml" title="RSS 订阅" aria-label="RSS 订阅" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-rss" aria-hidden="true"></i></a>
         <a href="https://github.com/sijie-Z" title="GitHub" aria-label="GitHub" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-github" aria-hidden="true"></i></a>

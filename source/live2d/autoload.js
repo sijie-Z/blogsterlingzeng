@@ -92,22 +92,13 @@ function loadExternalResource(url, type) {
     drag: true,
   });
   };
-  // 等页面 load 且用户有交互/空闲后再初始化,避免 4MB 模型抢首屏带宽
-  let bootStarted = false;
-  const start = () => {
-    if (bootStarted) return;
-    bootStarted = true;
-    if ('requestIdleCallback' in window) requestIdleCallback(boot, { timeout: 2000 });
-    else setTimeout(boot, 300);
-  };
+  // 等页面 load 后空闲再初始化,避免模型抢首屏带宽
   if (document.readyState === 'complete') {
-    start();
+    boot();
   } else {
     window.addEventListener('load', () => {
-      ['pointerdown', 'keydown', 'touchstart', 'scroll'].forEach(ev =>
-        window.addEventListener(ev, start, { once: true, passive: true })
-      );
-      setTimeout(start, 10000);
+      if ('requestIdleCallback' in window) requestIdleCallback(boot, { timeout: 2000 });
+      else setTimeout(boot, 300);
     }, { once: true });
   }
 })();

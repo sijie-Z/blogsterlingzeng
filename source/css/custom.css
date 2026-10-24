@@ -3531,6 +3531,59 @@ a.post-side-name:hover {
 }
 
 /* ========================================
+   MATH (build-time KaTeX MathML)
+   ======================================== */
+.katex {
+  font-size: 1.04em;
+}
+
+.katex-display {
+  margin: 1.15em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 2px 0;
+}
+
+/* ========================================
+   GALLERY
+   ======================================== */
+.cj-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 1.2rem 0 1.4rem;
+}
+
+.cj-gallery-item {
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--bg-card);
+}
+
+.cj-gallery-item img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1200 / 630;
+  object-fit: cover;
+}
+
+.cj-gallery-item figcaption {
+  padding: 8px 10px;
+  color: var(--text-tertiary);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .cj-gallery {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
+/* ========================================
    PROJECT ARCHITECTURE FIGURES
    ======================================== */
 .project-arch {

@@ -4,9 +4,8 @@ date: 2026-04-25 09:30:00
 categories:
   - 算法与数据结构
 tags:
-  - 算法
+  - 算法与数据结构
   - 编程思维
-  - 二分查找
 description: 二分查找不只是一个算法，它留下了一套处理边界的方式。这篇文章记录了我从"背模板"到"理解本质"的过程。
 cover: /images/cover-algorithm.jpg
 ---

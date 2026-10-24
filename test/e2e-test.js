@@ -108,6 +108,7 @@ function check(name, cond, extra) {
   check('ESC 退出管中窥豹', !(await page.evaluate(() => document.body.classList.contains('flashlight-mode'))));
 
   console.log('=== 5. Live2D 宠物 ===');
+  await page.waitForSelector('#waifu', { timeout: 12000 }).catch(() => {});
   const waifu = await page.$('#waifu');
   check('waifu 容器存在', !!waifu);
   if (waifu) {

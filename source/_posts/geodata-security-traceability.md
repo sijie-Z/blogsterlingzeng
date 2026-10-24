@@ -5,11 +5,9 @@ categories:
   - 项目实战
 tags:
   - GIS
-  - 数据安全
+  - 安全
   - Flask
   - Vue
-  - 水印
-  - 空间数据
 description: 矢量数据分发后如何溯源定责？GeoData Security System 通过 QR 码水印嵌入、HMAC 签名和民主召回机制，实现了完整的数据安全分发链路。
 cover: /images/cover-design.jpg
 ---
