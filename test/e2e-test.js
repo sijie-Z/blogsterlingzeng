@@ -115,8 +115,13 @@ function check(name, cond, extra) {
   console.log('=== 5. Live2D 宠物（显式召唤） ===');
   const petToggle = await page.$('#pet-toggle');
   check('默认不自动加载,显示召唤按钮', !!petToggle);
-  if (petToggle) await petToggle.click();
-  await page.waitForSelector('#waifu', { timeout: 15000 }).catch(() => {});
+  if (petToggle) {
+    // 模型初始化会等滚动停止 1.2s;先把页面稳定在顶部,再用 DOM click 避开浮动播放器遮挡
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await new Promise(r => setTimeout(r, 1500));
+    await petToggle.evaluate(el => el.click());
+  }
+  await page.waitForSelector('#waifu', { timeout: 25000 }).catch(() => {});
   const waifu = await page.$('#waifu');
   check('waifu 容器存在', !!waifu);
   if (waifu) {

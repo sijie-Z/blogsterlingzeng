@@ -82,7 +82,7 @@ test/                    12 套 Puppeteer / Node 检查
 | FontAwesome CSS | 65KB 类名子集（原 4 个文件约 200KB） |
 | 移除的脚本 | moment 375KB（essays 页改用 Intl） |
 | 首屏请求（首页） | 58 个；search.xml / APlayer 不在首屏请求 |
-| 部署产物 | 22MB（含 31 张 OG 卡；移除全量 webfonts / source map / 重复 js/libs 后，原 33MB+） |
+| 部署产物 | 约 21MB（含 32 张 OG 卡；移除全量 webfonts / source map / 重复 js/libs 后，原 33MB+） |
 | Live2D | 默认 0 请求；用户点击“召唤宠物”后才加载模型，选择记入 localStorage |
 
 ### 关键取舍
@@ -113,7 +113,7 @@ test/                    12 套 Puppeteer / Node 检查
 
 内链预览只在 `(hover: hover) and (pointer: fine)` 且宽度 ≥1024px 时启用；移动端点击直接跳转。脚注和预览卡都支持 `focusin`，键盘 Tab 到引用时同样显示。
 
-引用元数据放在静态 HTML 的 head 里，服务爬虫和首屏；引用菜单实际读的是正文里的 JSON，因为 Swup 只替换 `#swup`，head 不会随换页更新。反向链接只扫描每篇文章的渲染正文（`post.content`），不把导航、相关阅读、系列卡算进去；当前 22 篇里有 17 篇至少被引用一次，没有来源的文章不渲染空区块。
+引用元数据放在静态 HTML 的 head 里，服务爬虫和首屏；引用菜单实际读的是正文里的 JSON，因为 Swup 只替换 `#swup`，head 不会随换页更新。反向链接只扫描每篇文章的渲染正文（`post.content`），不把导航、相关阅读、系列卡算进去；当前 23 篇里有 18 篇至少被引用一次，没有来源的文章不渲染空区块。
 
 ## 6. 无障碍
 
@@ -147,10 +147,10 @@ test/                    12 套 Puppeteer / Node 检查
 | `test:features` | 84 | 边注、内链预览、公式复制、脚注预览、阅读设置、引用菜单、反向链接、键盘快捷键 |
 | `test:resume` | 7 | 阅读位置记忆与继续阅读 |
 | `test:archive` | 16 | 归档热力图与移动端 |
-| `test:content` | 22 篇 | front matter、站内链接、图片、OG 卡、文风硬规则 |
-| `test:links` | 99 HTML | 构建产物站内 href 断链检查 |
+| `test:content` | 23 篇 | front matter、站内链接、图片、OG 卡、文风硬规则 |
+| `test:links` | 100 HTML | 构建产物站内 href 断链检查 |
 
-合计 442 项浏览器检查、22 篇文章的内容检查和 99 个 HTML 的内链检查。所有套件在本机通过；CI 目前只跑不依赖浏览器的 `test:content`。
+合计 442 项浏览器检查、23 篇文章的内容检查和 100 个 HTML 的内链检查。所有套件在本机通过；CI 目前只跑不依赖浏览器的 `test:content`。
 
 ## 8. 已知边界
 

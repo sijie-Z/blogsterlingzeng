@@ -1,6 +1,6 @@
 blog-engineering:
   name: 博客工程化
-  description: 从选型、运行时迁移、性能体检到资源交付与系列阅读，把个人博客当成一个长期维护的工程。
+  description: 从选型、运行时迁移、性能体检到资源交付、系列阅读与阅读体验，把个人博客当成一个长期维护的工程。
 
 agent-rag:
   name: Agent 与 RAG 实战
