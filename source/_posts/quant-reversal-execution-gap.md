@@ -2,6 +2,8 @@
 title: 同一个信号，0.45 和 -0.27——A 股反转研究的执行之痛
 date: 2026-08-28 18:00:00
 updated: 2026-10-23 20:30:00
+series: quant-research
+series_order: 2
 categories:
   - 项目实战
 tags:

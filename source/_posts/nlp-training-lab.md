@@ -117,4 +117,6 @@ Query Router 是一段关键词判断逻辑，不用模型;LoRA 模型回答知�
 
 四 GB 显存，0.42% 的参数，17MB 的 adapter,和一个会自己报出训练编号的问答助手。
 
+这条训练链路后来也接进了 [DocMind 的 RAG 知识库](/2026/05/10/docmind-rag-knowledge-base/)：微调负责领域表达，检索负责事实依据。
+
 项目地址:[github.com/sijie-Z/nlp-training-lab](https://github.com/sijie-Z/nlp-training-lab)

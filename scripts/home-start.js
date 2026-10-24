@@ -34,7 +34,7 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
   <a class="home-start-card" href="/series/">
     <span class="home-start-kicker">系列</span>
     <span class="home-start-title">按顺序读</span>
-    <span class="home-start-desc">${seriesTotal} 篇文章，两条主线</span>
+    <span class="home-start-desc">${seriesTotal} 篇文章，四条主线</span>
   </a>
 </section>
 `;

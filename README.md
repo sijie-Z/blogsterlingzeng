@@ -178,11 +178,11 @@ npm test                    # 33 项端到端检查(含 8 个次级页面)
 npm run test:l2d            # Live2D 加载诊断(模型 / Core / 404)
 npm run test:smooth         # 26 项滚动与动效平滑度回归
 npm run test:content        # 文章 front matter / 站内链接 / 图片 / OG 卡 / 文风检查
-npm run test:links          # 构建产物内链检查（127 个 HTML）
+npm run test:links          # 构建产物内链检查（129 个 HTML）
 npm run test:transitions    # 46 项 SPA 跳转 / 连点 / 前后退 / 搜索焦点 / 路由播报
 npm run test:sidebar        # 39 项文章侧栏 / 进度 / 锚点 / 表格 / 面包屑 / 代码全屏
 npm run test:series         # 53 项系列页 / 徽章 / 系列卡 / SPA / 移动端
-npm run test:assets         # 46 项响应式横幅 / WebP 纹理 / JSON Feed / 图标子集 / JSON-LD
+npm run test:assets         # 49 项响应式横幅 / WebP 纹理 / JSON Feed / 图标子集 / JSON-LD
 npm run test:search         # 20 项搜索 combobox / 方向键 / Enter / 空态 / IME
 npm run test:a11y           # 68 项无障碍:名称 / alt / 列表语义 / 标题 / 地标 / 脚注
 npm run test:resume         # 7 项阅读位置记忆与“继续阅读”
@@ -410,7 +410,7 @@ inject:
 | 空间数据安全分发与溯源 | `geodata-security-traceability.md` | 项目实战 | 矢量数据分发后的溯源定责 |
 | 从零搭建 NFT 发行平台 | `nft-launchpad-kit-web3.md` | 项目实战 | 6 种铸造模式的全链路实践 |
 | A 股量化研究平台 | `quant-platform-a-share-research.md` | 项目实战 | 从因子到回测的完整流水线 |
-| 22 篇文章，9 篇在系列里 | `hexo-series-reading-path.md` | 前端开发 | 用 front matter、generator 和 Atom 把有顺序的文章串成系列 |
+| 22 篇文章，14 篇在系列里 | `hexo-series-reading-path.md` | 前端开发 | 用 front matter、generator 和 Atom 把有顺序的文章串成系列 |
 | 按显示尺寸交付 | `responsive-banner-live2d-texture.md` | 前端开发 | 横幅 srcset 与 Live2D 纹理按实际显示尺寸交付 |
 | 33MB 到 25MB | `static-assets-cleanup.md` | 前端开发 | 图标子集、moment 移除、长任务清理，以及一次被测量否决的 View Transition |
 

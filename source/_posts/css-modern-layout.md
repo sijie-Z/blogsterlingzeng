@@ -1,6 +1,8 @@
 ---
 title: CSS 布局的三次革命：从 float 到 Grid 的认知升级
 date: 2026-04-28 11:00:00
+series: frontend-basics
+series_order: 1
 categories:
   - 前端开发
 tags:
@@ -193,6 +195,8 @@ CSS 布局的三次革命，本质上是思维方式的三次升级。从"hack �
 掌握 Grid 和 Flexbox，不只是学会两个 CSS 属性，而是学会用更高层次的思维来思考布局问题。
 
 当你拿到一个设计稿，第一反应不再是"怎么实现"，而是"结构是什么"——你就真正理解了现代 CSS 布局。
+
+布局之外，CSS 还决定资源怎么交付。我在[响应式横幅](/2026/10/23/responsive-banner-live2d-texture/)里用 srcset 按显示尺寸选图，在[静态资源清理](/2026/10/23/static-assets-cleanup/)里把图标 CSS 从 200KB 压到 65KB。
 
 ---
 

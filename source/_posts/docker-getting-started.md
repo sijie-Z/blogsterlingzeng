@@ -148,6 +148,8 @@ Docker 教会我的不只是技术，更是一种思维方式：
 
 Docker 的学习曲线不陡，但它的影响很深。它不只是一个部署工具，而是改变了我思考"环境"、"依赖"、"部署"这些问题的方式。
 
+后来我用 Docker Compose 编排过几个项目：[DocMind 的 RAG 知识库](/2026/05/10/docmind-rag-knowledge-base/)、[MindPilot 的多 Agent 平台](/2026/05/10/mindpilot-multi-agent-rag/)，以及 [GeoData 的空间数据安全系统](/2026/05/10/geodata-security-traceability/)。
+
 如果你还在用"在我机器上能跑"这种方式工作，试试 Docker。不是因为它时髦，而是因为它真的能解决问题。
 
 ---

@@ -135,4 +135,6 @@ Loki + Promtail 做日志聚合，可以在 Grafana 里直接查看日志，不�
 
 做 GeoData Security System 最大的体会是：**数据安全不只是技术问题，更是制度问题。** 技术手段（水印、签名）解决"能不能追踪"的问题，制度手段（双级审批、民主召回）解决"该不该追踪"的问题。两者缺一不可。
 
+部署和监控这一套，沿用了我写 [Docker 入门](/2026/04/22/docker-getting-started/)时整理的环境隔离思路。
+
 项目地址：[github.com/sijie-Z/GeoData-Security-System](https://github.com/sijie-Z/GeoData-Security-System)

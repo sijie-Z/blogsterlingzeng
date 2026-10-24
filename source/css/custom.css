@@ -214,6 +214,12 @@ html.dark .navbar-container.scrolled .navbar-content {
   background-position: center !important;
 }
 
+@media (min-width: 769px) {
+  .home-banner-container {
+    height: 100vh;
+  }
+}
+
 .home-banner-container .description {
   font-weight: 600;
   font-size: 2.8rem;
@@ -231,6 +237,57 @@ html.dark .navbar-container.scrolled .navbar-content {
   letter-spacing: 0.01em;
   text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5);
   color: rgba(255, 255, 255, 0.9);
+}
+
+.home-hero-cta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 1.15rem;
+}
+
+.home-hero-cta a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 22px;
+  border-radius: 999px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-decoration: none !important;
+  background-image: none !important;
+  transition: transform 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
+}
+
+.home-hero-cta a:hover {
+  transform: translateY(-1px);
+}
+
+.home-hero-cta-primary {
+  background: var(--primary-color);
+  color: #fff !important;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.35);
+}
+
+.home-hero-cta-secondary {
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff !important;
+  backdrop-filter: blur(8px);
+}
+
+@media (max-width: 640px) {
+  .home-hero-cta {
+    margin-top: 0.8rem;
+    gap: 8px;
+  }
+
+  .home-hero-cta a {
+    min-height: 42px;
+    padding: 0 18px;
+    font-size: 0.85rem;
+  }
 }
 
 /* ========================================
@@ -890,6 +947,13 @@ footer.footer .info-container div:not(.customize-info):not(.text-center):not(.ic
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(var(--card-sheen-rgb), 0.18) transparent;
+}
+
+/* 首页副标题先占位,避免 Typed 从空文本开始时把居中内容上下推 */
+.home-banner-container #subtitle {
+  display: inline-block;
+  min-height: 1.5em;
+  vertical-align: top;
 }
 
 /* ========================================

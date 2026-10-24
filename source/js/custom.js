@@ -2250,16 +2250,14 @@
         .map(p => {
           const tags = new Set(p.tags);
           const cats = new Set(p.categories);
-          let score = 0;
-          const union = new Set([...curTags, ...tags]);
           const inter = [...curTags].filter(t => tags.has(t));
-          if (union.size > 0) score += (inter.length / union.size) * 2;
-          if ([...curCats].some(c => cats.has(c))) score += 3;
+          let score = inter.length * 3;
+          if ([...curCats].some(c => cats.has(c))) score += 1;
           const days = Math.abs(new Date(p.date).getTime() - curDate) / 86400000;
-          if (days <= 60) score += 1;
+          if (score > 0 && days <= 90) score += 0.5;
           return { post: p, score };
         })
-        .sort((a, b) => b.score - a.score);
+        .sort((a, b) => b.score - a.score || b.post.date.localeCompare(a.post.date));
 
       let picks = scored.filter(x => x.score > 0).slice(0, 3);
       // 不足 3 篇时用最新文章补齐

@@ -19,6 +19,12 @@ comments: false
 
 前端开发、全栈开发、AI 应用工程；实习或校招均可。
 
+## 教育
+
+本科 · 地理信息科学（GIS）· 2023–2027（预计）
+
+空间数据、数据库与编程基础；项目中的 GIS 相关工作见 GeoData 安全系统与 GeoAI 实验。
+
 ## 项目经历
 
 ### MiQroGate — AI 凭证虚拟化与用量治理网关
@@ -63,7 +69,7 @@ comments: false
 ## 写作与开源
 
 - 个人博客 [sterlingzeng.cn](https://sterlingzeng.cn)：22 篇技术文章，含[系列阅读](/series/)与构建期生成的 Atom / JSON Feed。
-- 站点工程化：Swup SPA、构建期系列系统、无障碍（axe WCAG A/AA 0 违规）、CLS 0.0001、354 项浏览器回归测试。
+- 站点工程化：Swup SPA、构建期系列系统、无障碍（axe WCAG A/AA 0 违规）、CLS 0.0001、357 项浏览器回归测试。
 - GitHub：[github.com/sijie-Z](https://github.com/sijie-Z)
 
 ## 联系

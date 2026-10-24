@@ -61,15 +61,26 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
   const categories = page.categories && page.categories.toArray ? page.categories.toArray() : [];
   const catName = categories.length ? categories[0].name : '';
   const allPosts = hexo.locals.get('posts').toArray();
-  const catPosts = catName
-    ? allPosts.filter(post => {
-        if (post._id === page._id) return false;
-        const list = post.categories && post.categories.toArray ? post.categories.toArray() : [];
-        return list.some(c => c.name === catName);
-      }).sort((a, b) => b.date - a.date).slice(0, 3)
-    : [];
+  const currentTags = new Set(tags.map(tag => tag.name));
+  const scored = allPosts
+    .filter(post => post._id !== page._id)
+    .map(post => {
+      const postTags = post.tags && post.tags.toArray ? post.tags.toArray().map(t => t.name) : [];
+      const sharedTags = postTags.filter(name => currentTags.has(name)).length;
+      const postCats = post.categories && post.categories.toArray ? post.categories.toArray().map(c => c.name) : [];
+      const sameCategory = catName && postCats.includes(catName) ? 1 : 0;
+      return { post, sharedTags, score: sharedTags * 3 + sameCategory };
+    })
+    .filter(item => item.score > 0)
+    .sort((a, b) => b.score - a.score || b.post.date - a.post.date);
+  const relatedPosts = scored.slice(0, 3).map(item => item.post);
+  // 标签/分类都不沾边时用最新文章补齐,卡片保持三行
+  for (const post of allPosts.sort((a, b) => b.date - a.date)) {
+    if (relatedPosts.length >= 3) break;
+    if (post._id !== page._id && !relatedPosts.some(p => p._id === post._id)) relatedPosts.push(post);
+  }
 
-  const catHtml = catPosts.map(post =>
+  const relatedHtml = relatedPosts.map(post =>
     `<li><a href="${escapeHtml(absUrl(post.path))}" title="${escapeHtml(post.title)}">${escapeHtml(post.title)}</a></li>`
   ).join('');
 
@@ -104,9 +115,9 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
     <div class="post-side-card-title">本文标签</div>
     <div class="post-side-tags">${tagHtml}</div>
   </section>` : ''}
-  ${catHtml ? `<section class="post-side-card post-side-cat-card" aria-label="同分类文章">
-    <div class="post-side-card-title">${escapeHtml(catName)} · 同分类</div>
-    <ul class="post-side-cat-list">${catHtml}</ul>
+  ${relatedHtml ? `<section class="post-side-card post-side-cat-card" aria-label="相关文章">
+    <div class="post-side-card-title">相关文章</div>
+    <ul class="post-side-cat-list">${relatedHtml}</ul>
   </section>` : ''}
 </div>`;
 

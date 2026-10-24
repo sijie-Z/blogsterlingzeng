@@ -264,8 +264,9 @@ date: 2026-08-28 10:00:00
 |---|---|---|---|
 | **MindPilot** | 多 Agent RAG 平台，从 DocMind 演进 | LangGraph 状态机 + Judge Agent；多端接入（Web / QQ / 飞书） | [GitHub](https://github.com/sijie-Z/mindpilot) · [文章](/2026/05/10/mindpilot-multi-agent-rag/) |
 | **GeoData Security** | 空间数据安全分发与溯源 | 3 种栅格水印 + QR 码水印 + HMAC 签名；双级审批与民主召回 | [GitHub](https://github.com/sijie-Z/GeoData-Security-System) · [文章](/2026/05/10/geodata-security-traceability/) |
-| **NFT Launchpad Kit** | Agent-Native 链上发行基础设施 | trusted-signer 离线签名铸造；204 个测试，v1.0.0 已发布 | [GitHub](https://github.com/sijie-Z/nft-launchpad-kit) · [发布复盘](/2026/08/28/nft-launchpad-release-sprint/) |
+| **NFT Launchpad Kit** | Agent-Native 链上发行基础设施 | trusted-signer 离线签名铸造；204 个测试，v1.0.0 已发布 | [GitHub](https://github.com/sijie-Z/nft-launchpad-kit) · [架构文章](/2026/05/10/nft-launchpad-kit-web3/) · [发布复盘](/2026/08/28/nft-launchpad-release-sprint/) |
 | **NLP Training Lab** | 从 BERT 到 LoRA 微调的渐进式实验 | 4GB 显存跑通全流程，LoRA 只训练 0.42% 参数；保留 Accuracy 44% / F1 30% 的失败记录 | [GitHub](https://github.com/sijie-Z/nlp-training-lab) · [实验记录](/2026/08/28/nlp-training-lab/) |
+| **这个博客** | Hexo + Swup + 构建期生成器 | 22 篇文章、构建期系列/OG/Feed、354 项回归、axe 0 违规 | [GitHub](https://github.com/sijie-Z/blogsterlingzeng) · [工程说明](https://github.com/sijie-Z/blogsterlingzeng/blob/main/docs/ENGINEERING.md) |
 
 > 以上均为个人项目；角色与边界以各项目文章为准。测试数字来自仓库，未做第三方审计。
 

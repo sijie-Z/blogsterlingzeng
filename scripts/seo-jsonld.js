@@ -206,7 +206,9 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
         height: 840,
       },
     },
-    image: [image],
+    image: [/\/images\/og\//.test(image)
+      ? { '@type': 'ImageObject', url: image, width: 1200, height: 630 }
+      : image],
     mainEntityOfPage: { '@type': 'WebPage', '@id': canonical },
     url: canonical,
     inLanguage: 'zh-CN',
@@ -229,6 +231,7 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
     '@type': 'ListItem',
     position: items.length + 1,
     name: String(page.title),
+    item: canonical,
   });
 
   const group = seriesGroup(page);

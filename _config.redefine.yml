@@ -17,7 +17,7 @@ info:
 defaults:
   favicon: /images/favicon.png
   logo:
-  avatar: /images/avatar.jpg
+  avatar: /images/avatar-160.webp
 # IMAGE CONFIGURATION <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
 
 
@@ -164,7 +164,7 @@ navbar:
       icon: fa-regular fa-bookmark
   search:
     enable: true
-    preload: true
+    preload: false
 # NAVIGATION BAR <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
 
 

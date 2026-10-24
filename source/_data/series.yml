@@ -5,3 +5,11 @@ blog-engineering:
 agent-rag:
   name: Agent 与 RAG 实战
   description: 从 RAG 知识库到多 Agent 协作，再到消融实验，记录检索、规划与执行的取舍。
+
+frontend-basics:
+  name: 前端基础三件套
+  description: 从 CSS 布局到闭包，再到 React Hooks，把日常写业务时最容易似懂非懂的三块基础重新讲一遍。
+
+quant-research:
+  name: 量化研究：从因子到执行
+  description: 先搭完整研究流水线，再验证一个反转信号在真实执行下是否还能赚钱；负结果也完整记录。

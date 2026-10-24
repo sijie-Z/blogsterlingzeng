@@ -209,12 +209,27 @@ function check(name, cond, extra) {
       return { ok: true, parts: (data['@graph'][0].hasPart || []).length };
     } catch (e) { return { ok: false, parts: 0 }; }
   });
-  check('系列总览 JSON-LD 列出 2 个系列', seriesIndexLd.ok && seriesIndexLd.parts === 2, JSON.stringify(seriesIndexLd));
+  check('系列总览 JSON-LD 列出 4 个系列', seriesIndexLd.ok && seriesIndexLd.parts === 4, JSON.stringify(seriesIndexLd));
 
   await page.goto(BASE + '/about/', { waitUntil: 'networkidle2', timeout: 30000 });
   await sleep(400);
   const aboutLd = await page.evaluate(() => document.querySelector('script[type="application/ld+json"]')?.textContent || '');
   check('关于页有 ProfilePage JSON-LD', aboutLd.includes('"ProfilePage"') && aboutLd.includes('"Person"'), aboutLd.slice(0, 120));
+
+  const aboutArticleMeta = await page.evaluate(() => document.querySelectorAll('meta[property^="article:"]').length);
+  check('非文章页没有 article:* 元数据', aboutArticleMeta === 0, String(aboutArticleMeta));
+
+  await page.goto(BASE + '/categories/前端开发/', { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(400);
+  const categoryPage = await page.evaluate(() => ({
+    h1: document.querySelector('h1')?.textContent.trim() || '',
+    ogTitle: document.querySelector('meta[property="og:title"]')?.content || '',
+  }));
+  check('分类页有独立 h1 和 og:title', categoryPage.h1.includes('前端开发') && categoryPage.ogTitle.includes('前端开发'), JSON.stringify(categoryPage));
+
+  const atom = await page.evaluate(async () => (await (await fetch('/atom.xml')).text()));
+  const atomUpdated = [...atom.matchAll(/<updated>([^<]+)<\/updated>/g)].map(m => m[1]);
+  check('Atom feed updated 不早于条目', atomUpdated.length > 1 && atomUpdated[0] >= atomUpdated.slice(1).sort().pop(), atomUpdated.slice(0, 2).join(' vs '));
 
   console.log('=== 8. Feed / robots / sitemap / 图标子集 ===');
   await page.goto(BASE, { waitUntil: 'networkidle2', timeout: 30000 });

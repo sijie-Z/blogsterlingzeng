@@ -105,8 +105,8 @@ search:
 # Sitemap
 sitemap:
   path: sitemap.xml
-  tags: false
-  categories: false
+  tags: true
+  categories: true
   template:
   rel: false
 
@@ -115,7 +115,7 @@ feed:
   enable: true
   type: atom
   path: atom.xml
-  limit: 20
+  limit: 0
   hub:
   content: true
   content_limit: 200

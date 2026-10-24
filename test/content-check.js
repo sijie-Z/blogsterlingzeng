@@ -60,9 +60,10 @@ for (const file of files) {
       continue;
     }
     const base = link.split('#')[0].replace(/\/$/, '');
-    if (!KNOWN_PAGES.has(base) && !/^\/page\/\d+$/.test(base)) {
-      warnings.push(`${file}: 未知站内链接 ${link}`);
+    if (KNOWN_PAGES.has(base) || /^\/page\/\d+$/.test(base) || /^\/series\/[a-z0-9-]+$/.test(base)) {
+      continue;
     }
+    warnings.push(`${file}: 未知站内链接 ${link}`);
   }
 
   const exclamations = (prose.match(/[!！]/g) || []).length;

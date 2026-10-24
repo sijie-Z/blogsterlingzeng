@@ -372,6 +372,11 @@ patchText('layout/pages/post/article-content.ejs', [
 \t\t</div>`,
     'post stats server rendered (meta)',
   ],
+  [
+    '<% if (page?.prev || page?.next) { %>',
+    '<% if (!page.series && (page?.prev || page?.next)) { %>',
+    'hide date post-nav for series posts',
+  ],
 ]);
 
 // 4.6 moment 只定义全局变量,换页时不需要重新下载/执行。
@@ -649,6 +654,11 @@ patchText('layout/components/scripts.ejs', [
     '<% if (is_home() && (subtitleEntries.length !== 0 || (subtitleConfig.hitokoto && subtitleConfig.hitokoto.enable))) { %>',
     'typed only on home',
   ],
+  [
+    '<% if (theme.masonry || theme.photos || theme.gallery || isMasonryPage) { %>',
+    '<% if (isMasonryPage) { %>',
+    'masonry only on photos page',
+  ],
 ]);
 
 // moment 从客户端移除后,主题 main.js 里的 typeof moment 守卫会吞掉
@@ -769,6 +779,13 @@ try {
     ''
   );
   const imageMarker = '            image: ogImage,';
+  const twitterMarker = "            twitter_card: 'summary_large_image',\n            twitter_image: ogImage,";
+  if (head.includes(twitterMarker) && !head.includes('title: page.title || page.category')) {
+    head = head.replace(twitterMarker, `            title: page.title || page.category || page.tag || config.title,
+            description: page.description || (page.category ? \`分类：\${page.category}\` : page.tag ? \`标签：\${page.tag}\` : ogDescription),
+            twitter_card: 'summary_large_image',
+            twitter_image: ogImage,`);
+  }
   const ogUrl = `\n            // og:url 用和 canonical 一致的目录 URL,不要带 index.html\n            url: (config.url || '').replace(/\\/+$/, '') + '/' + String(page.path || '').replace(/^\\/+/, '').replace(/index\\.html$/, ''),`;
   if (head.includes(imageMarker) && !head.includes("url: (config.url || '')")) {
     head = head.replace(imageMarker, imageMarker + ogUrl);
@@ -843,6 +860,25 @@ patchText('layout/pages/home/home-banner.ejs', [
   ],
 ]);
 
+// CTA 不能走 patchText:插入位置包含原 marker,重复执行会叠加。
+const bannerFile = path.join(themeRoot, 'layout/pages/home/home-banner.ejs');
+try {
+  let banner = fs.readFileSync(bannerFile, 'utf8');
+  if (!banner.includes('home-hero-cta')) {
+    const marker = '        <% if (theme.home_banner.social_links.enable) { %>';
+    const cta = `        <div class="home-hero-cta">
+            <a class="home-hero-cta-primary" href="/projects/">看项目案例</a>
+            <a class="home-hero-cta-secondary" href="/resume/">简历</a>
+        </div>
+`;
+    banner = banner.replace(marker, () => cta + marker);
+    fs.writeFileSync(bannerFile, banner, 'utf8');
+    console.log('[theme-patch] 已加入首页 CTA');
+  }
+} catch (e) {
+  console.warn('[theme-patch] 首页 CTA 补丁失败:', e.message);
+}
+
 // 6.8 主题默认配置里的占位邮箱会合并进站点,生成一条 you@example.com 空链接
 patchText('_config.yml', [
   [
@@ -892,8 +928,29 @@ patchText('layout/page.ejs', [
   ],
 ]);
 
-patchText('layout/pages/archive/archive.ejs', [
+patchText('layout/pages/category/category-detail.ejs', [
   [
+    `<div class="category-name">
+    <i class="fa-solid fa-folder"></i>&nbsp;<%= page.category %>
+</div>`,
+    `<h1 class="category-name page-title-header">
+    <i class="fa-solid fa-folder"></i>&nbsp;<%= page.category %>
+</h1>`,
+    'category detail h1',
+  ],
+]);
+patchText('layout/pages/tag/tag-detail.ejs', [
+  [
+    `<div class="tag-name">
+    <i class="fa-solid fa-tag"></i>&nbsp;<%= page.tag %>
+</div>`,
+    `<h1 class="tag-name page-title-header">
+    <i class="fa-solid fa-tag"></i>&nbsp;<%= page.tag %>
+</h1>`,
+    'tag detail h1',
+  ],
+]);
+patchText('layout/pages/archive/archive.ejs', [  [
     `	<%- partial('utils/posts-list', {posts: site.posts}) %>
 </div>`,
     `	<%- partial('utils/posts-list', {posts: page.posts}) %>
