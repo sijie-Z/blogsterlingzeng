@@ -94,6 +94,21 @@ async function audit(page) {
     console.log('  扫描:', JSON.stringify({ missingAlt: a.missingAlt, badLinks: a.badLinks.length, badButtons: a.badButtons.length, badLists: a.badLists.length }));
   }
 
+  await page.goto(BASE + '/projects/', { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(600);
+  const diagrams = await page.evaluate(() =>
+    [...document.querySelectorAll('.project-arch')].map(fig => {
+      const svg = fig.querySelector('svg');
+      return {
+        role: svg?.getAttribute('role') || '',
+        labelled: svg?.getAttribute('aria-labelledby') || '',
+        title: !!document.getElementById(svg?.getAttribute('aria-labelledby') || ''),
+        focusable: fig.tabIndex === 0,
+      };
+    })
+  );
+  check('项目架构图可访问且可聚焦', diagrams.length === 3 && diagrams.every(d => d.role === 'img' && d.labelled && d.title && d.focusable), JSON.stringify(diagrams));
+
   console.log('=== 图片查看器键盘 ===');
   await page.goto(BASE + '/2026/10/23/hexo-series-reading-path/', { waitUntil: 'networkidle2', timeout: 30000 });
   await sleep(900);
