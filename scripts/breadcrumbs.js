@@ -37,5 +37,5 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
 
   const marker = '<div class="article-title relative w-full">';
   if (!str.includes(marker)) return str;
-  return str.replace(marker, nav + marker);
+  return str.replace(marker, () => nav + marker);
 });

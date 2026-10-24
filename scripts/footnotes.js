@@ -41,6 +41,7 @@ hexo.extend.filter.register('before_post_render', function (data) {
   if (!definitions.size) return data;
 
   const order = [];
+  const refs = new Map();
   text = text.replace(/\[\^([^\]\s]+)\]/g, (match, id) => {
     if (!definitions.has(id)) return match;
     let index = order.indexOf(id);
@@ -49,13 +50,33 @@ hexo.extend.filter.register('before_post_render', function (data) {
       index = order.length - 1;
     }
     const number = index + 1;
-    return `<sup class="footnote-ref"><a href="#fn-${encodeURIComponent(id)}" id="fnref-${encodeURIComponent(id)}" aria-label="脚注 ${number}">${number}</a></sup>`;
+    const enc = encodeURIComponent(id);
+    const seen = refs.get(id) || [];
+    seen.push(seen.length === 0 ? `fnref-${enc}` : `fnref-${enc}-${seen.length + 1}`);
+    refs.set(id, seen);
+    const refId = seen[seen.length - 1];
+    return `<sup class="footnote-ref"><a href="#fn-${enc}" id="${refId}" aria-label="脚注 ${number}">${number}</a></sup>`;
   });
 
   if (order.length) {
-    const items = order.map((id, i) => `<li id="fn-${encodeURIComponent(id)}">
-      <p>${definitions.get(id)} <a href="#fnref-${encodeURIComponent(id)}" class="footnote-backref" aria-label="返回正文">↩</a></p>
-    </li>`).join('\n');
+    const renderBody = body => {
+      try {
+        return hexo.render.renderSync({ text: body, engine: 'markdown' })
+          .replace(/^<p>([\s\S]*)<\/p>\s*$/, '$1')
+          .trim();
+      } catch (e) {
+        return escapeHtml(body);
+      }
+    };
+    const items = order.map(id => {
+      const enc = encodeURIComponent(id);
+      const backrefs = (refs.get(id) || []).map((refId, i) =>
+        `<a href="#${refId}" class="footnote-backref" aria-label="返回正文${i ? ' ' + (i + 1) : ''}">↩${i ? `<sup>${i + 1}</sup>` : ''}</a>`
+      ).join(' ');
+      return `<li id="fn-${enc}">
+      <p>${renderBody(definitions.get(id))} ${backrefs}</p>
+    </li>`;
+    }).join('\n');
     text += `\n\n<section class="footnotes" aria-label="脚注">\n<hr>\n<ol>\n${items}\n</ol>\n</section>\n`;
   }
 

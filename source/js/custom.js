@@ -43,6 +43,10 @@
       const target = document.getElementById(id) || document.getElementById(href.slice(1));
       if (!target) return;
       e.preventDefault();
+      if (anchor.classList.contains('skip-link')) {
+        // 跳到正文时把焦点也移过去,否则键盘用户仍停在 skip link 上
+        target.focus({ preventScroll: true });
+      }
       target.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, true);
   }
@@ -245,6 +249,18 @@
     }, 700);
   }
 
+  // SPA 换页前清掉图片查看器留下的 inert 状态;查看器在 #swup 内,
+  // 换页时旧节点会被替换,关闭观察器不一定有机会执行。
+  function resetImageViewerState() {
+    const mask = document.querySelector('.image-viewer-container');
+    if (mask && mask.classList.contains('active')) {
+      mask.classList.remove('active');
+    }
+    (window.__cjInertNodes || []).forEach(node => { node.inert = false; });
+    window.__cjInertNodes = [];
+    document.body.classList.remove('image-viewer-open');
+  }
+
   function announceRoute() {
     const announcer = document.getElementById('route-announcer');
     if (!announcer) return;
@@ -268,6 +284,7 @@
       if (!swup || !swup.hooks || swup.__cjNavPause) return;
       swup.__cjNavPause = true;
       swup.hooks.on('visit:start', () => {
+        resetImageViewerState();
         swup.__cjAnnounceNext = true;
         closeCodeFullscreen();
         pauseLive2DForNav();

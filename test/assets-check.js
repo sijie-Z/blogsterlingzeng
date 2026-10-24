@@ -193,6 +193,7 @@ function check(name, cond, extra) {
 
   const aplayerJs = await page.evaluate(async () => (await fetch('/js/build/plugins/aplayer.js')).text());
   check('APlayer 无歌词时不请求 LRC', aplayerJs.includes('lrcType:e.some'), aplayerJs.slice(0, 120));
+  check('APlayer 固定/迷你模式都 preload none', aplayerJs.includes('preload:"none",fixed:!0') && aplayerJs.includes('preload:"none",mini:!0'), aplayerJs.slice(0, 160));
 
   await page.goto(BASE + '/series/', { waitUntil: 'networkidle2', timeout: 30000 });
   await sleep(400);

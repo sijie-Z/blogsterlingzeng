@@ -103,12 +103,12 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
   let out = str;
   const hasOg = /<meta property="og:image" content="[^"]*">/.test(out);
   if (hasOg) {
-    out = out.replace(/<meta property="og:image" content="[^"]*">/, `<meta property="og:image" content="${image}">`);
+    out = out.replace(/<meta property="og:image" content="[^"]*">/, () => `<meta property="og:image" content="${image}">`);
   } else {
-    out = out.replace('</head>', `<meta property="og:image" content="${image}">\n</head>`);
+    out = out.replace('</head>', () => `<meta property="og:image" content="${image}">\n</head>`);
   }
   if (/<meta name="twitter:image" content="[^"]*">/.test(out)) {
-    out = out.replace(/<meta name="twitter:image" content="[^"]*">/, `<meta name="twitter:image" content="${image}">`);
+    out = out.replace(/<meta name="twitter:image" content="[^"]*">/, () => `<meta name="twitter:image" content="${image}">`);
   }
   const extra = `<meta property="og:image:width" content="${dims.width}">
 <meta property="og:image:height" content="${dims.height}">

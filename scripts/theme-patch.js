@@ -522,8 +522,8 @@ patchText('source/js/build/plugins/aplayer.js', [
     'aplayer preload none mini build',
   ],
   [
-    'container:document.getElementById("aplayer"),fixed:!0,lrcType:3,audio:e',
-    'container:document.getElementById("aplayer"),preload:"none",fixed:!0,lrcType:3,audio:e',
+    'container:document.getElementById("aplayer"),fixed:!0,lrcType:',
+    'container:document.getElementById("aplayer"),preload:"none",fixed:!0,lrcType:',
     'aplayer preload none fixed build',
   ],
 ]);
@@ -648,6 +648,29 @@ patchText('layout/components/scripts.ejs', [
     '<% if (subtitleEntries.length !== 0 || (subtitleConfig.hitokoto && subtitleConfig.hitokoto.enable)) { %>',
     '<% if (is_home() && (subtitleEntries.length !== 0 || (subtitleConfig.hitokoto && subtitleConfig.hitokoto.enable))) { %>',
     'typed only on home',
+  ],
+]);
+
+// moment 从客户端移除后,主题 main.js 里的 typeof moment 守卫会吞掉
+// essays 初始化;去掉守卫,让 Intl 实现始终执行。
+patchText('source/js/main.js', [
+  [
+    `  safeRun("essays", () => {
+    if (typeof moment !== "undefined") {
+      initEssays();
+    }
+  });`,
+    `  safeRun("essays", () => {
+    initEssays();
+  });`,
+    'essays no moment guard',
+  ],
+]);
+patchText('source/js/build/main.js', [
+  [
+    '"undefined"!=typeof moment&&_()',
+    '_()',
+    'essays no moment guard build',
   ],
 ]);
 

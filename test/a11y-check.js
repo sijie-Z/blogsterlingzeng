@@ -166,6 +166,37 @@ async function audit(page) {
   });
   check('双指缩放放大图片', !pinch.missing && pinch.scale > 1.2, JSON.stringify(pinch));
 
+  await page.goto(BASE + '/2026/10/23/hexo-series-reading-path/', { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(500);
+  const skipFocus = await page.evaluate(() => {
+    const link = document.querySelector('.skip-link');
+    if (!link) return 'missing';
+    link.focus();
+    link.click();
+    return document.activeElement?.id || document.activeElement?.tagName || '';
+  });
+  check('skip link 把焦点移到正文', skipFocus === 'main-content', skipFocus);
+
+  await page.goto(BASE + '/shuoshuo/', { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(700);
+  const essayDates = await page.evaluate(() =>
+    [...document.querySelectorAll('.essay-date')].map(el => el.textContent.trim())
+  );
+  check('说说页日期已格式化', essayDates.length > 0 && !essayDates.some(text => text.includes('Loading')), JSON.stringify(essayDates.slice(0, 3)));
+
+  await page.goto(BASE + '/2026/10/23/hexo-series-reading-path/', { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(600);
+  await page.evaluate(() => document.querySelector('.markdown-body img')?.click());
+  await sleep(400);
+  await page.evaluate(() => window.swup?.navigate('/about/'));
+  await page.waitForFunction(() => location.pathname === '/about/', { timeout: 5000 }).catch(() => {});
+  await sleep(500);
+  const afterViewerNav = await page.evaluate(() => ({
+    inert: [...document.querySelectorAll('[inert]')].filter(el => !el.classList.contains('navbar-drawer')).length,
+    active: !!document.querySelector('.image-viewer-container.active'),
+  }));
+  check('SPA 换页清除查看器 inert', afterViewerNav.inert === 0 && !afterViewerNav.active, JSON.stringify(afterViewerNav));
+
   check('零页面错误', errors.length === 0, errors.slice(0, 2).join(' | '));
 
   console.log(`\n结果: ${pass} 通过, ${fail} 失败`);
