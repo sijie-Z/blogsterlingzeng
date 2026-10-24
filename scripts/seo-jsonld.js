@@ -71,7 +71,7 @@ function jsonLdScript(data) {
     .replace(/</g, '\\u003c')
     .replace(/>/g, '\\u003e')
     .replace(/&/g, '\\u0026');
-  return `<script type="application/ld+json">${json}</script>\n</head>`;
+  return `<script type="application/ld+json" data-cj-jsonld="1">${json}</script>\n</head>`;
 }
 
 hexo.extend.filter.register('after_render:html', function (str, locals) {
@@ -88,7 +88,7 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
     const pagePath = String(page.path || '').replace(/index\.html$/, '');
     // hexo-generator-index 会给 /page/2/ 也带 __index,只在真正首页输出 WebSite
     const isHome = pagePath === '';
-    if (isHome && !str.includes('"WebSite"')) {
+    if (isHome && !str.includes('data-cj-jsonld')) {
       const data = {
         '@context': 'https://schema.org',
         '@graph': [{
@@ -108,7 +108,7 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
       };
       return str.replace('</head>', () => jsonLdScript(data));
     }
-    if (pagePath === 'about/' && !str.includes('"ProfilePage"')) {
+    if (pagePath === 'about/' && !str.includes('data-cj-jsonld')) {
       const data = {
         '@context': 'https://schema.org',
         '@graph': [{
@@ -128,7 +128,7 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
       };
       return str.replace('</head>', () => jsonLdScript(data));
     }
-    if (page.series_page && !str.includes('"CollectionPage"')) {
+    if (page.series_page && !str.includes('data-cj-jsonld')) {
       const url = root + '/' + pagePath;
       const data = {
         '@context': 'https://schema.org',
@@ -175,7 +175,7 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
   }
 
   if (!page.title) return str;
-  if (str.includes('"BlogPosting"')) return str;
+  if (str.includes('data-cj-jsonld')) return str;
 
   const canonical = root + '/' + String(page.path || '').replace(/^\/+/, '');
   const image = absUrl(root, page.og_image || generatedOg(page) || page.cover || page.banner || '/images/og-banner.jpg');
