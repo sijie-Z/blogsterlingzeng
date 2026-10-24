@@ -4134,3 +4134,20 @@ html.dark .post-series-item-title:hover {
   outline: 2px solid var(--primary-color);
   outline-offset: 2px;
 }
+
+/* ========================================
+   SMALL TEXT READABILITY — 不小于 12px
+   ======================================== */
+.post-series-item-meta,
+.post-series-count,
+.post-series-step-label,
+.post-side-card-title,
+.post-side-tag,
+.cj-breadcrumbs {
+  font-size: 12px;
+}
+
+.post-series-item-meta,
+.post-series-count {
+  color: var(--second-text-color);
+}
