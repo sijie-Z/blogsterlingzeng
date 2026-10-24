@@ -1,0 +1,57 @@
+/**
+ * Redirects — 文章 URL 迁移后的旧地址清理。
+ *
+ * `source/2026/10/22/hexo-series-reading-path/index.html` 是给旧链接用的跳转页。
+ * 它会被 hexo-generator-sitemap 和 searchdb 当成普通页面收录;
+ * 这里把旧地址从 sitemap 和搜索索引里移除,只保留跳转和 noindex。
+ */
+
+'use strict';
+
+const REDIRECTS = {
+  '/2026/10/22/hexo-series-reading-path/': '/2026/10/23/hexo-series-reading-path/',
+};
+
+function streamToString(stream) {
+  if (typeof stream === 'string') return Promise.resolve(stream);
+  if (!stream || typeof stream.on !== 'function') return Promise.resolve('');
+  return new Promise(resolve => {
+    let data = '';
+    stream.on('data', chunk => { data += chunk; });
+    stream.on('end', () => resolve(data));
+    stream.on('error', () => resolve(''));
+  });
+}
+
+hexo.extend.filter.register('after_generate', function () {  const jobs = [];
+
+  const sitemap = hexo.route.get('sitemap.xml');
+  if (sitemap) {
+    jobs.push(streamToString(sitemap).then(xml => {
+      if (!xml) return;
+      let out = xml;
+      for (const oldUrl of Object.keys(REDIRECTS)) {
+        out = out.replace(/<url>[\s\S]*?<\/url>\s*/g, block =>
+          block.includes(oldUrl) ? '' : block
+        );
+      }
+      if (out !== xml) hexo.route.set('sitemap.xml', out);
+    }));
+  }
+
+  const search = hexo.route.get('search.xml');
+  if (search) {
+    jobs.push(streamToString(search).then(xml => {
+      if (!xml) return;
+      let out = xml;
+      for (const oldUrl of Object.keys(REDIRECTS)) {
+        out = out.replace(/<entry>[\s\S]*?<\/entry>\s*/g, block =>
+          block.includes(oldUrl) ? '' : block
+        );
+      }
+      if (out !== xml) hexo.route.set('search.xml', out);
+    }));
+  }
+
+  return Promise.all(jobs);
+}, 20);

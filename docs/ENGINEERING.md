@@ -1,7 +1,7 @@
 # 工程说明：这个博客是怎么搭的
 
 > 面向代码审阅者。记录架构、构建期流水线、性能与无障碍的测量方法，以及已经知道的边界。
-> 更新日期：2026-10-24
+> 更新日期：2026-10-25
 
 ## 1. 约束与目标
 
@@ -22,6 +22,7 @@ scripts/                 构建期脚本（Hexo 启动时加载）
 ├── backlinks.js         扫描正文内链，生成“引用本文的文章”
 ├── post-nav.js          文末更早/更新一篇 + head rel=prev/next
 ├── recent-posts.js      404 页最近文章
+├── redirects.js         文章迁移后的旧地址：保留跳转页，从 sitemap/搜索索引移除
 ├── math.js              $...$ / $$...$$ 构建期 KaTeX MathML + 复制按钮
 ├── footnotes.js         [^id] 脚注：doc-noteref / doc-endnotes
 ├── markdown-route.js    /<path>/index.md 与 llms.txt
@@ -38,7 +39,7 @@ scripts/                 构建期脚本（Hexo 启动时加载）
 source/js/custom.js      运行时交互：导航、搜索、目录、边注、预览、阅读设置、代码全屏、阅读记忆、无障碍（约 3200 行）
 source/css/custom.css    设计系统与页面覆盖（约 4800 行）
 source/css/series.css    系列阅读样式
-test/                    12 套 Puppeteer / Node 检查
+test/                    13 套 Puppeteer / Node 检查
 ```
 
 主题来自 npm 包 `hexo-theme-redefine@2.9.0`，没有复制进 `themes/`。`theme-patch.js` 在 postinstall 和 Hexo 启动时对 `node_modules` 打补丁；所有补丁都有标记检查，重复执行不会叠加。
@@ -154,7 +155,7 @@ test/                    12 套 Puppeteer / Node 检查
 | `test:content` | 23 篇 | front matter、站内链接、图片、OG 卡、文风硬规则 |
 | `test:links` | 101 HTML | 构建产物站内 href 断链检查 |
 
-合计 456 项浏览器检查、23 篇文章的内容检查和 101 个 HTML 的内链检查。所有套件在本机通过；CI 目前只跑不依赖浏览器的 `test:content`。
+合计 456 项浏览器检查、23 篇文章的内容检查和 101 个 HTML 的内链检查。所有套件在本机通过；CI 跑 `test:content`、构建和 `test:links`，浏览器套件留在本地或 self-hosted runner。
 
 ## 8. 已知边界
 

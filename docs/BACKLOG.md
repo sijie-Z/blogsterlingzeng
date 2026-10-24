@@ -1,8 +1,8 @@
-# 续作清单（2026-10-24）
+# 续作清单（2026-10-25）
 
 这份文档记录这一轮已经做完的事、验证过的数字，以及之后可以继续做的方向。主线程收尾时留下，方便下次直接接上。
 
-## 2026-10-24 这一轮新增
+## 2026-10-24 ~ 10-25 这一轮新增
 
 - **导航胶囊材质统一**：滚动收缩后的胶囊改用和文章卡片相同的 `--background-color-transparent-80` + `--border-color`，去掉单独的 `backdrop-filter`，两种“玻璃”不再混用。
 - **Live2D 显式召唤**：默认不请求任何 Live2D 资源；桌面左下角显示“召唤宠物”，点击后才加载约 4MB 模型。宠物自带的退出会记住关闭状态，返回访客按 localStorage 恢复。
@@ -18,10 +18,10 @@
 - **OG 卡防过期**：生成器同时写 `og-manifest.json`，`test:content` 比对文章标题；改了标题但忘记重跑 `npm run og:images` 时 CI 直接失败，不需要在 CI 里装 Chrome。
 - **图片查看器双指平移**：缩放后两指同向移动复用主题的拖拽逻辑，把中点位移翻译成 mousedown/mousemove/mouseup，不另写 transform 状态；测试用 CDP 真实多点触摸验证。
 - **文章导航与 404**：文末按发布日期生成“更早/更新一篇”，head 输出 `rel=prev/next`，`[` `]` 快捷键复用链接点击；404 页补最近 5 篇文章。顺手修掉主题 Giscus 主题同步在 iframe 被换页移除后对 null `contentWindow` 调 `postMessage` 的报错。
-- **CI 时区修复**：Content Check 从加入起就没绿过，根因是 GitHub Actions 用 UTC 构建，`hexo-series-reading-path` 的 `00:00` 日期被排到前一天，站内链接指向 `/10/23/` 而产物在 `/10/22/`，线上那篇确实 404。两个 workflow 现在固定 `TZ: Asia/Shanghai`，文章时间改到 10:00，旧 URL 加了跳转页，`test:content` 会拦住 08:00 之前的日期。
+- **CI 时区修复**：Content Check 从加入起就没绿过，根因是 GitHub Actions 用 UTC 构建，`hexo-series-reading-path` 的 `00:00` 日期被排到前一天，站内链接指向 `/10/23/` 而产物在 `/10/22/`，线上那篇确实 404。两个 workflow 现在固定 `TZ: Asia/Shanghai`，文章时间改到 10:00，旧 URL 加了跳转页并用 `scripts/redirects.js` 从 sitemap/搜索索引移除，`test:content` 会拦住 08:00 之前的日期。
 - **测试**：新增 `test:features`，目前 98 项；浏览器检查合计 456 项，23 篇内容检查，101 个 HTML 内链检查。
 
-## 这一轮已完成
+## 2026-10-23 第一轮（历史记录）
 
 - 项目页改为 **3 个案例 + 4 个紧凑条目**：每个案例包含问题、约束、关键决策、证据、边界和本人角色；MiQroGate 明确写出“规格/审查由我负责，实现主要由 Claude Code 完成”和“真实凭证未联调”。
 - 关于页改成 30 秒可扫读：求职方向、三个项目入口、按“在哪用过”分组的技术栈（移除无法验证的熟练度百分比）、精简时间线；新增 `/resume/` 一页式简历（可打印 / 存 PDF），导航加入“简历”。
@@ -32,7 +32,7 @@
 - 测试：357 项浏览器检查 + 22 篇内容检查全部通过；axe-core 桌面/移动端 9 类页面（含项目、简历）0 违规。
 - 后续补强：文章页可见面包屑（与 BreadcrumbList 对齐）；图片查看器显示 figcaption/alt 并接 `aria-describedby`；`timeline` Hexo 标签替换关于页时间线；站内搜索改为 `field: all`，简历/项目/关于也能被搜到；构建期脚注（`[^id]` → doc-noteref / doc-endnotes）；首页加“项目 / 简历 / 系列”三张快速入口卡；代码块支持 `{% codeblock %}` 文件名标题与 `mark:` 行高亮；修复 APlayer 无歌词时请求 LRC 的 404；修复系列页 JSON-LD 图片回退问题；补充 Nginx 缓存头文档。
 
-## 审计修复（2026-10-24）
+## 2026-10-24 审计修复（历史记录）
 
 - `/shuoshuo/` 的日期不再停在 “Loading Date”：主题 `main.js` 里 `typeof moment` 的守卫已移除，Intl 格式化始终执行。
 - APlayer 固定模式的 `preload:"none"` 补丁不再依赖 `lrcType` 的改写顺序，全新安装也能命中；测试里加了断言。
