@@ -626,7 +626,67 @@ function check(name, cond, extra) {
   await sleep(1800);
   check('g h 回到首页', await page.evaluate(() => location.pathname === '/'), await page.evaluate(() => location.pathname));
 
-  console.log('=== 10. 页面错误 ===');
+  console.log('=== 10. 图片查看器双指平移 ===');
+  await page.setViewport({ width: 1440, height: 1000 });
+  await page.goto(BASE + ARTICLE, { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(1400);
+  await page.evaluate(() => {
+    const img = document.querySelector('.article-content img');
+    if (img) img.scrollIntoView({ block: 'center' });
+  });
+  await sleep(400);
+  const viewerSource = await page.$('.article-content img');
+  check('文章有可打开查看器的图片', !!viewerSource);
+  if (viewerSource) await viewerSource.click();
+  await sleep(700);
+  check('图片查看器已打开', await page.evaluate(() => !!document.querySelector('.image-viewer-container.active')));
+
+  const zoomed = await page.evaluate(() => {
+    const img = document.querySelector('.image-viewer-frame img');
+    if (!img) return null;
+    const rect = img.getBoundingClientRect();
+    img.dispatchEvent(new WheelEvent('wheel', {
+      deltaY: -800,
+      clientX: rect.x + rect.width / 2,
+      clientY: rect.y + rect.height / 2,
+      bubbles: true,
+      cancelable: true,
+      ctrlKey: true,
+    }));
+    return img.style.transform;
+  });
+  await sleep(400);
+  const scaleValue = parseFloat((zoomed || '').match(/scale\(([\d.]+)\)/)?.[1] || '0');
+  check('ctrl+滚轮放大图片', scaleValue > 1, zoomed || '');
+
+  const beforePan = await page.evaluate(() => document.querySelector('.image-viewer-frame img')?.style.transform || '');
+  const box = await page.evaluate(() => {
+    const rect = document.querySelector('.image-viewer-frame img').getBoundingClientRect();
+    return { x: rect.x, y: rect.y, w: rect.width, h: rect.height };
+  });
+  const cx = box.x + box.w / 2;
+  const cy = box.y + box.h / 2;
+  const cdp = await page.createCDPSession();
+  await cdp.send('Input.dispatchTouchEvent', {
+    type: 'touchStart',
+    touchPoints: [{ x: cx - 50, y: cy, id: 1 }, { x: cx + 50, y: cy, id: 2 }],
+  });
+  await cdp.send('Input.dispatchTouchEvent', {
+    type: 'touchMove',
+    touchPoints: [{ x: cx - 10, y: cy, id: 1 }, { x: cx + 90, y: cy, id: 2 }],
+  });
+  await sleep(400);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await sleep(300);
+  const afterPan = await page.evaluate(() => document.querySelector('.image-viewer-frame img')?.style.transform || '');
+  const tx = value => parseFloat((value.match(/translate\(([-\d.]+)px/) || [])[1] || '0');
+  check('双指平移改变图片位置', tx(afterPan) > tx(beforePan) + 20, JSON.stringify({ beforePan, afterPan }));
+
+  await page.keyboard.press('Escape');
+  await sleep(300);
+  check('Esc 关闭查看器', await page.evaluate(() => !document.querySelector('.image-viewer-container.active')));
+
+  console.log('=== 11. 页面错误 ===');
   check('零页面错误', errors.length === 0, errors.join(' | '));
 
   await browser.close();

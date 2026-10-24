@@ -16,7 +16,8 @@
 - **键盘快捷键**：`?` 打开原生 `<dialog>` 快捷键面板；`t` 切换明暗主题；`g h` / `g a` 快速回首页/归档；输入框聚焦或弹层打开时不触发。
 - **新文章**：《读完一篇长文，不该被打断》进入博客工程化系列第 7 篇，记录边注、预览、引用、反向链接、阅读设置和快捷键，以及按页拆包被测量否决的原因。
 - **OG 卡防过期**：生成器同时写 `og-manifest.json`，`test:content` 比对文章标题；改了标题但忘记重跑 `npm run og:images` 时 CI 直接失败，不需要在 CI 里装 Chrome。
-- **测试**：新增 `test:features`，目前 84 项；浏览器检查合计 442 项，23 篇内容检查，100 个 HTML 内链检查。
+- **图片查看器双指平移**：缩放后两指同向移动复用主题的拖拽逻辑，把中点位移翻译成 mousedown/mousemove/mouseup，不另写 transform 状态；测试用 CDP 真实多点触摸验证。
+- **测试**：新增 `test:features`，目前 89 项；浏览器检查合计 447 项，23 篇内容检查，100 个 HTML 内链检查。
 
 ## 这一轮已完成
 
@@ -53,7 +54,7 @@
 1. **按页拆 CSS/JS**：Chrome coverage 实测 custom.css 只用到 14–30%、custom.js 29–40%，但 Swup 只替换 `#swup`，head 里按页注入的 `<link>` 在 SPA 跳转时不会生效。正确做法是把条件样式 `<link>` 放进被替换的正文或用运行时 loader；收益约 8–10KB gzip/页，风险高于收益，暂时搁置。
 2. **Cloudflare 缓存头落地**：`docs/DEPLOYMENT.md` 已给出精确的 Transform Rule（`immutable`）和 Cache Rule（HTML 回源），待在控制台执行并用 `curl -I` 验证。
 3. **代码行全局锚点**：`#cb1-L3` 已可用；跨代码块 `#L3` 需要处理重复 id，价值一般。
-4. **图片查看器**：双指缩放/说明/键盘已完成；旋转与双指平移可按需扩展 Pointer Events。
+4. **图片查看器**：双指缩放、平移、说明、键盘已完成；旋转会牵动主题的 fit 计算，暂未做。
 5. **OG 卡自动生成**：`og-manifest.json` 已能在 CI 发现标题漂移；要在 CI 直接重渲染，需要安装 Chrome 并接受约 1 分钟构建时间。
 6. **清理确认（未删除）**：`source/pet/` 的 2.7MB WebM 已进入版本库但构建时跳过部署；`.claude/launch.json` 仍未跟踪。是否移出版本库/删除需你明确确认。
 

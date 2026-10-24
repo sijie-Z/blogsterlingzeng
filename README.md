@@ -125,7 +125,7 @@
 | SPA 整次导航 | **~134ms** | Swup 只替换 `#swup`，滚动即时归零 |
 | Live2D 主纹理 | **1.7MB → 308KB** | 2048 PNG 重采样为 1024 WebP |
 | 手机首屏横幅 | **63KB → 35KB**（亮色） | 960/1280/1920 srcset + DPR 选图 |
-| 自动化浏览器检查 | **442 项** | 跳转、侧栏、系列、阅读记忆、归档、平滑度、资源、内容、边注/预览/阅读设置/引用/反向链接/快捷键 |
+| 自动化浏览器检查 | **447 项** | 跳转、侧栏、系列、阅读记忆、归档、平滑度、资源、内容、边注/预览/阅读设置/引用/反向链接/快捷键/图片平移 |
 
 **构建期优先**：系列页、写作热力图、文章侧栏、JSON-LD、Markdown 原文、llms.txt 全部在 `hexo generate` 阶段生成，运行时不发额外请求、不引入布局抖动。主题通过 `scripts/theme-patch.js` 做可审计的最小补丁（Swup、TOC、搜索防抖、APlayer 延迟加载等），补丁可重复执行。
 
@@ -186,7 +186,7 @@ npm run serve               # http://127.0.0.1:4140
 
 # 测试(需要 puppeteer-core 与本机 Chrome)
 npm test                    # 34 项端到端检查(含 8 个次级页面、Live2D 显式召唤)
-npm run test:features       # 84 项边注 / 内链预览 / 公式复制 / 脚注预览 / 阅读设置 / 引用 / 反向链接 / 快捷键
+npm run test:features       # 89 项边注 / 内链预览 / 公式复制 / 脚注预览 / 阅读设置 / 引用 / 反向链接 / 快捷键 / 图片平移
 npm run test:l2d            # Live2D 加载诊断(模型 / Core / 404)
 npm run test:smooth         # 26 项滚动与动效平滑度回归
 npm run test:content        # 文章 front matter / 站内链接 / 图片 / OG 卡 / 文风检查

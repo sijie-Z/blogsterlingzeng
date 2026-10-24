@@ -121,7 +121,7 @@ test/                    12 套 Puppeteer / Node 检查
 
 - **地标**：`main` 只包正文，header/footer 回到 banner/contentinfo；导航容器有 navigation 角色。
 - **搜索**：combobox + listbox，↑/↓/Home/End、Enter、`aria-activedescendant`、结果数量 live region、空结果文字；IME 组合期间不响应 Enter。
-- **图片查看器**：图片可聚焦，Enter 打开，焦点进入关闭按钮，Esc 关闭后回到图片。
+- **图片查看器**：图片可聚焦，Enter 打开，焦点进入关闭按钮，Esc 关闭后回到图片；双指缩放与平移复用主题的 wheel/拖拽状态，不另存一套 transform。
 - **代码块**：复制/折叠按钮有 role、tabindex、名称和 Enter/Space。
 - **目录**：桌面 TOC 当前项有 `aria-current="location"`；移动端使用原生 `<details>` 目录。
 - **边注/预览**：边注按钮带 `aria-controls`，卡片是 `role="dialog"`，打开时焦点进入关闭按钮，Esc 收起后焦点回到引用；内链/脚注预览是 `role="tooltip"` + `pointer-events: none`，不抢鼠标也不打断读屏。
@@ -144,13 +144,13 @@ test/                    12 套 Puppeteer / Node 检查
 | `test:search` | 20 | combobox/listbox、方向键、Enter、空态、IME、SPA |
 | `test:smooth` | 26 | 滚动、Live2D 暂停、reduced-motion、移动端溢出 |
 | `test` | 34 | 端到端页面、主题切换、Live2D 显式召唤、次级页面 |
-| `test:features` | 84 | 边注、内链预览、公式复制、脚注预览、阅读设置、引用菜单、反向链接、键盘快捷键 |
+| `test:features` | 89 | 边注、内链预览、公式复制、脚注预览、阅读设置、引用菜单、反向链接、键盘快捷键、图片双指平移 |
 | `test:resume` | 7 | 阅读位置记忆与继续阅读 |
 | `test:archive` | 16 | 归档热力图与移动端 |
 | `test:content` | 23 篇 | front matter、站内链接、图片、OG 卡、文风硬规则 |
 | `test:links` | 100 HTML | 构建产物站内 href 断链检查 |
 
-合计 442 项浏览器检查、23 篇文章的内容检查和 100 个 HTML 的内链检查。所有套件在本机通过；CI 目前只跑不依赖浏览器的 `test:content`。
+合计 447 项浏览器检查、23 篇文章的内容检查和 100 个 HTML 的内链检查。所有套件在本机通过；CI 目前只跑不依赖浏览器的 `test:content`。
 
 ## 8. 已知边界
 

@@ -2223,26 +2223,56 @@
         if (e.touches.length !== 2) return;
         const img = mask.querySelector('.image-viewer-frame img');
         if (!img) return;
-        pinch = { startDistance: distance(e.touches), startScale: scaleOf(img), img };
+        const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        pinch = { startDistance: distance(e.touches), startScale: scaleOf(img), img, midX, midY };
+        // 复用主题的拖拽:缩放后两指平移时,把中点位移喂给 mousedown/mousemove/mouseup
+        img.dispatchEvent(new MouseEvent('mousedown', {
+          bubbles: true, cancelable: true, clientX: midX, clientY: midY, button: 0, buttons: 1,
+        }));
       }, { passive: true, capture: true });
       mask.addEventListener('touchmove', e => {
-        if (!pinch || e.touches.length !== 2) return;
+        if (!pinch || e.touches.length !== 2 || !pinch.img.isConnected) return;
         e.preventDefault();
-        const target = Math.min(8, Math.max(0.3, pinch.startScale * (distance(e.touches) / pinch.startDistance)));
+        const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        const ratio = distance(e.touches) / pinch.startDistance;
+        // 两指距离基本不变 = 平移;有缩放时交给主题的 wheel 缩放,避免两个位移叠加
+        if (Math.abs(ratio - 1) < 0.03) {
+          pinch.img.dispatchEvent(new MouseEvent('mousemove', {
+            bubbles: true, cancelable: true, clientX: midX, clientY: midY, button: 0, buttons: 1,
+          }));
+          return;
+        }
+        const target = Math.min(8, Math.max(0.3, pinch.startScale * ratio));
         const current = scaleOf(pinch.img);
         if (Math.abs(target - current) < 0.02) return;
         pinch.img.dispatchEvent(new WheelEvent('wheel', {
           deltaY: (current - target) * 1000,
-          clientX: (e.touches[0].clientX + e.touches[1].clientX) / 2,
-          clientY: (e.touches[0].clientY + e.touches[1].clientY) / 2,
+          clientX: midX,
+          clientY: midY,
           bubbles: true,
           cancelable: true,
           ctrlKey: true,
         }));
       }, { passive: false, capture: true });
-      mask.addEventListener('touchend', e => {
-        if (e.touches.length < 2) pinch = null;
-      }, { passive: true, capture: true });
+      const endPinch = e => {
+        if (!pinch || e.touches.length >= 2) return;
+        const touch = (e.changedTouches && e.changedTouches[0]) || null;
+        if (pinch.img && pinch.img.isConnected) {
+          const x = pinch.midX;
+          const y = pinch.midY;
+          pinch.img.dispatchEvent(new MouseEvent('mouseup', {
+            bubbles: true, cancelable: true,
+            clientX: touch ? touch.clientX : x,
+            clientY: touch ? touch.clientY : y,
+            button: 0, buttons: 0,
+          }));
+        }
+        pinch = null;
+      };
+      mask.addEventListener('touchend', endPinch, { passive: true, capture: true });
+      mask.addEventListener('touchcancel', endPinch, { passive: true, capture: true });
     }
 
     // 弹层打开时把 Tab 限制在对话框内,并让背景暂时 inert
