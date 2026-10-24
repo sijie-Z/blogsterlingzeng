@@ -2277,7 +2277,10 @@
     onceGlobal('keyboard', initKeyboardShortcuts);
     initExternalLinks();
     initAplayerA11y();
-    [1500, 4000, 7000].forEach(ms => setTimeout(initAplayerA11y, ms));
+    if (!window.__cjAplayerTimers) {
+      window.__cjAplayerTimers = true;
+      [1500, 4000, 7000, 13000].forEach(ms => setTimeout(initAplayerA11y, ms));
+    }
     onceGlobal('readingProgress', initReadingProgress);
     onceGlobal('readingResume', initReadingResume);
     onceGlobal('scrollHeightCache', initScrollHeightCache);
