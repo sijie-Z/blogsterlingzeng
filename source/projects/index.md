@@ -102,6 +102,51 @@ date: 2026-08-28 10:00:00
 - 真实成本：佣金双边 0.03%、印花税卖出 0.05%、滑点、手数约束
 - 失败运行也要记录 Trust Metadata，保证结论可复现
 
+<figure class="project-arch" tabindex="0" role="region" aria-label="quant_platform 架构图，可横向滚动">
+<svg viewBox="0 0 900 260" role="img" aria-labelledby="arch-quant-title">
+  <title id="arch-quant-title">quant_platform 从数据到实盘的流水线</title>
+  <defs>
+    <marker id="arrow-quant" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" class="arch-arrow"/>
+    </marker>
+  </defs>
+  <rect class="arch-node" x="15" y="55" width="130" height="66" rx="9"/>
+  <text class="arch-text" x="80" y="83" text-anchor="middle">数据</text>
+  <text class="arch-sub" x="80" y="103" text-anchor="middle">行情 / 财务</text>
+
+  <rect class="arch-node" x="165" y="55" width="130" height="66" rx="9"/>
+  <text class="arch-text" x="230" y="83" text-anchor="middle">因子引擎</text>
+  <text class="arch-sub" x="230" y="103" text-anchor="middle">20+ 因子</text>
+
+  <rect class="arch-node arch-node-accent" x="315" y="55" width="130" height="66" rx="9"/>
+  <text class="arch-text" x="380" y="83" text-anchor="middle">IC / ICIR</text>
+  <text class="arch-sub" x="380" y="103" text-anchor="middle">10 个时间尺度</text>
+
+  <rect class="arch-node" x="465" y="55" width="130" height="66" rx="9"/>
+  <text class="arch-text" x="530" y="83" text-anchor="middle">组合优化</text>
+  <text class="arch-sub" x="530" y="103" text-anchor="middle">MVO / 约束</text>
+
+  <rect class="arch-node" x="615" y="55" width="130" height="66" rx="9"/>
+  <text class="arch-text" x="680" y="83" text-anchor="middle">回测</text>
+  <text class="arch-sub" x="680" y="103" text-anchor="middle">真实成本模型</text>
+
+  <rect class="arch-node" x="765" y="55" width="120" height="66" rx="9"/>
+  <text class="arch-text" x="825" y="83" text-anchor="middle">执行</text>
+  <text class="arch-sub" x="825" y="103" text-anchor="middle">QMT / Paper</text>
+
+  <path class="arch-line" d="M145 88 H157" marker-end="url(#arrow-quant)"/>
+  <path class="arch-line" d="M295 88 H307" marker-end="url(#arrow-quant)"/>
+  <path class="arch-line" d="M445 88 H457" marker-end="url(#arrow-quant)"/>
+  <path class="arch-line" d="M595 88 H607" marker-end="url(#arrow-quant)"/>
+  <path class="arch-line" d="M745 88 H757" marker-end="url(#arrow-quant)"/>
+
+  <path class="arch-line arch-dash" d="M80 145 H825" marker-start="url(#arrow-quant)" marker-end="url(#arrow-quant)"/>
+  <text class="arch-sub" x="452" y="170" text-anchor="middle">No-Lookahead 契约：所有环节只能使用 signal_date 及之前的数据</text>
+  <text class="arch-sub" x="452" y="220" text-anchor="middle">六项系统性自检：Oracle IC · Known Alpha · MVO Audit · Walk-Forward · Rank IC · No-Lookahead</text>
+</svg>
+<figcaption>研究链路和实盘链路共用同一套因子与回测代码；零前视契约贯穿数据、因子、权重、回测和执行。</figcaption>
+</figure>
+
 ### 关键决策
 
 1. **先建自检，再谈收益。** 六项系统性验证：Oracle Factor IC=1.000000、Known Alpha Recovery、MVO Audit 60/60、Walk-Forward、Rank IC 手动对比差异 < 0.001%、No-Lookahead 零前视契约。

@@ -11,8 +11,9 @@ const files = fs.readdirSync(POSTS).filter(f => f.endsWith('.md'));
 const slugs = new Set(files.map(f => f.replace(/\.md$/, '')));
 const KNOWN_PAGES = new Set([
   '/about', '/archives', '/tags', '/categories', '/projects', '/friends',
-  '/bookmarks', '/shuoshuo', '/photos',
+  '/bookmarks', '/shuoshuo', '/photos', '/resume', '/series',
 ]);
+const OG_DIR = path.join(ROOT, 'source', 'images', 'og');
 
 const errors = [];
 const warnings = [];
@@ -31,6 +32,11 @@ for (const file of files) {
   if (coverMatch && coverMatch[1].startsWith('/images/')) {
     const name = decodeURIComponent(coverMatch[1].slice('/images/'.length));
     if (!IMAGES.has(name)) errors.push(`${file}: cover 不存在 ${coverMatch[1]}`);
+  }
+
+  const slug = file.replace(/\.md$/, '');
+  if (!fs.existsSync(path.join(OG_DIR, `${slug}.jpg`))) {
+    errors.push(`${file}: 缺少 OG 分享卡（运行 npm run og:images）`);
   }
 
   const body = text.slice(fm[0].length);
