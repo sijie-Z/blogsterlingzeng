@@ -3862,6 +3862,7 @@ html[data-read-size="l"] .article-content.markdown-body {
 .read-size-btn:focus-visible,
 .read-focus-btn:focus-visible,
 .read-toggle:focus-visible,
+.mobile-cite:focus-visible,
 .read-sheet-close:focus-visible,
 .focus-exit:focus-visible {
   outline: 2px solid var(--primary-color);
@@ -3926,8 +3927,34 @@ html[data-read-size="l"] .article-content.markdown-body {
   border-color: color-mix(in srgb, var(--primary-color) 34%, var(--border-color));
 }
 
+/* 窄屏侧栏不可见,引用入口也放到浮动按钮 */
+.mobile-cite {
+  display: none;
+  position: fixed;
+  left: 18px;
+  bottom: 96px;
+  z-index: 90;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background: var(--background-color-transparent-80, var(--bg-card));
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.06));
+}
+
+.mobile-cite:hover {
+  color: var(--primary-color);
+  border-color: color-mix(in srgb, var(--primary-color) 34%, var(--border-color));
+}
+
 @media (max-width: 880px) {
-  .read-toggle {
+  .read-toggle,
+  .mobile-cite {
     display: inline-flex;
   }
 }

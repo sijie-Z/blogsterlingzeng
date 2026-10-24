@@ -416,6 +416,24 @@
     document.body.appendChild(btn);
   }
 
+  function ensureMobileCite(show) {
+    let btn = document.getElementById('mobile-cite');
+    if (!show) {
+      if (btn) btn.remove();
+      return;
+    }
+    if (btn) return;
+    btn = document.createElement('button');
+    btn.id = 'mobile-cite';
+    btn.type = 'button';
+    btn.className = 'mobile-cite';
+    btn.setAttribute('aria-label', '引用与分享本文');
+    btn.setAttribute('aria-haspopup', 'menu');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.innerHTML = '<i class="fa-solid fa-share-nodes" aria-hidden="true"></i>';
+    document.body.appendChild(btn);
+  }
+
   function ensureReadToggle(show) {
     let btn = document.getElementById('read-toggle');
     if (!show) {
@@ -502,6 +520,7 @@
 
     ensureFocusExit(focus);
     ensureReadToggle(isPost);
+    ensureMobileCite(isPost);
     if (!focus) closeReadSheet(false);
   }
 
@@ -713,6 +732,12 @@
 
   function initCitationMenu() {
     document.addEventListener('click', e => {
+      const mobileTrigger = e.target.closest('#mobile-cite');
+      if (mobileTrigger) {
+        e.preventDefault();
+        openCitationMenu(mobileTrigger);
+        return;
+      }
       if (!citeMenu) return;
       if (citeMenu.contains(e.target) || (citeTrigger && citeTrigger.contains(e.target))) return;
       closeCitationMenu(false);

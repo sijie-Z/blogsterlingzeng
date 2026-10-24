@@ -356,6 +356,35 @@ function check(name, cond, extra) {
   await sleep(300);
   check('Esc 收起设置卡', await page.evaluate(() => !document.getElementById('read-sheet').classList.contains('is-open')));
 
+  const mobileCite = await page.evaluate(() => {
+    const btn = document.getElementById('mobile-cite');
+    if (!btn) return null;
+    const r = btn.getBoundingClientRect();
+    return {
+      visible: getComputedStyle(btn).display !== 'none',
+      inViewport: r.top >= 0 && r.bottom <= innerHeight,
+      label: btn.getAttribute('aria-label'),
+      haspopup: btn.getAttribute('aria-haspopup'),
+    };
+  });
+  check('窄屏显示引用按钮', !!mobileCite && mobileCite.visible && mobileCite.inViewport && mobileCite.haspopup === 'menu', JSON.stringify(mobileCite));
+  await page.click('#mobile-cite');
+  await sleep(350);
+  const mobileCiteMenu = await page.evaluate(() => {
+    const menu = document.querySelector('.cite-menu');
+    if (!menu) return null;
+    const r = menu.getBoundingClientRect();
+    return {
+      items: menu.querySelectorAll('[role="menuitem"]').length,
+      inViewport: r.top >= 0 && r.left >= 0 && r.right <= innerWidth && r.bottom <= innerHeight,
+      expanded: document.getElementById('mobile-cite').getAttribute('aria-expanded'),
+    };
+  });
+  check('窄屏引用菜单可打开', !!mobileCiteMenu && mobileCiteMenu.items >= 4 && mobileCiteMenu.inViewport && mobileCiteMenu.expanded === 'true', JSON.stringify(mobileCiteMenu));
+  await page.keyboard.press('Escape');
+  await sleep(250);
+  check('窄屏 Esc 关闭引用菜单', await page.evaluate(() => !document.querySelector('.cite-menu')));
+
   await page.evaluate(() => {
     localStorage.removeItem('cj-read-size');
     localStorage.removeItem('cj-focus');
