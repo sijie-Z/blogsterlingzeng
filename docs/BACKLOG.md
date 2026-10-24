@@ -13,6 +13,15 @@
 - 测试：344 项浏览器检查 + 22 篇内容检查全部通过；axe-core 桌面/移动端 9 类页面（含项目、简历）0 违规。
 - 后续补强：文章页可见面包屑（与 BreadcrumbList 对齐）；图片查看器显示 figcaption/alt 并接 `aria-describedby`；`timeline` Hexo 标签替换关于页时间线；站内搜索改为 `field: all`，简历/项目/关于也能被搜到；构建期脚注（`[^id]` → doc-noteref / doc-endnotes）；首页加“项目 / 简历 / 系列”三张快速入口卡；代码块支持 `{% codeblock %}` 文件名标题与 `mark:` 行高亮；修复 APlayer 无歌词时请求 LRC 的 404；修复系列页 JSON-LD 图片回退问题；补充 Nginx 缓存头文档。
 
+## 审计修复（2026-10-24）
+
+- `/shuoshuo/` 的日期不再停在 “Loading Date”：主题 `main.js` 里 `typeof moment` 的守卫已移除，Intl 格式化始终执行。
+- APlayer 固定模式的 `preload:"none"` 补丁不再依赖 `lrcType` 的改写顺序，全新安装也能命中；测试里加了断言。
+- skip link 现在会把焦点移到 `#main-content`；图片查看器打开时按 SPA 换页会清理 inert 状态。
+- 面包屑/OG 的 HTML 插入改用函数 replacer，标题含 `$&`、`$'` 时不会被当成替换模式；脚注重复引用生成唯一 id，定义内容按 Markdown 渲染，未引用的定义不再静默丢弃。
+- JSON-LD 用显式 `data-cj-jsonld` 标记判断是否已注入；OG 回退页也补齐 width/height/alt。
+- 首页系列数从 `__cjBuildSeries()` 推导，不再写死。
+
 ## 验证数字
 
 - 文章首屏 CLS：0.0001；首页首屏 CLS：0.002–0.004。
