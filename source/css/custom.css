@@ -4953,3 +4953,123 @@ html.dark .post-series-item-title:hover {
   min-width: 44px;
   min-height: 44px;
 }
+
+/* ========================================
+   SHORTCUT HELP — ? 打开的快捷键面板
+   ======================================== */
+.shortcut-help {
+  width: min(430px, calc(100vw - 32px));
+  max-height: min(80vh, 560px);
+  padding: 0;
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  background: var(--background-color);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-xl, 0 20px 48px rgba(0, 0, 0, 0.18));
+  overflow: auto;
+}
+
+.shortcut-help::backdrop {
+  background: rgba(2, 6, 23, 0.55);
+}
+
+.shortcut-help-inner {
+  padding: 18px 20px 16px;
+}
+
+.shortcut-help-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.shortcut-help-head h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.shortcut-help-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.shortcut-help-close:hover {
+  color: var(--text-primary);
+  background: var(--third-background-color, rgba(148, 163, 184, 0.16));
+}
+
+.shortcut-help-close:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+.shortcut-help-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.shortcut-help-list > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.shortcut-help-list dt {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.shortcut-help-list dd {
+  margin: 0;
+  color: var(--text-tertiary);
+  font-size: 0.82rem;
+  text-align: right;
+}
+
+.shortcut-help kbd {
+  display: inline-block;
+  min-width: 22px;
+  padding: 2px 6px;
+  border: 1px solid var(--border-color);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.shortcut-help-hint {
+  margin: 14px 0 0;
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+}
+
+html:has(dialog.shortcut-help[open]) body {
+  overflow: hidden;
+}
+
+@media print {
+  .shortcut-help {
+    display: none !important;
+  }
+}

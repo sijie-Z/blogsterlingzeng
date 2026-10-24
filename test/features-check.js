@@ -569,7 +569,64 @@ function check(name, cond, extra) {
   await sleep(1000);
   check('无反向链接的文章不渲染空区块', await page.evaluate(() => !document.querySelector('.cj-backlinks')));
 
-  console.log('=== 9. 页面错误 ===');
+  console.log('=== 9. 键盘快捷键 ===');
+  await page.setViewport({ width: 1440, height: 1000 });
+  await page.goto(BASE + '/2026/05/10/docmind-rag-knowledge-base/', { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(1300);
+
+  await page.keyboard.down('Shift');
+  await page.keyboard.press('Slash');
+  await page.keyboard.up('Shift');
+  await sleep(300);
+  const helpDialog = await page.evaluate(() => {
+    const dialog = document.getElementById('shortcut-help');
+    return dialog ? {
+      open: dialog.open,
+      modal: dialog.matches(':modal'),
+      title: dialog.querySelector('h2')?.textContent || '',
+      rows: dialog.querySelectorAll('.shortcut-help-list > div').length,
+      focus: document.activeElement && document.activeElement.className,
+    } : null;
+  });
+  check('? 打开快捷键帮助', !!helpDialog && helpDialog.open && helpDialog.modal && helpDialog.rows >= 6 && helpDialog.title.includes('快捷键'), JSON.stringify(helpDialog));
+  check('帮助打开后焦点在关闭按钮', !!helpDialog && helpDialog.focus === 'shortcut-help-close', helpDialog && helpDialog.focus);
+
+  await page.keyboard.press('Escape');
+  await sleep(250);
+  check('Esc 关闭快捷键帮助', await page.evaluate(() => !document.getElementById('shortcut-help').open));
+
+  const themeBefore = await page.evaluate(() => document.documentElement.classList.contains('dark'));
+  await page.keyboard.press('t');
+  await sleep(700);
+  const themeAfter = await page.evaluate(() => document.documentElement.classList.contains('dark'));
+  check('t 切换明暗主题', themeAfter !== themeBefore, JSON.stringify({ themeBefore, themeAfter }));
+  await page.keyboard.press('t');
+  await sleep(600);
+
+  await page.evaluate(() => {
+    const input = document.createElement('input');
+    input.id = 'cj-key-test';
+    document.body.appendChild(input);
+    input.focus();
+  });
+  await page.keyboard.down('Shift');
+  await page.keyboard.press('Slash');
+  await page.keyboard.up('Shift');
+  await sleep(300);
+  const typingGuard = await page.evaluate(() => ({
+    dialog: !!document.querySelector('dialog[open]'),
+    value: document.getElementById('cj-key-test')?.value || '',
+  }));
+  check('输入框聚焦时快捷键不触发', !typingGuard.dialog && typingGuard.value.includes('?'), JSON.stringify(typingGuard));
+  await page.evaluate(() => document.getElementById('cj-key-test')?.remove());
+
+  await page.keyboard.press('g');
+  await sleep(80);
+  await page.keyboard.press('h');
+  await sleep(1800);
+  check('g h 回到首页', await page.evaluate(() => location.pathname === '/'), await page.evaluate(() => location.pathname));
+
+  console.log('=== 10. 页面错误 ===');
   check('零页面错误', errors.length === 0, errors.join(' | '));
 
   await browser.close();

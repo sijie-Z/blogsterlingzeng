@@ -54,20 +54,112 @@
   // ============================
   // Keyboard shortcuts
   // ============================
+  function openShortcutHelp() {
+    let dialog = document.getElementById('shortcut-help');
+    if (!dialog) {
+      dialog = document.createElement('dialog');
+      dialog.id = 'shortcut-help';
+      dialog.className = 'shortcut-help';
+      dialog.setAttribute('aria-labelledby', 'shortcut-help-title');
+      dialog.innerHTML =
+        '<div class="shortcut-help-inner">' +
+        '<div class="shortcut-help-head"><h2 id="shortcut-help-title">键盘快捷键</h2>' +
+        '<button type="button" class="shortcut-help-close" aria-label="关闭快捷键帮助">×</button></div>' +
+        '<dl class="shortcut-help-list">' +
+        '<div><dt><kbd>?</kbd></dt><dd>打开快捷键帮助</dd></div>' +
+        '<div><dt><kbd>/</kbd> 或 <kbd>⌘ K</kbd></dt><dd>站内搜索</dd></div>' +
+        '<div><dt><kbd>t</kbd></dt><dd>切换明暗主题</dd></div>' +
+        '<div><dt><kbd>g</kbd> <kbd>h</kbd></dt><dd>回到首页</dd></div>' +
+        '<div><dt><kbd>g</kbd> <kbd>a</kbd></dt><dd>打开归档</dd></div>' +
+        '<div><dt><kbd>Esc</kbd></dt><dd>关闭弹层 / 退出全屏</dd></div>' +
+        '</dl>' +
+        '<p class="shortcut-help-hint">输入框聚焦时快捷键不会触发。</p>' +
+        '</div>';
+      dialog.querySelector('.shortcut-help-close').addEventListener('click', () => dialog.close());
+      dialog.addEventListener('click', e => {
+        if (e.target === dialog) dialog.close();
+      });
+      document.body.appendChild(dialog);
+    }
+    if (!dialog.open) dialog.showModal();
+  }
+
+  function closeShortcutHelp() {
+    const dialog = document.getElementById('shortcut-help');
+    if (dialog && dialog.open) dialog.close();
+  }
+  window.__cjCloseShortcutHelp = closeShortcutHelp;
+
+  function navigateTo(url) {
+    if (window.swup && typeof window.swup.navigate === 'function') {
+      try {
+        const result = window.swup.navigate(url);
+        if (result && typeof result.catch === 'function') {
+          result.catch(() => { window.location.href = url; });
+        }
+        return;
+      } catch (e) {}
+    }
+    window.location.href = url;
+  }
+
   function initKeyboardShortcuts() {
+    let gPending = 0;
+
     document.addEventListener('keydown', (e) => {
       const isCmdK = (e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K');
       const isSlash = e.key === '/' && !e.ctrlKey && !e.metaKey && !e.altKey;
+      const tag = (document.activeElement && document.activeElement.tagName) || '';
+      const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(tag) ||
+        (document.activeElement && document.activeElement.isContentEditable);
+      const hasModifier = e.ctrlKey || e.metaKey || e.altKey;
+      const overlayOpen = !!document.querySelector(
+        '.search-pop-overlay.active, .image-viewer-container.active, .cite-menu, ' +
+        '.mn-sheet.is-open, .read-sheet.is-open, dialog[open], body.code-fullscreen-open'
+      );
+
       if (isCmdK || isSlash) {
-        const tag = (document.activeElement && document.activeElement.tagName) || '';
-        const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(tag) ||
-          (document.activeElement && document.activeElement.isContentEditable);
-        const overlayOpen = !!document.querySelector('.search-pop-overlay.active');
         if (!typing && !overlayOpen) {
           e.preventDefault();
           const searchBtn = document.querySelector('.desktop .search-popup-trigger') ||
             document.querySelector('.search-popup-trigger');
           if (searchBtn) searchBtn.click();
+        }
+        return;
+      }
+
+      if (!typing && !hasModifier) {
+        // g 开头的二连跳转:g h 首页,g a 归档
+        if (gPending && Date.now() - gPending < 1200) {
+          const key = e.key.toLowerCase();
+          if (key === 'h' || key === 'a') {
+            gPending = 0;
+            e.preventDefault();
+            navigateTo(key === 'h' ? '/' : '/archives/');
+            return;
+          }
+        }
+        gPending = 0;
+
+        if (e.key === 'g' || e.key === 'G') {
+          if (!overlayOpen) {
+            gPending = Date.now();
+            return;
+          }
+        }
+
+        if (e.key === '?' && !overlayOpen) {
+          e.preventDefault();
+          openShortcutHelp();
+          return;
+        }
+
+        if ((e.key === 't' || e.key === 'T') && !overlayOpen) {
+          e.preventDefault();
+          const toggle = document.querySelector('.tool-dark-light-toggle');
+          if (toggle) toggle.click();
+          else toggleDarkManually(!document.documentElement.classList.contains('dark'));
+          return;
         }
       }
 
@@ -559,8 +651,8 @@
 
     document.addEventListener('keydown', e => {
       if (e.key !== 'Escape') return;
-      // 引用菜单打开时,Esc 先交给菜单,不要把专注模式一起关掉
-      if (document.querySelector('.cite-menu')) return;
+      // 引用菜单或帮助对话框打开时,Esc 先交给它们,不要把专注模式一起关掉
+      if (document.querySelector('.cite-menu') || document.querySelector('dialog[open]')) return;
       const sheet = document.getElementById('read-sheet');
       if (sheet && sheet.classList.contains('is-open')) {
         closeReadSheet(true);
@@ -1020,6 +1112,7 @@
         if (window.__cjHideFootnotePreview) window.__cjHideFootnotePreview();
         if (window.__cjCloseReadSheet) window.__cjCloseReadSheet();
         if (window.__cjCloseCitationMenu) window.__cjCloseCitationMenu();
+        if (window.__cjCloseShortcutHelp) window.__cjCloseShortcutHelp();
         pauseLive2DForNav();
       });
       swup.hooks.on('page:view', () => {

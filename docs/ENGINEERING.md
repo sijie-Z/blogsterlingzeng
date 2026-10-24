@@ -106,6 +106,7 @@ test/                    12 套 Puppeteer / Node 检查
 | 阅读设置 | 侧栏三档字号 + 专注模式；head 内联脚本在首屏前应用，字号不闪动 | 0 请求 |
 | Live2D | 默认不加载；显式“召唤宠物”后才拉模型，选择写入 localStorage | 用户点击前 0 请求 |
 | 引用与分享 | head 输出 `citation_*`；侧栏菜单复制 Markdown / BibTeX / APA / GB/T 7714 / RIS / 链接；body JSON 随 Swup 换页更新 | 0 请求 |
+| 键盘快捷键 | `?` 打开原生 `<dialog>` 帮助；`t` 切换主题；`g h` / `g a` 站内跳转；输入框和弹层打开时不触发 | 0 请求 |
 | 反向链接 | 构建期扫描所有文章正文内链，目标文章底部列出来源与上下文 | 0 请求 |
 
 边注的宽屏阈值是 1680px：正文 957px + 左页边 235px，低于这个宽度放不下 212px 的注释列，因此降级为底部卡片。底部卡片、边注、预览卡都挂在 `body` 上，避免正文祖先的 `transform`（Swup 入场）把 `position: fixed` 变成相对定位。
@@ -126,6 +127,7 @@ test/                    12 套 Puppeteer / Node 检查
 - **边注/预览**：边注按钮带 `aria-controls`，卡片是 `role="dialog"`，打开时焦点进入关闭按钮，Esc 收起后焦点回到引用；内链/脚注预览是 `role="tooltip"` + `pointer-events: none`，不抢鼠标也不打断读屏。
 - **阅读设置**：字号和专注按钮使用 `aria-pressed`；窄屏设置卡打开后焦点进入关闭按钮，Esc 关闭。
 - **引用菜单**：`role="menu"` / `menuitem`，打开后焦点进入第一项，↑/↓/Home/End 移动，Esc 关闭并把焦点还给分享按钮，Tab 离开时自动收起。
+- **快捷键帮助**：原生 `<dialog>` + `showModal()` 提供焦点陷阱和 Esc 关闭，背景由浏览器置为 inert；输入框聚焦时所有单键快捷键关闭。
 - **对比度**：浅色/深色/四季主题的次要文字统一到 WCAG AA 以上。
 
 验证：axe-core 4.10 在桌面和移动端扫描首页、文章页、归档、系列总览、系列页、关于、项目、简历、404，WCAG A/AA 标签下 **0 条违规**。回归测试另覆盖标题唯一性、图片 alt、链接/按钮名称、列表语义、地标和 skip link。
@@ -142,13 +144,13 @@ test/                    12 套 Puppeteer / Node 检查
 | `test:search` | 20 | combobox/listbox、方向键、Enter、空态、IME、SPA |
 | `test:smooth` | 26 | 滚动、Live2D 暂停、reduced-motion、移动端溢出 |
 | `test` | 34 | 端到端页面、主题切换、Live2D 显式召唤、次级页面 |
-| `test:features` | 78 | 边注、内链预览、公式复制、脚注预览、阅读设置、引用菜单、反向链接 |
+| `test:features` | 84 | 边注、内链预览、公式复制、脚注预览、阅读设置、引用菜单、反向链接、键盘快捷键 |
 | `test:resume` | 7 | 阅读位置记忆与继续阅读 |
 | `test:archive` | 16 | 归档热力图与移动端 |
 | `test:content` | 22 篇 | front matter、站内链接、图片、OG 卡、文风硬规则 |
 | `test:links` | 99 HTML | 构建产物站内 href 断链检查 |
 
-合计 436 项浏览器检查、22 篇文章的内容检查和 99 个 HTML 的内链检查。所有套件在本机通过；CI 目前只跑不依赖浏览器的 `test:content`。
+合计 442 项浏览器检查、22 篇文章的内容检查和 99 个 HTML 的内链检查。所有套件在本机通过；CI 目前只跑不依赖浏览器的 `test:content`。
 
 ## 8. 已知边界
 
