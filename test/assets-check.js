@@ -156,6 +156,11 @@ function check(name, cond, extra) {
 
   await page.goto(BASE + '/2026/10/22/font-subset-and-cls/', { waitUntil: 'networkidle2', timeout: 30000 });
   await sleep(400);
+  const articleScripts = await page.evaluate(() =>
+    [...document.querySelectorAll('script[src]')].map(s => s.getAttribute('src') || '')
+  );
+  check('文章页不加载首页专用 Typed', !articleScripts.some(src => src.includes('Typed')), JSON.stringify(articleScripts.slice(0, 5)));
+  check('odometer 脚本已从全站移除', !articleScripts.some(src => src.includes('odometer')), 'odometer found');
   const articleLd = await page.evaluate(() => {
     try {
       const data = JSON.parse(document.querySelector('script[type="application/ld+json"]').textContent);

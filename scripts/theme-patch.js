@@ -634,6 +634,21 @@ patchText('layout/components/scripts.ejs', [
     '',
     'drop moment script',
   ],
+  [
+    `<% if (theme.footer.runtime) { %>
+    <%- renderJS('libs/odometer.min.js') %>
+    <%- renderCSS('assets/odometer-theme-minimal.css') %>
+<% } %>
+
+`,
+    '',
+    'drop odometer (footer runtime writes text directly)',
+  ],
+  [
+    '<% if (subtitleEntries.length !== 0 || (subtitleConfig.hitokoto && subtitleConfig.hitokoto.enable)) { %>',
+    '<% if (is_home() && (subtitleEntries.length !== 0 || (subtitleConfig.hitokoto && subtitleConfig.hitokoto.enable))) { %>',
+    'typed only on home',
+  ],
 ]);
 
 patchText('layout/components/header/head.ejs', [

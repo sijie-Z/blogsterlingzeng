@@ -35,6 +35,12 @@ hexo.extend.filter.register('after_generate', function () {
   }
   // essays 页已改用 Intl 格式化日期,不再需要 375KB 的 moment
   extras.push('js/libs/moment-with-locales.min.js', 'js/build/libs/moment-with-locales.min.js');
+  // 页脚数字由 runtime 直接写文本,odometer 动画已停用
+  extras.push(
+    'js/libs/odometer.min.js',
+    'js/build/libs/odometer.min.js',
+    'assets/odometer-theme-minimal.css'
+  );
   // 全量图标 CSS 已由 fontawesome-icons-subset.css 取代
   if (fs.existsSync(path.join(hexo.source_dir, 'css', 'fontawesome-icons-subset.css'))) {
     extras.push(
