@@ -31,7 +31,12 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
   const page = locals && locals.page;
   if (!str || !page) return str;
 
-  // 目录容器只会出现在开启了 TOC 的文章页
+  // 标记文章页,head 里的内联脚本据此在首屏前应用“专注阅读”
+  if (!/<html\b[^>]*\bdata-cj-post\b/i.test(str)) {
+    str = str.replace(/<html\b([^>]*)>/i, '<html$1 data-cj-post="1">');
+  }
+
+  // 目录容器只会出现在开启了 TOC 的文章页(注入属性后再定位,避免索引错位)
   const marker = '<div class="toc-content-container">';
   const at = str.indexOf(marker);
   if (at === -1) return str;
@@ -110,6 +115,18 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
       <a href="${escapeHtml(markdownUrl)}" target="_blank" rel="noopener noreferrer" aria-label="查看 Markdown 原文"><i class="fa-solid fa-file-lines" aria-hidden="true"></i></a>
       <button type="button" class="post-side-copy-md" data-md-url="${escapeHtml(markdownUrl)}" aria-label="复制 Markdown 原文"><i class="fa-regular fa-copy" aria-hidden="true"></i></button>
     </div>
+  </section>
+  <section class="post-side-card post-side-read-card" aria-label="阅读设置">
+    <div class="post-side-card-title">阅读设置</div>
+    <div class="read-size-row" role="group" aria-label="正文字号">
+      <button type="button" class="read-size-btn" data-read-size="s" aria-pressed="false" aria-label="小号字">A-</button>
+      <button type="button" class="read-size-btn" data-read-size="m" aria-pressed="true" aria-label="默认字号">A</button>
+      <button type="button" class="read-size-btn" data-read-size="l" aria-pressed="false" aria-label="大号字">A+</button>
+    </div>
+    <button type="button" class="read-focus-btn" aria-pressed="false">
+      <span>专注阅读</span>
+      <span class="read-switch" aria-hidden="true"><span class="read-switch-dot"></span></span>
+    </button>
   </section>
   ${tagHtml ? `<section class="post-side-card post-side-tags-card" aria-label="本文标签">
     <div class="post-side-card-title">本文标签</div>

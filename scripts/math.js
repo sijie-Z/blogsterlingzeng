@@ -40,7 +40,10 @@ hexo.extend.filter.register('before_post_render', function (data) {
   });
 
   let text = protect(data.content);
-  text = text.replace(/\$\$([\s\S]+?)\$\$/g, (match, tex) => render(tex.trim(), true));
+  text = text.replace(/\$\$([\s\S]+?)\$\$/g, (match, tex) => {
+    // 块级公式包一层,右上角放“TeX”复制按钮(运行时只做复制,不重新渲染)
+    return `<div class="katex-block"><button type="button" class="math-copy-btn" aria-label="复制此公式的 LaTeX 源码" title="复制 LaTeX">TeX</button>${render(tex.trim(), true)}</div>`;
+  });
   text = text.replace(/(^|[^\\$])\$(?!\$)([^\n$]+?)\$(?!\$)/g, (match, prefix, tex) =>
     prefix + render(tex.trim(), false));
   text = text.replace(/\u0000CJMATH(\d+)\u0000/g, (match, index) => stash[Number(index)] || '');

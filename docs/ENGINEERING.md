@@ -1,7 +1,7 @@
 # 工程说明：这个博客是怎么搭的
 
 > 面向代码审阅者。记录架构、构建期流水线、性能与无障碍的测量方法，以及已经知道的边界。
-> 更新日期：2026-10-23
+> 更新日期：2026-10-24
 
 ## 1. 约束与目标
 
@@ -15,7 +15,11 @@
 ```
 scripts/                 构建期脚本（Hexo 启动时加载）
 ├── series.js            系列分组、系列页、徽章/系列卡、Atom、sitemap 追加
-├── post-sidebar.js      文章右侧作者卡/标签/同分类/目录卡
+├── post-sidebar.js      文章右侧作者卡/阅读设置/标签/同分类；文章页 data-cj-post 标记
+├── marginnote.js        {% margin %} 边注：宽屏页边，窄屏底部卡片
+├── link-preview.js      站内链接预览数据 link-preview.json
+├── math.js              $...$ / $$...$$ 构建期 KaTeX MathML + 复制按钮
+├── footnotes.js         [^id] 脚注：doc-noteref / doc-endnotes
 ├── markdown-route.js    /<path>/index.md 与 llms.txt
 ├── archive-heatmap.js   归档页内联 SVG 写作热力图
 ├── related-posts.js     相关阅读数据
@@ -27,10 +31,10 @@ scripts/                 构建期脚本（Hexo 启动时加载）
 ├── image-metadata.js    懒加载图片尺寸补全
 └── theme-patch.js       对主题做可审计、可重复执行的最小补丁
 
-source/js/custom.js      运行时交互：导航、搜索、目录、代码全屏、阅读记忆、无障碍
-source/css/custom.css    设计系统与页面覆盖（约 3400 行）
+source/js/custom.js      运行时交互：导航、搜索、目录、边注、预览、阅读设置、代码全屏、阅读记忆、无障碍（约 3200 行）
+source/css/custom.css    设计系统与页面覆盖（约 4800 行）
 source/css/series.css    系列阅读样式
-test/                    11 套 Puppeteer / Node 检查
+test/                    12 套 Puppeteer / Node 检查
 ```
 
 主题来自 npm 包 `hexo-theme-redefine@2.9.0`，没有复制进 `themes/`。`theme-patch.js` 在 postinstall 和 Hexo 启动时对 `node_modules` 打补丁；所有补丁都有标记检查，重复执行不会叠加。
@@ -77,7 +81,7 @@ test/                    11 套 Puppeteer / Node 检查
 | 移除的脚本 | moment 375KB（essays 页改用 Intl） |
 | 首屏请求（首页） | 58 个；search.xml / APlayer 不在首屏请求 |
 | 部署产物 | 22MB（含 31 张 OG 卡；移除全量 webfonts / source map / 重复 js/libs 后，原 33MB+） |
-| Live2D | 3MB 模型在页面 load 后空闲初始化，不参与首屏内容 |
+| Live2D | 默认 0 请求；用户点击“召唤宠物”后才加载模型，选择记入 localStorage |
 
 ### 关键取舍
 
@@ -87,7 +91,24 @@ test/                    11 套 Puppeteer / Node 检查
 - **APlayer 延迟**：12 秒后才加载，并设置 `preload: none`；2.5MB 的 mp3 不在首屏请求。页脚数字关闭 odometer 滚动动画，由主题 runtime 每秒直接写文本，避免一次约 300ms 的布局任务。
 - **PNG 纹理仍部署**：WebP 已切换，但旧 `index.json` 可能被缓存 10 分钟；PNG 作为回退保留。设置 `CJ_SKIP_OLD_TEXTURES=1` 可移除。
 
-## 5. 无障碍
+## 5. 阅读体验与内容增强
+
+这些功能优先在构建期完成，运行时不发额外请求：
+
+| 功能 | 实现 | 运行时成本 |
+|---|---|---|
+| 边注 | `{% margin %}` 由 `scripts/marginnote.js` 输出引用 + 注释；≥1680px 浮动到左页边，窄屏点开底部卡片 | 0 请求；约 150 行 JS/CSS |
+| 内链预览 | generator 输出 `link-preview.json`（32 条，约 10KB / gzip 4KB），首次悬停才 fetch | 1 个 JSON + 1 张封面，仅悬停时 |
+| 脚注预览 | 复用构建期 `#fn-*`，悬停/聚焦时克隆到 fixed tooltip | 0 请求 |
+| 公式复制 | `scripts/math.js` 包一层 `.katex-block`，按钮读取 MathML `annotation` 里的 TeX 源码 | 0 请求 |
+| 阅读设置 | 侧栏三档字号 + 专注模式；head 内联脚本在首屏前应用，字号不闪动 | 0 请求 |
+| Live2D | 默认不加载；显式“召唤宠物”后才拉模型，选择写入 localStorage | 用户点击前 0 请求 |
+
+边注的宽屏阈值是 1680px：正文 957px + 左页边 235px，低于这个宽度放不下 212px 的注释列，因此降级为底部卡片。底部卡片、边注、预览卡都挂在 `body` 上，避免正文祖先的 `transform`（Swup 入场）把 `position: fixed` 变成相对定位。
+
+内链预览只在 `(hover: hover) and (pointer: fine)` 且宽度 ≥1024px 时启用；移动端点击直接跳转。脚注和预览卡都支持 `focusin`，键盘 Tab 到引用时同样显示。
+
+## 6. 无障碍
 
 目标不是“加几个 aria-label”，而是让键盘和读屏用户能完成主要路径：
 
@@ -96,11 +117,13 @@ test/                    11 套 Puppeteer / Node 检查
 - **图片查看器**：图片可聚焦，Enter 打开，焦点进入关闭按钮，Esc 关闭后回到图片。
 - **代码块**：复制/折叠按钮有 role、tabindex、名称和 Enter/Space。
 - **目录**：桌面 TOC 当前项有 `aria-current="location"`；移动端使用原生 `<details>` 目录。
+- **边注/预览**：边注按钮带 `aria-controls`，卡片是 `role="dialog"`，打开时焦点进入关闭按钮，Esc 收起后焦点回到引用；内链/脚注预览是 `role="tooltip"` + `pointer-events: none`，不抢鼠标也不打断读屏。
+- **阅读设置**：字号和专注按钮使用 `aria-pressed`；窄屏设置卡打开后焦点进入关闭按钮，Esc 关闭。
 - **对比度**：浅色/深色/四季主题的次要文字统一到 WCAG AA 以上。
 
 验证：axe-core 4.10 在桌面和移动端扫描首页、文章页、归档、系列总览、系列页、关于、项目、简历、404，WCAG A/AA 标签下 **0 条违规**。回归测试另覆盖标题唯一性、图片 alt、链接/按钮名称、列表语义、地标和 skip link。
 
-## 6. 测试矩阵
+## 7. 测试矩阵
 
 | 套件 | 项数 | 覆盖 |
 |---|---:|---|
@@ -111,27 +134,32 @@ test/                    11 套 Puppeteer / Node 检查
 | `test:a11y` | 68 | 名称、alt、列表语义、标题、地标、图片查看器键盘/双指缩放、脚注、项目/简历页 |
 | `test:search` | 20 | combobox/listbox、方向键、Enter、空态、IME、SPA |
 | `test:smooth` | 26 | 滚动、Live2D 暂停、reduced-motion、移动端溢出 |
-| `test` | 33 | 端到端页面、主题切换、Live2D、次级页面 |
+| `test` | 34 | 端到端页面、主题切换、Live2D 显式召唤、次级页面 |
+| `test:features` | 51 | 边注、内链预览、公式复制、脚注预览、阅读设置（桌面/窄屏） |
 | `test:resume` | 7 | 阅读位置记忆与继续阅读 |
 | `test:archive` | 16 | 归档热力图与移动端 |
 | `test:content` | 22 篇 | front matter、站内链接、图片、OG 卡、文风硬规则 |
 | `test:links` | 99 HTML | 构建产物站内 href 断链检查 |
 
-合计 357 项浏览器检查、22 篇文章的内容检查和 99 个 HTML 的内链检查。所有套件在本机通过；CI 目前只跑不依赖浏览器的 `test:content`。
+合计 409 项浏览器检查、22 篇文章的内容检查和 99 个 HTML 的内链检查。所有套件在本机通过；CI 目前只跑不依赖浏览器的 `test:content`。
 
-## 7. 已知边界
+## 8. 已知边界
 
 - **Swup 解析成本**：首跳时如果用户没有 hover 预取，Swup 需要解析整篇长文 HTML，单次 long task 约 120–190ms。真实用户悬停链接会提前预取，测试里的程序化点击没有 hover 阶段。
 - **全量字体仍在产物里**：FontAwesome 全量 webfonts 和主题库文件仍会部署，虽然页面只请求子集字体；彻底裁剪需要更细的资源清单。
 - **mermaid/waline**：当前配置未启用，构建时移除；重新启用会自动保留对应文件。
-- **图片查看器手势**：键盘、按钮、左右滑动和双指缩放已可用。
-- **Live2D 工具菜单**：画布可点击/拖拽，工具栏已改为原生按钮并支持键盘；暂停/恢复状态还没有常驻的可见控件。
+- **边注阈值**：≥1680px 才放进左页边；更窄时只能点开底部卡片，因为正文左侧只剩约 143px。
+- **内链预览**：只在桌面 hover / 键盘聚焦时出现，触屏直接跳转；每次悬停会额外请求一张封面图。
+- **阅读设置**：只改正文字号，标题仍走主题的 rem 阶梯；专注模式只作用于文章页，离开文章自动收起。
+- **构建缓存**：`scripts/` 里的 tag/renderer 改动不会让 Hexo 的文章缓存失效（缓存按源文件内容哈希）；改标签或渲染器后需要重建缓存或改动文章内容才会重新渲染。
+- **Live2D**：默认不加载，用户点击“召唤宠物”后才请求；暂停/恢复仍由滚动自动管理，没有常驻可见控件。
 - **主题升级**：补丁目标是 2.9.0 的模板文本；版本已锁定，升级时需要重新核对 `theme-patch.js` 的标记。
 
-## 8. 如果继续做
+## 9. 如果继续做
 
-1. 用内容哈希替代手写字体/静态资源版本号，彻底消除缓存不一致。
-2. 图片查看器补 Pointer Events 双指缩放。
-3. 把 Live2D 的暂停/恢复做成常驻的可见控件。
-4. 在 CI 里跑 `test:content` + 构建，浏览器套件留在本地或 self-hosted runner。
-5. 在 Nginx / Cloudflare 给带哈希或版本号的静态资源加 `Cache-Control: immutable`，HTML 保持短缓存。
+1. **按页拆 CSS/JS**：style.css / custom.css / FontAwesome 子集仍有未使用字节，可在构建期按页面类型拆包。
+2. **内容哈希替代手写版本号**：现在靠 `?v=` 手工推进，改成构建期内容哈希可以彻底消除缓存不一致。
+3. **Cite / BibTeX + Highwire meta**：给文章生成 `citation_title` 等元数据，并在侧栏提供复制引用。
+4. **反向链接**：构建期扫描正文内链，在文末列出“引用本文的文章”。
+5. **CI**：在 CI 里跑 `test:content` + 构建，浏览器套件留在本地或 self-hosted runner。
+6. **Cloudflare 缓存规则落地**：`docs/DEPLOYMENT.md` 已给出精确的 Transform Rule / Cache Rule 配置，待在控制台执行并 `curl -I` 验证。

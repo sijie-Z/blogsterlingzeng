@@ -86,6 +86,8 @@ function check(name, cond, extra) {
   check('上滚 240px 收回', !(await atBottom()));
 
   console.log('=== 5. Live2D 滚动暂停 ===');
+  const petBtn = await page.$('#pet-toggle');
+  if (petBtn) await petBtn.click();
   const hasL2d = await page.waitForFunction(() => !!window.__l2dApp, { timeout: 15000 }).then(() => true).catch(() => false);
   check('Live2D 实例已暴露', hasL2d);
   if (hasL2d) {

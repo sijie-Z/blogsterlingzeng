@@ -130,3 +130,4 @@ $$
 研究文档冻结在 2026-06-21,完整的研究链(市场结构测绘、交叉验证、执行适配、相位探针、终局结论)都在仓库的 docs 里，每一步的原始数据都留着。
 
 项目地址:[github.com/sijie-Z/quant_platform](https://github.com/sijie-Z/quant_platform)
+

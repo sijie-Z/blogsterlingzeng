@@ -78,6 +78,483 @@
     });
   }
 
+  // ============================
+  // Margin notes — 宽屏在左页边,窄屏点开成底部卡片
+  // ============================
+  function initMarginNotes() {
+    let sheet = null;
+    let lastRef = null;
+
+    const ensureSheet = () => {
+      if (sheet && document.body.contains(sheet)) return sheet;
+      sheet = document.createElement('div');
+      sheet.id = 'mn-sheet';
+      sheet.className = 'mn-sheet';
+      sheet.setAttribute('role', 'dialog');
+      sheet.setAttribute('aria-label', '边注');
+      sheet.setAttribute('aria-hidden', 'true');
+      sheet.innerHTML = '<div class="mn-sheet-body"></div>' +
+        '<button type="button" class="mn-sheet-close" aria-label="关闭边注">×</button>';
+      sheet.querySelector('.mn-sheet-close').addEventListener('click', () => closeSheet(true));
+      document.body.appendChild(sheet);
+      return sheet;
+    };
+
+    const closeSheet = restoreFocus => {
+      if (!sheet || !sheet.classList.contains('is-open')) return;
+      sheet.classList.remove('is-open');
+      sheet.setAttribute('aria-hidden', 'true');
+      const ref = lastRef;
+      lastRef = null;
+      if (restoreFocus && ref) {
+        try { ref.focus({ preventScroll: true }); } catch (e) {}
+      }
+    };
+    // Swup 换页时收起,避免卡片悬在新页面上
+    window.__cjCloseMarginSheet = () => closeSheet(false);
+
+    const openSheet = (ref, note) => {
+      const el = ensureSheet();
+      el.querySelector('.mn-sheet-body').innerHTML = note.innerHTML;
+      lastRef = ref;
+      el.classList.add('is-open');
+      el.setAttribute('aria-hidden', 'false');
+      try { el.querySelector('.mn-sheet-close').focus({ preventScroll: true }); } catch (e) {}
+    };
+
+    document.addEventListener('click', e => {
+      const ref = e.target.closest('.mn-ref > button');
+      if (ref) {
+        const note = document.getElementById(ref.getAttribute('aria-controls') || '');
+        if (note) openSheet(ref, note);
+        return;
+      }
+      if (sheet && sheet.classList.contains('is-open') && !e.target.closest('.mn-sheet')) {
+        closeSheet(false);
+      }
+    });
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeSheet(true);
+    });
+  }
+
+  // ============================
+  // Link previews — 桌面端悬停文章内链时显示标题/摘要/封面
+  // ============================
+  function initLinkPreviews() {
+    if (!window.matchMedia || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    if (window.innerWidth < 1024) return;
+
+    let data = null;
+    let requested = false;
+    let card = null;
+    let current = null;
+    let timer = 0;
+
+    const load = () => {
+      if (requested) return Promise.resolve(data);
+      requested = true;
+      return fetch('/link-preview.json', { cache: 'force-cache' })
+        .then(res => res.ok ? res.json() : null)
+        .then(json => { data = json || {}; return data; })
+        .catch(() => { data = {}; return data; });
+    };
+
+    const ensureCard = () => {
+      if (card && document.body.contains(card)) return card;
+      card = document.createElement('div');
+      card.className = 'link-preview-card';
+      card.setAttribute('role', 'tooltip');
+      card.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(card);
+      return card;
+    };
+
+    const hide = () => {
+      clearTimeout(timer);
+      current = null;
+      if (card) {
+        card.classList.remove('show');
+        card.setAttribute('aria-hidden', 'true');
+      }
+    };
+    // Swup 换页时收起
+    window.__cjHideLinkPreview = hide;
+
+    const show = (link, info) => {
+      const el = ensureCard();
+      el.innerHTML =
+        `<img class="lp-cover" src="${esc(info.cover)}" alt="" loading="lazy" decoding="async" width="640" height="236">` +
+        `<div class="lp-body"><div class="lp-title"></div><div class="lp-desc"></div><div class="lp-meta"></div></div>`;
+      el.querySelector('.lp-title').textContent = info.title;
+      const desc = el.querySelector('.lp-desc');
+      if (info.description) desc.textContent = info.description;
+      else desc.remove();
+      const meta = el.querySelector('.lp-meta');
+      if (info.meta) meta.textContent = info.meta;
+      else meta.remove();
+
+      const width = el.offsetWidth;
+      const height = el.offsetHeight;
+      const rect = link.getBoundingClientRect();
+      let left = Math.min(Math.max(12, rect.left), Math.max(12, window.innerWidth - width - 12));
+      let top = rect.top - height - 10;
+      if (top < 12) top = rect.bottom + 10;
+      if (top + height > window.innerHeight - 12) top = Math.max(12, window.innerHeight - height - 12);
+      el.style.left = Math.round(left) + 'px';
+      el.style.top = Math.round(top) + 'px';
+      el.classList.add('show');
+      el.setAttribute('aria-hidden', 'false');
+    };
+
+    const linkFrom = event => event.target.closest &&
+      event.target.closest('.article-content a[href^="/"]');
+
+    const schedule = link => {
+      const href = link.getAttribute('href') || '';
+      if (!href.startsWith('/') || href.startsWith('//')) return;
+      if (link.querySelector('img') || link.classList.contains('headerlink')) return;
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        const path = href.split('#')[0].split('?')[0];
+        load().then(map => {
+          const info = map && map[path];
+          if (!info || !link.isConnected) return;
+          current = link;
+          show(link, info);
+        });
+      }, 300);
+    };
+
+    document.addEventListener('mouseover', e => {
+      const link = linkFrom(e);
+      if (!link || link === current) return;
+      if (link.contains(e.relatedTarget)) return;
+      schedule(link);
+    });
+
+    document.addEventListener('mouseout', e => {
+      const link = linkFrom(e);
+      if (!link) return;
+      if (link.contains(e.relatedTarget)) return;
+      clearTimeout(timer);
+      if (current === link) hide();
+    });
+
+    // 键盘聚焦也显示预览,Tab 浏览时不用先离开文章
+    document.addEventListener('focusin', e => {
+      const link = linkFrom(e);
+      if (link) schedule(link);
+    });
+
+    document.addEventListener('focusout', e => {
+      const link = linkFrom(e);
+      if (link && current === link) hide();
+    });
+
+    window.addEventListener('scroll', hide, { passive: true });
+    document.addEventListener('click', hide, true);
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') hide();
+    });
+  }
+
+  // ============================
+  // Math — 块级公式右上角复制 LaTeX
+  // ============================
+  function initMathCopy() {
+    document.addEventListener('click', e => {
+      const btn = e.target.closest('.math-copy-btn');
+      if (!btn) return;
+      e.preventDefault();
+      const block = btn.closest('.katex-block');
+      const annotation = block && block.querySelector('annotation[encoding="application/x-tex"]');
+      const tex = annotation && annotation.textContent.trim();
+      if (!tex) return;
+      const done = () => {
+        showToast('LaTeX 已复制');
+        announceAction('公式 LaTeX 已复制');
+        btn.textContent = '✓';
+        setTimeout(() => { btn.textContent = 'TeX'; }, 1200);
+      };
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(tex).then(done).catch(() => fallbackCopy(tex, done));
+      } else {
+        fallbackCopy(tex, done);
+      }
+    });
+  }
+
+  // ============================
+  // Footnotes — 悬停/聚焦引用时预览脚注正文
+  // ============================
+  function initFootnotePreview() {
+    let card = null;
+    let current = null;
+    let timer = 0;
+
+    const ensureCard = () => {
+      if (card && document.body.contains(card)) return card;
+      card = document.createElement('div');
+      card.className = 'footnote-preview-card';
+      card.setAttribute('role', 'tooltip');
+      card.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(card);
+      return card;
+    };
+
+    const hide = () => {
+      clearTimeout(timer);
+      current = null;
+      if (card) {
+        card.classList.remove('show');
+        card.setAttribute('aria-hidden', 'true');
+      }
+    };
+    window.__cjHideFootnotePreview = hide;
+
+    const show = (ref, note) => {
+      const el = ensureCard();
+      el.innerHTML = '<div class="fp-label">脚注</div><div class="fp-body"></div>';
+      const clone = note.cloneNode(true);
+      clone.removeAttribute('id');
+      clone.querySelectorAll('.footnote-backref, a[href^="#fnref"]').forEach(a => a.remove());
+      el.querySelector('.fp-body').appendChild(clone);
+
+      const width = el.offsetWidth;
+      const height = el.offsetHeight;
+      const rect = ref.getBoundingClientRect();
+      let left = Math.min(Math.max(12, rect.left - 24), Math.max(12, window.innerWidth - width - 12));
+      let top = rect.top - height - 10;
+      if (top < 12) top = rect.bottom + 12;
+      if (top + height > window.innerHeight - 12) top = Math.max(12, window.innerHeight - height - 12);
+      el.style.left = Math.round(left) + 'px';
+      el.style.top = Math.round(top) + 'px';
+      el.classList.add('show');
+      el.setAttribute('aria-hidden', 'false');
+    };
+
+    const refFrom = event => event.target.closest &&
+      event.target.closest('.footnote-ref a[href^="#fn-"]');
+
+    const schedule = ref => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        let id = (ref.getAttribute('href') || '').slice(1);
+        try { id = decodeURIComponent(id); } catch (e) {}
+        const note = document.getElementById(id);
+        if (!note) return;
+        current = ref;
+        show(ref, note);
+      }, 260);
+    };
+
+    document.addEventListener('mouseover', e => {
+      const ref = refFrom(e);
+      if (!ref || ref === current || ref.contains(e.relatedTarget)) return;
+      schedule(ref);
+    });
+
+    document.addEventListener('mouseout', e => {
+      const ref = refFrom(e);
+      if (!ref || ref.contains(e.relatedTarget)) return;
+      clearTimeout(timer);
+      if (current === ref) hide();
+    });
+
+    document.addEventListener('focusin', e => {
+      const ref = refFrom(e);
+      if (ref) schedule(ref);
+    });
+
+    document.addEventListener('focusout', e => {
+      const ref = refFrom(e);
+      if (ref && current === ref) hide();
+    });
+
+    window.addEventListener('scroll', hide, { passive: true });
+    document.addEventListener('click', hide, true);
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') hide();
+    });
+  }
+
+  // ============================
+  // Reading preferences — 字号与专注阅读
+  // ============================
+  const READ_SIZE_KEY = 'cj-read-size';
+  const READ_FOCUS_KEY = 'cj-focus';
+
+  function readSizePref() {
+    try {
+      const value = localStorage.getItem(READ_SIZE_KEY);
+      return value === 's' || value === 'l' ? value : 'm';
+    } catch (e) { return 'm'; }
+  }
+
+  function focusPref() {
+    try { return localStorage.getItem(READ_FOCUS_KEY) === 'on'; } catch (e) { return false; }
+  }
+
+  function setReadPref(key, value) {
+    try { localStorage.setItem(key, value); } catch (e) {}
+  }
+
+  function ensureFocusExit(show) {
+    let btn = document.getElementById('focus-exit');
+    if (!show) {
+      if (btn) btn.remove();
+      return;
+    }
+    if (btn) return;
+    btn = document.createElement('button');
+    btn.id = 'focus-exit';
+    btn.type = 'button';
+    btn.className = 'focus-exit';
+    btn.innerHTML = '退出专注 <kbd>Esc</kbd>';
+    document.body.appendChild(btn);
+  }
+
+  function ensureReadToggle(show) {
+    let btn = document.getElementById('read-toggle');
+    if (!show) {
+      if (btn) btn.remove();
+      return;
+    }
+    if (btn) return;
+    btn = document.createElement('button');
+    btn.id = 'read-toggle';
+    btn.type = 'button';
+    btn.className = 'read-toggle';
+    btn.setAttribute('aria-label', '阅读设置');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.textContent = 'Aa';
+    document.body.appendChild(btn);
+  }
+
+  function ensureReadSheet() {
+    let sheet = document.getElementById('read-sheet');
+    if (sheet && document.body.contains(sheet)) return sheet;
+    sheet = document.createElement('div');
+    sheet.id = 'read-sheet';
+    sheet.className = 'read-sheet';
+    sheet.setAttribute('role', 'dialog');
+    sheet.setAttribute('aria-label', '阅读设置');
+    sheet.setAttribute('aria-hidden', 'true');
+    sheet.innerHTML = '<div class="post-side-card-title">阅读设置</div>' +
+      '<div class="read-sheet-body"></div>' +
+      '<button type="button" class="read-sheet-close" aria-label="关闭阅读设置">×</button>';
+    document.body.appendChild(sheet);
+    return sheet;
+  }
+
+  function closeReadSheet(restoreFocus) {
+    const sheet = document.getElementById('read-sheet');
+    if (!sheet || !sheet.classList.contains('is-open')) return;
+    sheet.classList.remove('is-open');
+    sheet.setAttribute('aria-hidden', 'true');
+    const toggle = document.getElementById('read-toggle');
+    if (toggle) {
+      toggle.setAttribute('aria-expanded', 'false');
+      if (restoreFocus) {
+        try { toggle.focus({ preventScroll: true }); } catch (e) {}
+      }
+    }
+  }
+  window.__cjCloseReadSheet = () => closeReadSheet(false);
+
+  function openReadSheet() {
+    const card = document.querySelector('.post-side-read-card');
+    if (!card) return;
+    const sheet = ensureReadSheet();
+    const body = sheet.querySelector('.read-sheet-body');
+    body.innerHTML = '';
+    card.querySelectorAll('.read-size-row, .read-focus-btn').forEach(el => {
+      body.appendChild(el.cloneNode(true));
+    });
+    sheet.classList.add('is-open');
+    sheet.setAttribute('aria-hidden', 'false');
+    const toggle = document.getElementById('read-toggle');
+    if (toggle) toggle.setAttribute('aria-expanded', 'true');
+    try { sheet.querySelector('.read-sheet-close').focus({ preventScroll: true }); } catch (e) {}
+  }
+
+  function applyReadingPrefs() {
+    const html = document.documentElement;
+    const isPost = !!document.querySelector('.post-page-container .article-content');
+    if (isPost) html.setAttribute('data-cj-post', '1');
+    else html.removeAttribute('data-cj-post');
+
+    const size = readSizePref();
+    if (size === 'm') html.removeAttribute('data-read-size');
+    else html.setAttribute('data-read-size', size);
+
+    const focus = focusPref() && isPost;
+    html.classList.toggle('cj-focus', focus);
+
+    document.querySelectorAll('.read-size-btn').forEach(btn => {
+      btn.setAttribute('aria-pressed', String(btn.getAttribute('data-read-size') === size));
+    });
+    document.querySelectorAll('.read-focus-btn').forEach(btn => {
+      btn.setAttribute('aria-pressed', String(focus));
+    });
+
+    ensureFocusExit(focus);
+    ensureReadToggle(isPost);
+    if (!focus) closeReadSheet(false);
+  }
+
+  function initReadingPrefs() {
+    document.addEventListener('click', e => {
+      const sizeBtn = e.target.closest('.read-size-btn');
+      if (sizeBtn) {
+        setReadPref(READ_SIZE_KEY, sizeBtn.getAttribute('data-read-size'));
+        applyReadingPrefs();
+        return;
+      }
+      if (e.target.closest('.read-focus-btn')) {
+        setReadPref(READ_FOCUS_KEY, focusPref() ? 'off' : 'on');
+        applyReadingPrefs();
+        closeReadSheet(false);
+        return;
+      }
+      if (e.target.closest('#focus-exit')) {
+        setReadPref(READ_FOCUS_KEY, 'off');
+        applyReadingPrefs();
+        return;
+      }
+      if (e.target.closest('#read-toggle')) {
+        openReadSheet();
+        return;
+      }
+      if (e.target.closest('.read-sheet-close')) {
+        closeReadSheet(true);
+        return;
+      }
+      const sheet = document.getElementById('read-sheet');
+      if (sheet && sheet.classList.contains('is-open') && !e.target.closest('.read-sheet')) {
+        closeReadSheet(false);
+      }
+    });
+
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Escape') return;
+      const sheet = document.getElementById('read-sheet');
+      if (sheet && sheet.classList.contains('is-open')) {
+        closeReadSheet(true);
+        return;
+      }
+      if (!focusPref() || !document.documentElement.classList.contains('cj-focus')) return;
+      const tag = (document.activeElement && document.activeElement.tagName) || '';
+      if (/^(INPUT|TEXTAREA|SELECT)$/.test(tag) || document.querySelector('.search-pop-overlay.active')) return;
+      setReadPref(READ_FOCUS_KEY, 'off');
+      applyReadingPrefs();
+    });
+
+    applyReadingPrefs();
+  }
+
   // APlayer 的图标按钮默认只有 SVG,补上可访问名称
   function initAplayerA11y() {
     const labels = {
@@ -293,6 +770,10 @@
         resetImageViewerState();
         swup.__cjAnnounceNext = true;
         closeCodeFullscreen();
+        if (window.__cjCloseMarginSheet) window.__cjCloseMarginSheet();
+        if (window.__cjHideLinkPreview) window.__cjHideLinkPreview();
+        if (window.__cjHideFootnotePreview) window.__cjHideFootnotePreview();
+        if (window.__cjCloseReadSheet) window.__cjCloseReadSheet();
         pauseLive2DForNav();
       });
       swup.hooks.on('page:view', () => {
@@ -407,7 +888,14 @@
     const canvas = document.getElementById('live2d');
     if (canvas) canvas.setAttribute('aria-hidden', 'true');
     initLive2DDrag(waifu);
+    let lastHidden = waifu.classList.contains('waifu-hidden');
     new MutationObserver(() => {
+      const hidden = waifu.classList.contains('waifu-hidden');
+      if (hidden !== lastHidden) {
+        lastHidden = hidden;
+        // 宠物自带的“退出”会加 waifu-hidden,记住这个选择,下次不再自动加载
+        setPetPref(!hidden);
+      }
       const app = window.__l2dApp;
       if (!app) return;
       const active = waifu.classList.contains('waifu-active') && !waifu.classList.contains('waifu-hidden');
@@ -417,6 +905,89 @@
         try { app.run(); } catch (e) {}
       }
     }).observe(waifu, { attributes: true, attributeFilter: ['class'] });
+  }
+
+  // ============================
+  // Live2D opt-in — 默认不加载 4MB 模型
+  // ============================
+  const PET_PREF = 'cj-pet';
+  const PET_SCRIPT = '/live2d/autoload.js?v=20261024e';
+
+  function petPref() {
+    try { return localStorage.getItem(PET_PREF); } catch (e) { return null; }
+  }
+
+  function setPetPref(on) {
+    try { localStorage.setItem(PET_PREF, on ? 'on' : 'off'); } catch (e) {}
+  }
+
+  function petSupported() {
+    if (window.matchMedia && window.matchMedia('(max-width: 900px)').matches) return false;
+    const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    return !(c && c.saveData);
+  }
+
+  function petToggle(show) {
+    let btn = document.getElementById('pet-toggle');
+    if (!show || !petSupported()) {
+      if (btn) btn.remove();
+      return;
+    }
+    if (btn) return;
+    btn = document.createElement('button');
+    btn.id = 'pet-toggle';
+    btn.type = 'button';
+    btn.className = 'pet-toggle';
+    btn.setAttribute('aria-label', '召唤 Live2D 宠物');
+    btn.title = '召唤大肥鱼（首次加载约 4MB 模型）';
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12c3.2-4.2 7.4-5.4 11.2-3.4 1.4.7 2.6 1.8 3.6 3l2.4-1.2-.6 2.4 1.9 1.2-2.5 1.2.5 2.5-2.4-1.3c-1 1.2-2.1 2.3-3.5 3-3.8 2-7.8.6-10.6-3.4a2 2 0 0 1 0-2.4Z"/><circle cx="8.2" cy="10.6" r="1" fill="currentColor" stroke="none"/></svg><span>召唤宠物</span>';
+    btn.addEventListener('click', () => {
+      setPetPref(true);
+      // 用户主动点击 = 重新打开,清掉组件自己的禁用标记
+      try {
+        localStorage.removeItem('waifu-disabled');
+        localStorage.removeItem('waifu-display');
+      } catch (e) {}
+      btn.remove();
+      loadPet();
+    });
+    document.body.appendChild(btn);
+  }
+
+  function loadPet() {
+    if (!petSupported()) return;
+    if (window.__live2dAutoloaded || document.querySelector('script[data-live2d-autoload]')) return;
+    const script = document.createElement('script');
+    script.src = PET_SCRIPT;
+    script.async = true;
+    script.dataset.live2dAutoload = '';
+    script.onerror = () => {
+      script.remove();
+      petToggle(true);
+    };
+    document.body.appendChild(script);
+  }
+
+  function initPetToggle() {
+    if (!petSupported()) {
+      petToggle(false);
+      return;
+    }
+    let disabled = false;
+    try { disabled = localStorage.getItem('waifu-disabled') === 'true'; } catch (e) {}
+    if (petPref() === 'on' && !disabled) {
+      petToggle(false);
+      // 返回访客:等 load 后空闲再拉模型,不抢首屏带宽
+      const kick = () => {
+        if (petPref() !== 'on') return;
+        if ('requestIdleCallback' in window) requestIdleCallback(loadPet, { timeout: 2500 });
+        else setTimeout(loadPet, 800);
+      };
+      if (document.readyState === 'complete') kick();
+      else window.addEventListener('load', kick, { once: true });
+    } else {
+      petToggle(true);
+    }
   }
 
   // 搜索弹层关闭后把焦点还给触发按钮;MutationObserver 负责即时恢复
@@ -2427,6 +2998,12 @@
     // 全局监听在整个会话只注册一次(脚本每次换页都会重新执行)
     onceGlobal('smoothScroll', initSmoothScroll);
     onceGlobal('keyboard', initKeyboardShortcuts);
+    onceGlobal('marginNotes', initMarginNotes);
+    onceGlobal('linkPreviews', initLinkPreviews);
+    onceGlobal('mathCopy', initMathCopy);
+    onceGlobal('footnotePreview', initFootnotePreview);
+    onceGlobal('readingPrefs', initReadingPrefs);
+    applyReadingPrefs();
     initExternalLinks();
     initAplayerA11y();
     if (!window.__cjAplayerTimers) {
@@ -2459,6 +3036,7 @@
     });
     onceGlobal('themeToggle', initThemeToggle);
     onceGlobal('live2dRuntime', initLive2DRuntime);
+    initPetToggle();
     initAsideState();
     initMobileToc();
     initImageA11y();

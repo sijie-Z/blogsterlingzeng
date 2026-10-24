@@ -55,6 +55,12 @@
 | 简历页 | 一页式 HTML 简历，可打印 / 存 PDF | `source/resume/` |
 | 复制 Markdown | 侧栏一键复制文章 Markdown 原文 | `scripts/post-sidebar.js` |
 | 脚注 | `[^id]` 语法，构建期生成 doc-noteref / doc-endnotes | `scripts/footnotes.js` |
+| 边注 | `{% margin %}`：≥1680px 浮动到左页边，窄屏点开底部卡片 | `scripts/marginnote.js` |
+| 内链预览 | 悬停或键盘聚焦站内链接时显示标题、摘要、封面与日期 | `scripts/link-preview.js` |
+| 脚注预览 | 悬停/聚焦脚注引用时直接显示脚注正文 | `source/js/custom.js` |
+| 公式复制 | 块级公式右上角一键复制 LaTeX 源码（读 MathML annotation） | `scripts/math.js` |
+| 阅读设置 | 三档字号 + 专注阅读（隐藏目录、正文居中），刷新保持；窄屏 Aa 面板 | `scripts/post-sidebar.js` |
+| Live2D 按需加载 | 默认 0 请求，点击“召唤宠物”后才加载约 4MB 模型 | `source/js/custom.js` |
 | 数学公式 | `$...$` / `$$...$$` 构建期 KaTeX MathML，无客户端 JS/字体 | `scripts/math.js` |
 | 图片集 | `{% gallery %}` 图片网格，复用查看器与懒加载 | `scripts/gallery.js` |
 | 首页入口 | 项目 / 简历 / 系列三张快速卡片，构建期插入 | `scripts/home-start.js` |
@@ -63,7 +69,7 @@
 | 文章置顶 | `sticky: 1` 字段置顶 | `hexo-generator-index` |
 | Sitemap | `sitemap.xml` + `robots.txt` | `hexo-generator-sitemap` |
 | 复制链接 | 文章页工具条复制当前链接 | `source/js/custom.js` |
-| Live2D 宠物 | DeepSeek 大肥鱼（Cubism 4.2 模型 / Cubism 5 Core 运行时，8 动作 / 44 表情） | `source/live2d/` |
+| Live2D 宠物 | DeepSeek 大肥鱼（Cubism 4.2 模型 / Cubism 5 Core 运行时，8 动作 / 44 表情），默认按需加载 | `source/live2d/` |
 | 文章侧栏 | 作者卡 + 阅读进度环 + 标签 + 相关文章 + 目录卡片（构建期渲染，无 CLS） | `scripts/post-sidebar.js` |
 | 系列文章 | `series` / `series_order` 声明，构建期生成系列总览、系列页与 Atom 订阅；文章内显示进度徽章、系列内上下篇、折叠目录（0 运行时 JS） | `scripts/series.js` |
 | 响应式横幅 | 960 / 1280 / 1920 三档 WebP srcset，手机按 DPR 自动选图 | `scripts/responsive-images.js` |
@@ -116,7 +122,7 @@
 | SPA 整次导航 | **~134ms** | Swup 只替换 `#swup`，滚动即时归零 |
 | Live2D 主纹理 | **1.7MB → 308KB** | 2048 PNG 重采样为 1024 WebP |
 | 手机首屏横幅 | **63KB → 35KB**（亮色） | 960/1280/1920 srcset + DPR 选图 |
-| 自动化浏览器检查 | **280+ 项** | 跳转、侧栏、系列、阅读记忆、归档、平滑度、资源、内容 |
+| 自动化浏览器检查 | **409 项** | 跳转、侧栏、系列、阅读记忆、归档、平滑度、资源、内容、边注/预览/阅读设置 |
 
 **构建期优先**：系列页、写作热力图、文章侧栏、JSON-LD、Markdown 原文、llms.txt 全部在 `hexo generate` 阶段生成，运行时不发额外请求、不引入布局抖动。主题通过 `scripts/theme-patch.js` 做可审计的最小补丁（Swup、TOC、搜索防抖、APlayer 延迟加载等），补丁可重复执行。
 
@@ -130,8 +136,8 @@
 |------|------|------|
 | 框架 | Hexo | 7.3.0 |
 | 主题 | hexo-theme-redefine | 2.9.0 |
-| 样式 | 自定义 CSS | ~3400 行 |
-| 脚本 | 自定义 JS | ~1600 行 |
+| 样式 | 自定义 CSS | ~4800 行 |
+| 脚本 | 自定义 JS | ~3200 行 |
 | 静态资源 | 本地自托管 | - |
 | 搜索 | hexo-generator-searchdb | - |
 | 字数 | hexo-wordcount | - |
@@ -176,7 +182,8 @@ npm run clean               # 清理缓存和构建产物
 npm run serve               # http://127.0.0.1:4140
 
 # 测试(需要 puppeteer-core 与本机 Chrome)
-npm test                    # 33 项端到端检查(含 8 个次级页面)
+npm test                    # 34 项端到端检查(含 8 个次级页面、Live2D 显式召唤)
+npm run test:features       # 51 项边注 / 内链预览 / 公式复制 / 脚注预览 / 阅读设置
 npm run test:l2d            # Live2D 加载诊断(模型 / Core / 404)
 npm run test:smooth         # 26 项滚动与动效平滑度回归
 npm run test:content        # 文章 front matter / 站内链接 / 图片 / OG 卡 / 文风检查
@@ -440,6 +447,16 @@ cover: /images/cover.jpg
 - `cover` — 封面图路径（可选）
 
 在 `<!-- more -->` 之前的内容会作为摘要显示在文章列表。
+
+### 内容语法速查
+
+```markdown
+{% margin %}这是一条边注，宽屏会浮到正文左侧页边{% endmargin %}
+[^cls] 这是脚注引用
+$E = mc^2$ 行内公式；$$...$$ 块级公式（右上角可复制 LaTeX）
+```
+
+边注建议只写一段纯文字或少量行内标记；窄屏点击 ※ 会在底部卡片打开。脚注定义写在文末：`[^cls]: 脚注正文`。
 
 ---
 

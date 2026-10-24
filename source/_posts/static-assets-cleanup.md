@@ -48,7 +48,7 @@ solid.min.css           0.5KB
 regular.min.css         0.5KB
 ```
 
-字体已经做过子集（14KB 的 woff2，过程见[《从 971KB 到 179KB》](/2026/10/22/font-subset-and-cls/)），但 **CSS 类名没有**。`fontawesome.min.css` 里每个图标都有一条 `.fa-xxx:before { content: "\fxxx" }`，全站实际只用到 77 个。
+字体已经做过子集（14KB 的 woff2，过程见[《从 971KB 到 179KB》](/2026/10/22/font-subset-and-cls/)），但 **CSS 类名没有**。`fontawesome.min.css` 里每个图标都有一条 `.fa-xxx:before { content: "\fxxx" }`，全站实际只用到 77 个。{% margin %}子集脚本是 `scripts/build-fontawesome-subset.js`。新增图标后先跑 `npm run build:fonts`，再重新构建，否则运行时会缺图标。{% endmargin %}
 
 于是写了一个构建期脚本，思路分三步：
 
@@ -116,7 +116,7 @@ Swup 4 支持 `native: true`，用浏览器原生 View Transition 做页面交�
 | 原生 View Transition | 381ms | 485ms |
 | 保留现有入场动画 | 37ms | 30ms |
 
-原因不复杂：首页有大量固定定位、backdrop-filter 和图片，浏览器在切换前要对整页做快照，这个成本远大于 Swup 直接替换 DOM。**“更原生”不等于“更快”**，所以这个改动被回退了。
+原因不复杂：首页有大量固定定位、backdrop-filter 和图片，浏览器在切换前要对整页做快照，这个成本远大于 Swup 直接替换 DOM。**“更原生”不等于“更快”**，所以这个改动被回退了。{% margin %}测量用本机 Chrome + Puppeteer，同一操作连跑三次取中位数。数字只适合同一台机器上的方案对比，不适合和别的设备横向比较。{% endmargin %}
 
 现在页面切换仍然是：旧页不动，新页内容 0.28s 入场；主题切换保留 View Transition 的圆形扩散，因为那是低频操作。
 
@@ -146,3 +146,4 @@ Swup 4 支持 `native: true`，用浏览器原生 View Transition 做页面交�
 3. **性能改动必须能被测量否决。** View Transition 的 37ms → 381ms 如果只凭感觉，很容易当成“更高级的体验”上线。
 
 [^og]: OG 卡由本地 Chrome 渲染，31 张图合计约 1.8MB；生成脚本在 `tools/gen-og-images.js`，改标题后重新跑一次即可。
+

@@ -107,8 +107,11 @@ function check(name, cond, extra) {
   await new Promise(r => setTimeout(r, 300));
   check('ESC 退出管中窥豹', !(await page.evaluate(() => document.body.classList.contains('flashlight-mode'))));
 
-  console.log('=== 5. Live2D 宠物 ===');
-  await page.waitForSelector('#waifu', { timeout: 12000 }).catch(() => {});
+  console.log('=== 5. Live2D 宠物（显式召唤） ===');
+  const petToggle = await page.$('#pet-toggle');
+  check('默认不自动加载,显示召唤按钮', !!petToggle);
+  if (petToggle) await petToggle.click();
+  await page.waitForSelector('#waifu', { timeout: 15000 }).catch(() => {});
   const waifu = await page.$('#waifu');
   check('waifu 容器存在', !!waifu);
   if (waifu) {
