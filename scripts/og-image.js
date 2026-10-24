@@ -63,8 +63,13 @@ function absolute(url) {
 }
 
 function dimensions(url) {
-  const clean = String(url || '').split('?')[0].replace(/^https?:\/\/[^/]+/i, '').replace(/^\//, '');
-  const file = path.join(hexo.source_dir, decodeURIComponent(clean));
+  let clean;
+  try {
+    clean = decodeURIComponent(String(url || '').split('?')[0].replace(/^https?:\/\/[^/]+/i, '').replace(/^\//, ''));
+  } catch (e) {
+    return null;
+  }
+  const file = path.join(hexo.source_dir, clean);
   try {
     const dims = sizeOf(file);
     if (dims && dims.width && dims.height) return dims;
@@ -94,8 +99,7 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
   if (!page || !str || !str.includes('</head>')) return str;
   if (str.includes('property="og:image:width"')) return str;
 
-  const chosen = generatedImage(page) || page.og_image;
-  if (!chosen) return str;
+  const chosen = generatedImage(page) || page.og_image || '/images/og-banner.jpg';
   const image = absolute(chosen);
   const dims = dimensions(chosen) || { width: 1200, height: 630 };
   const alt = String(page.title || hexo.config.title || '').replace(/"/g, '&quot;');
