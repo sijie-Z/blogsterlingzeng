@@ -31,6 +31,8 @@ function check(name, cond, extra) {
   });
   const musicRequests = [];
   page.on('request', r => { if (r.url().endsWith('/music/123.mp3')) musicRequests.push(r.url()); });
+  const live2dRequests = [];
+  page.on('request', r => { if (r.url().includes('/live2d/model')) live2dRequests.push(r.url()); });
   await page.setViewport({ width: 1440, height: 900 });
   await page.goto(BASE, { waitUntil: 'networkidle2', timeout: 30000 });
   await sleep(800);
@@ -106,6 +108,7 @@ function check(name, cond, extra) {
   }
 
   check('音乐不随页面预加载', musicRequests.length === 0, JSON.stringify(musicRequests));
+  check('Live2D 不抢首屏带宽', live2dRequests.length === 0, JSON.stringify(live2dRequests.slice(0, 3)));
 
   console.log('=== 4. Live2D 纹理 ===');
   const tex = await page.evaluate(async () => {
