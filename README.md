@@ -412,7 +412,7 @@ inject:
 | A 股量化研究平台 | `quant-platform-a-share-research.md` | 项目实战 | 从因子到回测的完整流水线 |
 | 22 篇文章，14 篇在系列里 | `hexo-series-reading-path.md` | 前端开发 | 用 front matter、generator 和 Atom 把有顺序的文章串成系列 |
 | 按显示尺寸交付 | `responsive-banner-live2d-texture.md` | 前端开发 | 横幅 srcset 与 Live2D 纹理按实际显示尺寸交付 |
-| 33MB 到 25MB | `static-assets-cleanup.md` | 前端开发 | 图标子集、moment 移除、长任务清理，以及一次被测量否决的 View Transition |
+| 33MB 到 22MB | `static-assets-cleanup.md` | 前端开发 | 图标子集、moment 移除、长任务清理，以及一次被测量否决的 View Transition |
 
 ### 文章 Front Matter 格式
 

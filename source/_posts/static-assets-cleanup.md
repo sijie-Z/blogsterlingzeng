@@ -1,5 +1,5 @@
 ---
-title: 33MB 到 25MB：一次静态资源和长任务清理
+title: 33MB 到 22MB：一次静态资源和长任务清理
 date: 2026-10-23 23:30:00
 categories:
   - 前端开发
@@ -128,7 +128,7 @@ Swup 4 支持 `native: true`，用浏览器原生 View Transition 做页面交�
 |---|---:|---:|
 | 首页 FontAwesome CSS | ~200KB | 65KB |
 | 客户端 moment | 375KB | 0 |
-| 部署体积 | 33MB+ | 25MB（含 31 张 OG 卡；横幅和 Live2D 纹理的瘦身见[另一篇](/2026/10/23/responsive-banner-live2d-texture/)） |
+| 部署体积 | 33MB+ | 22MB（含 31 张 OG 卡；横幅和 Live2D 纹理的瘦身见[另一篇](/2026/10/23/responsive-banner-live2d-texture/)） |
 | 文章首屏 CLS | ~0.0002 | 0.0001 |
 | 点击 → 内容替换 | 15–40ms | 21–43ms |
 | 首屏长任务 | ~300ms（odometer） | 仍有 250–300ms 的整页布局，待继续排查 |

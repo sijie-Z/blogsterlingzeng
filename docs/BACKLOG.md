@@ -27,7 +27,7 @@
 
 - 文章首屏 CLS：0.0001；首页首屏 CLS：0.002–0.004。
 - 点击 → 内容替换：约 21–43ms；点击 → 导航结束：134–246ms。
-- 部署产物：约 25MB（含 31 张 OG 卡）；原 33MB+。
+- 部署产物：约 22MB（含 31 张 OG 卡）；原 33MB+。
 - FontAwesome CSS：65KB；字体子集：solid 5KB / regular 7KB / brands 1KB。
 - `npm run test:assets` 39、`test:a11y` 61、`test:sidebar` 36、`test:transitions` 44、`test:series` 53、`test:search` 17、`test:smooth` 26、`test` 33、`test:resume` 7、`test:archive` 12。
 
