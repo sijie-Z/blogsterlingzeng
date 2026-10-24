@@ -75,7 +75,7 @@ test/                    11 套 Puppeteer / Node 检查
 | Live2D 主纹理 | 308KB WebP（原 1.7MB PNG） |
 | FontAwesome CSS | 65KB 类名子集（原 4 个文件约 200KB） |
 | 移除的脚本 | moment 375KB（essays 页改用 Intl） |
-| 部署产物 | 25MB（含 29 张 OG 卡；移除全量 webfonts / source map 后，原 33MB+） |
+| 部署产物 | 25MB（含 31 张 OG 卡；移除全量 webfonts / source map 后，原 33MB+） |
 | Live2D | 3MB 模型在首次交互或 10s 后才加载，不占首屏网络 |
 
 ### 关键取舍

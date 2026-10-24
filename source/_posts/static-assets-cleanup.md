@@ -128,7 +128,7 @@ Swup 4 支持 `native: true`，用浏览器原生 View Transition 做页面交�
 |---|---:|---:|
 | 首页 FontAwesome CSS | ~200KB | 65KB |
 | 客户端 moment | 375KB | 0 |
-| 部署体积 | 33MB+ | 25MB（含 28 张 OG 卡；横幅和 Live2D 纹理的瘦身见[另一篇](/2026/10/23/responsive-banner-live2d-texture/)） |
+| 部署体积 | 33MB+ | 25MB（含 31 张 OG 卡；横幅和 Live2D 纹理的瘦身见[另一篇](/2026/10/23/responsive-banner-live2d-texture/)） |
 | 文章首屏 CLS | ~0.0002 | 0.0001 |
 | 点击 → 内容替换 | 15–40ms | 21–43ms |
 | 首屏长任务 | ~300ms（odometer） | 仍有 250–300ms 的整页布局，待继续排查 |
@@ -141,4 +141,4 @@ Swup 4 支持 `native: true`，用浏览器原生 View Transition 做页面交�
 2. **动态内容要进扫描范围。** 图标类名子集如果不扫主题 JS，运行时会缺图标；只看 HTML 会漏。
 3. **性能改动必须能被测量否决。** View Transition 的 37ms → 381ms 如果只凭感觉，很容易当成“更高级的体验”上线。
 
-[^og]: OG 卡由本地 Chrome 渲染，28 张图合计约 1.6MB；生成脚本在 `tools/gen-og-images.js`，改标题后重新跑一次即可。
+[^og]: OG 卡由本地 Chrome 渲染，31 张图合计约 1.8MB；生成脚本在 `tools/gen-og-images.js`，改标题后重新跑一次即可。
