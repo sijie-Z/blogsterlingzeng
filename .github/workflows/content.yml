@@ -26,3 +26,10 @@ jobs:
       # 检查 front matter、站内链接、图片引用和文风硬规则,不依赖浏览器
       - name: Content checks
         run: npm run test:content
+
+      # 构建后再查一遍真实产物的站内链接
+      - name: Build
+        run: npm run build
+
+      - name: Internal link checks
+        run: npm run test:links
