@@ -3331,6 +3331,80 @@ a.post-side-name:hover {
 }
 
 /* ========================================
+   PROJECT ARCHITECTURE FIGURES
+   ======================================== */
+.project-arch {
+  margin: 1.2rem 0 1.4rem;
+  padding: 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: var(--bg-card);
+  overflow-x: auto;
+}
+
+.project-arch svg {
+  display: block;
+  width: 100%;
+  min-width: 680px;
+  height: auto;
+  font-family: inherit;
+}
+
+.project-arch figcaption {
+  margin-top: 10px;
+  color: var(--text-tertiary);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.arch-node {
+  fill: color-mix(in srgb, var(--background-color) 82%, var(--primary-color) 18%);
+  stroke: var(--border-color);
+  stroke-width: 1.2;
+}
+
+.arch-node-accent {
+  fill: color-mix(in srgb, var(--background-color) 72%, var(--primary-color) 28%);
+  stroke: color-mix(in srgb, var(--primary-color) 55%, var(--border-color));
+}
+
+.arch-text {
+  fill: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.arch-sub {
+  fill: var(--text-tertiary);
+  font-size: 11px;
+}
+
+.arch-line {
+  fill: none;
+  stroke: var(--text-tertiary);
+  stroke-width: 1.5;
+}
+
+.arch-dash {
+  stroke-dasharray: 5 4;
+}
+
+.arch-arrow {
+  fill: var(--text-tertiary);
+}
+
+@media (max-width: 640px) {
+  .project-arch {
+    padding: 10px;
+  }
+
+  .project-arch svg {
+    min-width: 620px;
+  }
+}
+
+/* ========================================
    BREADCRUMBS
    ======================================== */
 .cj-breadcrumbs {

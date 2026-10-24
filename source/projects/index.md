@@ -30,6 +30,42 @@ date: 2026-08-28 10:00:00
 - 预算不足时告警，但**不阻断**请求
 - 热路径不能查数据库
 
+<figure class="project-arch" tabindex="0" role="region" aria-label="MiQroGate 架构图，可横向滚动">
+<svg viewBox="0 0 900 270" role="img" aria-labelledby="arch-miqro-title">
+  <title id="arch-miqro-title">MiQroGate 控制面与数据面分离架构</title>
+  <defs>
+    <marker id="arrow-miqro" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" class="arch-arrow"/>
+    </marker>
+  </defs>
+  <rect class="arch-node" x="20" y="62" width="150" height="74" rx="10"/>
+  <text class="arch-text" x="95" y="94" text-anchor="middle">业务客户端</text>
+  <text class="arch-sub" x="95" y="114" text-anchor="middle">Base URL + Virtual Key</text>
+
+  <rect class="arch-node arch-node-accent" x="270" y="45" width="250" height="108" rx="12"/>
+  <text class="arch-text" x="395" y="76" text-anchor="middle">MiQroGate 数据面</text>
+  <text class="arch-sub" x="395" y="98" text-anchor="middle">鉴权 · 路由快照 · 计量审计 · 响应缓存</text>
+  <text class="arch-sub" x="395" y="118" text-anchor="middle">热路径零数据库访问</text>
+
+  <rect class="arch-node" x="640" y="62" width="240" height="74" rx="10"/>
+  <text class="arch-text" x="760" y="94" text-anchor="middle">上游模型厂商</text>
+  <text class="arch-sub" x="760" y="114" text-anchor="middle">7 家厂商 · 20 个产品</text>
+
+  <rect class="arch-node" x="270" y="200" width="160" height="52" rx="9"/>
+  <text class="arch-text" x="350" y="231" text-anchor="middle">管理门户</text>
+  <rect class="arch-node" x="470" y="200" width="160" height="52" rx="9"/>
+  <text class="arch-text" x="550" y="231" text-anchor="middle">PostgreSQL</text>
+  <text class="arch-sub" x="590" y="267" text-anchor="middle">pg_notify 刷新快照</text>
+
+  <path class="arch-line" d="M170 99 H262" marker-end="url(#arrow-miqro)"/>
+  <path class="arch-line" d="M520 99 H632" marker-end="url(#arrow-miqro)"/>
+  <path class="arch-line arch-dash" d="M430 200 V160" marker-end="url(#arrow-miqro)"/>
+  <path class="arch-line arch-dash" d="M630 226 H700 V160" marker-end="url(#arrow-miqro)"/>
+  <path class="arch-line" d="M470 226 H438" marker-end="url(#arrow-miqro)"/>
+</svg>
+<figcaption>控制面负责 Virtual Key 的签发、轮换与吊销；数据面只读路由快照，热路径不查数据库。</figcaption>
+</figure>
+
 ### 关键决策
 
 1. **控制面 / 数据面分离。** 控制面负责 Virtual Key 的创建、轮换、吊销；网关只认路由快照。快照通过 `pg_notify` 失效，热路径零数据库访问。
@@ -102,6 +138,56 @@ date: 2026-08-28 10:00:00
 - 文档格式杂：PDF / Word / PPT / TXT，含扫描件
 - 回答必须能追溯到原文
 - 10 万条文档规模下，向量索引不能把内存吃穿
+
+<figure class="project-arch" tabindex="0" role="region" aria-label="DocMind 架构图，可横向滚动">
+<svg viewBox="0 0 900 300" role="img" aria-labelledby="arch-docmind-title">
+  <title id="arch-docmind-title">DocMind 文档索引与查询检索两条链路</title>
+  <defs>
+    <marker id="arrow-docmind" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" class="arch-arrow"/>
+    </marker>
+  </defs>
+  <text class="arch-sub" x="20" y="30">索引链路</text>
+  <rect class="arch-node" x="20" y="45" width="140" height="62" rx="9"/>
+  <text class="arch-text" x="90" y="72" text-anchor="middle">文档</text>
+  <text class="arch-sub" x="90" y="92" text-anchor="middle">PDF / Word / 扫描件</text>
+  <rect class="arch-node" x="210" y="45" width="160" height="62" rx="9"/>
+  <text class="arch-text" x="290" y="72" text-anchor="middle">解析 + 语义分块</text>
+  <text class="arch-sub" x="290" y="92" text-anchor="middle">保留上下文重叠</text>
+  <rect class="arch-node" x="420" y="45" width="140" height="62" rx="9"/>
+  <text class="arch-text" x="490" y="72" text-anchor="middle">Embedding</text>
+  <text class="arch-sub" x="490" y="92" text-anchor="middle">1536 → 768 维 + int8</text>
+  <rect class="arch-node arch-node-accent" x="610" y="45" width="230" height="62" rx="9"/>
+  <text class="arch-text" x="725" y="72" text-anchor="middle">混合索引</text>
+  <text class="arch-sub" x="725" y="92" text-anchor="middle">Elasticsearch BM25 + 向量</text>
+  <text class="arch-sub" x="20" y="170">查询链路</text>
+  <rect class="arch-node" x="20" y="185" width="140" height="62" rx="9"/>
+  <text class="arch-text" x="90" y="212" text-anchor="middle">用户问题</text>
+  <text class="arch-sub" x="90" y="232" text-anchor="middle">意图判断</text>
+  <rect class="arch-node" x="210" y="185" width="160" height="62" rx="9"/>
+  <text class="arch-text" x="290" y="212" text-anchor="middle">混合检索</text>
+  <text class="arch-sub" x="290" y="232" text-anchor="middle">BM25 + 向量各取 Top N</text>
+  <rect class="arch-node" x="420" y="185" width="140" height="62" rx="9"/>
+  <text class="arch-text" x="490" y="212" text-anchor="middle">RRF 融合</text>
+  <text class="arch-sub" x="490" y="232" text-anchor="middle">去重 + 排序</text>
+  <rect class="arch-node" x="610" y="185" width="150" height="62" rx="9"/>
+  <text class="arch-text" x="685" y="212" text-anchor="middle">BGE Reranker</text>
+  <text class="arch-sub" x="685" y="232" text-anchor="middle">交叉编码器精排</text>
+  <rect class="arch-node arch-node-accent" x="800" y="185" width="80" height="62" rx="9"/>
+  <text class="arch-text" x="840" y="212" text-anchor="middle">LLM</text>
+  <text class="arch-sub" x="840" y="232" text-anchor="middle">引用</text>
+
+  <path class="arch-line" d="M160 76 H202" marker-end="url(#arrow-docmind)"/>
+  <path class="arch-line" d="M370 76 H412" marker-end="url(#arrow-docmind)"/>
+  <path class="arch-line" d="M560 76 H602" marker-end="url(#arrow-docmind)"/>
+  <path class="arch-line arch-dash" d="M725 107 V177" marker-end="url(#arrow-docmind)"/>
+  <path class="arch-line" d="M160 216 H202" marker-end="url(#arrow-docmind)"/>
+  <path class="arch-line" d="M370 216 H412" marker-end="url(#arrow-docmind)"/>
+  <path class="arch-line" d="M560 216 H602" marker-end="url(#arrow-docmind)"/>
+  <path class="arch-line" d="M760 216 H792" marker-end="url(#arrow-docmind)"/>
+</svg>
+<figcaption>索引链路负责离线构建 BM25 + 向量混合索引；查询链路做混合召回、RRF 融合、Reranker 精排，最后交给大模型生成带引用的回答。</figcaption>
+</figure>
 
 ### 关键决策
 

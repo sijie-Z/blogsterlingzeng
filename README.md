@@ -56,6 +56,7 @@
 | 复制 Markdown | 侧栏一键复制文章 Markdown 原文 | `scripts/post-sidebar.js` |
 | 脚注 | `[^id]` 语法，构建期生成 doc-noteref / doc-endnotes | `scripts/footnotes.js` |
 | 首页入口 | 项目 / 简历 / 系列三张快速卡片，构建期插入 | `scripts/home-start.js` |
+| 项目架构图 | MiQroGate / DocMind 内联 SVG，跟随主题配色，移动端可横向滚动 | `source/projects/index.md` |
 | 相关阅读 | 标签相似度推荐（前端渲染，无原生依赖） | `scripts/related-posts.js` |
 | 文章置顶 | `sticky: 1` 字段置顶 | `hexo-generator-index` |
 | Sitemap | `sitemap.xml` + `robots.txt` | `hexo-generator-sitemap` |
