@@ -58,6 +58,14 @@ hexo.extend.filter.register('before_post_render', function (data) {
     return `<sup class="footnote-ref"><a href="#fn-${enc}" id="${refId}" aria-label="脚注 ${number}">${number}</a></sup>`;
   });
 
+  // 保留了定义但没有引用的脚注也不要静默丢掉
+  for (const id of definitions.keys()) {
+    if (!order.includes(id)) {
+      order.push(id);
+      refs.set(id, []);
+    }
+  }
+
   if (order.length) {
     const renderBody = body => {
       try {

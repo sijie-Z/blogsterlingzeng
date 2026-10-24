@@ -156,11 +156,11 @@ function check(name, cond, extra) {
   check('文章有系列卡', article.card);
   check('系列卡进度 50%', article.cardCount.includes('50%'), article.cardCount);
   check('当前项已标记', article.current.includes('当前') && article.currentAria === 'page', JSON.stringify(article.current));
-  check('系列列表 5 项', article.listCount === 6, String(article.listCount));
+  check('系列列表 6 项', article.listCount === 6, String(article.listCount));
   check('上一篇指向 Live2D 文章', article.prevHref === PREV && article.prevRel === 'prev', JSON.stringify({ href: article.prevHref, rel: article.prevRel }));
   check('下一篇指向系列第 4 篇', article.nextTag === 'A' && article.nextHref === '/2026/10/23/hexo-series-reading-path/', JSON.stringify({ tag: article.nextTag, href: article.nextHref }));
   check('原生 details 折叠', article.details);
-  check('进度条 60%', article.progress === '50%', article.progress);
+  check('进度条 50%', article.progress === '50%', article.progress);
   check('系列卡在相关阅读之前', article.seriesBeforeRelated, JSON.stringify({ related: article.seriesBeforeRelated }));
   check('文章无横向溢出', article.overflow <= 2, String(article.overflow));
 
