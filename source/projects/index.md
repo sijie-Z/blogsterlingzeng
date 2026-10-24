@@ -74,7 +74,7 @@ date: 2026-08-28 10:00:00
 
 ### 证据
 
-- 449 个 Java 文件、134 个测试文件；ArchUnit 管模块边界，契约测试 + 协议夹具 + 端到端分层
+- 449 个 Java 文件、134 个测试文件（测试文件数，不是覆盖率）；ArchUnit 管模块边界，契约测试 + 协议夹具 + 端到端分层
 - 7 家厂商、20 个产品适配器
 - 前端 vitest 21/21、Playwright 15/15，lint / typecheck / 构建全绿
 
@@ -104,7 +104,7 @@ date: 2026-08-28 10:00:00
 
 <figure class="project-arch" tabindex="0" role="region" aria-label="quant_platform 架构图，可横向滚动">
 <svg viewBox="0 0 900 260" role="img" aria-labelledby="arch-quant-title">
-  <title id="arch-quant-title">quant_platform 从数据到实盘的流水线</title>
+  <title id="arch-quant-title">quant_platform 从数据到执行接口的流水线</title>
   <defs>
     <marker id="arrow-quant" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
       <path d="M0,0 L10,5 L0,10 z" class="arch-arrow"/>
@@ -116,7 +116,7 @@ date: 2026-08-28 10:00:00
 
   <rect class="arch-node" x="165" y="55" width="130" height="66" rx="9"/>
   <text class="arch-text" x="230" y="83" text-anchor="middle">因子引擎</text>
-  <text class="arch-sub" x="230" y="103" text-anchor="middle">20+ 因子</text>
+  <text class="arch-sub" x="230" y="103" text-anchor="middle">15 个基础因子</text>
 
   <rect class="arch-node arch-node-accent" x="315" y="55" width="130" height="66" rx="9"/>
   <text class="arch-text" x="380" y="83" text-anchor="middle">IC / ICIR</text>
@@ -144,7 +144,7 @@ date: 2026-08-28 10:00:00
   <text class="arch-sub" x="452" y="170" text-anchor="middle">No-Lookahead 契约：所有环节只能使用 signal_date 及之前的数据</text>
   <text class="arch-sub" x="452" y="220" text-anchor="middle">六项系统性自检：Oracle IC · Known Alpha · MVO Audit · Walk-Forward · Rank IC · No-Lookahead</text>
 </svg>
-<figcaption>研究链路和实盘链路共用同一套因子与回测代码；零前视契约贯穿数据、因子、权重、回测和执行。</figcaption>
+<figcaption>研究链路和执行接口共用同一套因子与回测代码；零前视契约贯穿数据、因子、权重、回测和执行。</figcaption>
 </figure>
 
 ### 关键决策
@@ -158,12 +158,13 @@ date: 2026-08-28 10:00:00
 - 80 日反转：IC = **-0.081**，t 统计量 **-4.58**（2018–2025，10 个时间尺度）
 - 理想执行夏普 **0.45**，加波动率过滤 **0.60**
 - 月频真实调仓夏普 **-0.27**——同一个信号，0.72 的差距
-- 四次修复尝试均未恢复；平台侧 20+ 因子引擎、97 个 REST 端点、81 个测试文件
+- 四次修复尝试均未恢复；平台侧 15 个基础因子、97 个 REST 端点、81 个测试文件
 
 ### 边界
 
 - 只测试了固定频率和简单相位代理；状态空间模型、小波域相位估计、非线性控制**都没有测试**，不能排除。
 - 研究结论已封档，不再继续调参；这是一次“负结果”的完整记录。
+- **我的角色：** 独立完成研究设计、因子与回测实现、前端与结论复盘；没有用真实资金运行，实盘接口只到 QMT / Paper 层。
 
 [GitHub](https://github.com/sijie-Z/quant_platform) · [执行之痛](/2026/08/28/quant-reversal-execution-gap/) · [平台架构](/2026/05/10/quant-platform-a-share-research/)
 
@@ -238,12 +239,12 @@ date: 2026-08-28 10:00:00
 
 1. **混合检索。** BM25 负责精确匹配（如错误码 `ERR-4032`），向量负责语义；RRF 融合，再加 BGE Reranker 精排。
 2. **语义分块，而不是固定字数。** 按段落和标题切分并保留重叠，避免答案被切到两个块里。
-3. **向量降维 + 量化。** 1536 维降到 768 维，float32 转 int8，10 万条文档的索引内存从 8GB 降到约 2GB。
-4. **用消融实验回答“规划还是执行”。** 7 组对照实验，固定模型和评测集，只改一个变量。
+3. **向量降维 + 量化。** 1536 维降到 768 维，float32 转 int8，10 万条文档的索引内存从 8GB 降到约 2GB；召回率损失未单独评测。
+4. **用消融实验回答“规划还是执行”。** 5 组对照实验，固定模型和评测集，只改一个变量。
 
 ### 证据
 
-- Agent 消融：L1 覆盖率 **69% → 93.1%**（20 题评测集），失败数 5–6 → 0
+- Agent 消融：L1 评测点覆盖率 **69% → 93.1%**（20 题评测集），L1 题目失败数 5–6 → 0；L2 另测 10 题，通过率 50%——如实记录，没有藏
 - 同一评测的 L2 系统层（10 题，歧义/边界查询）只有 **50%**——如实记录，没有藏
 - 生产实现迁移到 DocMind-RAG 仓库后，测试规模到 422 个
 
@@ -251,6 +252,7 @@ date: 2026-08-28 10:00:00
 
 - 30 题评测集偏小，结论是“在这个评测集上”的结论，不外推到所有 RAG 场景。
 - 扫描件 OCR、复杂表格解析仍有失败样例；引用溯源降低幻觉，但不能消灭幻觉。
+- **我的角色：** 独立完成系统与实验设计、检索管线、评测和复盘；评测集只有 30 题，L2 仍有 5 个失败。
 
 [GitHub](https://github.com/sijie-Z/DocMind-RAG) · [项目记录](/2026/05/10/docmind-rag-knowledge-base/) · [消融实验](/2026/08/28/docmind-agent-causal-study/)
 
@@ -263,7 +265,9 @@ date: 2026-08-28 10:00:00
 | **MindPilot** | 多 Agent RAG 平台，从 DocMind 演进 | LangGraph 状态机 + Judge Agent；多端接入（Web / QQ / 飞书） | [GitHub](https://github.com/sijie-Z/mindpilot) · [文章](/2026/05/10/mindpilot-multi-agent-rag/) |
 | **GeoData Security** | 空间数据安全分发与溯源 | 3 种栅格水印 + QR 码水印 + HMAC 签名；双级审批与民主召回 | [GitHub](https://github.com/sijie-Z/GeoData-Security-System) · [文章](/2026/05/10/geodata-security-traceability/) |
 | **NFT Launchpad Kit** | Agent-Native 链上发行基础设施 | trusted-signer 离线签名铸造；204 个测试，v1.0.0 已发布 | [GitHub](https://github.com/sijie-Z/nft-launchpad-kit) · [发布复盘](/2026/08/28/nft-launchpad-release-sprint/) |
-| **NLP Training Lab** | 从 BERT 到 LoRA 微调的渐进式实验 | 4GB 显存跑通全流程，LoRA 只训练 0.42% 参数；保留 44%/30% 的失败记录 | [GitHub](https://github.com/sijie-Z/nlp-training-lab) · [实验记录](/2026/08/28/nlp-training-lab/) |
+| **NLP Training Lab** | 从 BERT 到 LoRA 微调的渐进式实验 | 4GB 显存跑通全流程，LoRA 只训练 0.42% 参数；保留 Accuracy 44% / F1 30% 的失败记录 | [GitHub](https://github.com/sijie-Z/nlp-training-lab) · [实验记录](/2026/08/28/nlp-training-lab/) |
+
+> 以上均为个人项目；角色与边界以各项目文章为准。测试数字来自仓库，未做第三方审计。
 
 ---
 

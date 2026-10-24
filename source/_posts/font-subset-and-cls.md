@@ -79,7 +79,7 @@ FontAwesome 的 CSS 里，每个图标都有一条 `.fa-name:before{content:"\fX
 - 900px 以下不加载 Live2D，省掉 4.6MB 的模型和 Core。Live2D 的迁移过程写在[另一篇文章](/2026/10/21/live2d-cubism5-migration/)里。
 - 移动端搜索/菜单补上键盘焦点，关闭的抽屉设 `inert`。
 
-## 现在的数字
+## 当时的数字（2026-10-22）
 
 | 页面 | 首屏 CLS | LCP |
 |------|---------|-----|

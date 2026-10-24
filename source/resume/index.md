@@ -21,20 +21,20 @@ comments: false
 
 ## 项目经历
 
-### MiQroGate — 企业级 AI 凭证虚拟化与用量治理网关
+### MiQroGate — AI 凭证虚拟化与用量治理网关
 
 *Java 21 · Spring WebFlux · Vue 3 · PostgreSQL ｜ 个人项目 · 项目所有者*
 
 - 把真实上游 API Key 映射为可独立追踪、轮换、吊销的 Virtual Key；控制面/数据面分离，热路径零数据库访问（路由快照 + `pg_notify`）。
 - 安全默认值：统一 404 防探测、常量时间 HMAC、密钥零残留；7 家厂商 20 个产品适配器。
-- 449 个 Java 文件、134 个测试文件；前端 vitest 21/21、Playwright 15/15。
+- 449 个 Java 文件、134 个测试文件（测试文件数，非覆盖率）；前端 vitest 21/21、Playwright 15/15。
 - 角色：写规格、架构与审查、合并发布；实现主要由 Claude Code 按规格完成。真实凭证联调尚未验证，适配器按“已实现 / 已验证”分级，不伪造 PASS。
 
 ### quant_platform — A 股多因子量化研究平台
 
 *Python · Pandas · cvxpy · FastAPI · Vue 3 ｜ 个人项目*
 
-- 20+ 因子引擎、组合优化、回测与实盘接入；97 个 REST 端点、81 个测试文件。
+- 15 个基础因子、组合优化、回测与实盘接口（QMT / Paper，未用真实资金运行）；97 个 REST 端点、81 个测试文件。
 - 六项系统性自检：Oracle Factor IC=1.000000、Known Alpha Recovery、MVO Audit 60/60、Walk-Forward、Rank IC 差异 < 0.001%、No-Lookahead 零前视契约。
 - 研究结论：80 日反转 IC = -0.081（t = -4.58）；理想执行夏普 0.45，月频真实调仓 -0.27；明确标注结论边界。
 
@@ -44,7 +44,7 @@ comments: false
 
 - 混合检索（BM25 + 向量 + RRF + BGE Reranker）、语义分块、SSE 流式对话与引用溯源。
 - 向量降维 + 量化：1536 → 768 维、float32 → int8，10 万条文档索引内存 8GB → 约 2GB。
-- Agent 消融：7 组对照实验，L1 覆盖率 69% → 93.1%（20 题评测集）；同时记录 L2 仅 50% 的边界结果。
+- Agent 消融：5 组对照实验，L1 评测点覆盖率 69% → 93.1%（20 题评测集）；L2 另测 10 题，通过率 50%。
 
 ## 其他项目
 

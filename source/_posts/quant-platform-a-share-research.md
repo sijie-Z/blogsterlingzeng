@@ -1,6 +1,7 @@
 ---
 title: 我做了一个 A 股量化研究平台——从因子到回测的完整流水线
 date: 2026-05-10 10:00:00
+updated: 2026-10-24 00:30:00
 categories:
   - 项目实战
 tags:
@@ -49,7 +50,7 @@ cover: /images/cover-algorithm.jpg
 
 ### 因子引擎
 
-做了 15 个因子：
+做了 15 个基础因子：
 
 - **10 个技术因子** — 动量、波动率、换手率、成交量比率等
 - **5 个基本面因子** — PE、PB、ROE、营收增长、净利润增长
@@ -138,7 +139,7 @@ A 股有退市股票。如果只用当前存续的股票回测，相当于默认
 - 净值曲线、回撤、滚动 Sharpe、月度热力图等可视化报告
 - LLM 情感因子（可选，接入 OpenAI）
 
-项目地址：[github.com/sijie-Z/quant-platform](https://github.com/sijie-Z/quant-platform)
+项目地址：[github.com/sijie-Z/quant_platform](https://github.com/sijie-Z/quant_platform)
 
 ## 总结
 

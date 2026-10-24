@@ -81,7 +81,7 @@ GeoData Security System 就是为了解决这个问题。
 
 ### 民主召回机制
 
-如果发现数据被滥用，管理员可以发起召回投票。超过 50% 的管理员反对，数据就会被召回。
+如果发现数据被滥用，管理员可以发起召回投票。超过 50% 的管理员同意召回，数据就会被召回。
 
 这是一种制度设计——技术手段（水印）和制度手段（投票召回）双保险。
 
@@ -93,7 +93,7 @@ GeoData Security System 就是为了解决这个问题。
 
 | 层 | 技术 | 用途 |
 |----|------|------|
-| 前端 | Vue 3 + Element Plus | 企业级 UI |
+| 前端 | Vue 3 + Element Plus | 组件库方案 |
 | 后端 | Flask + Flask-RESTful | REST API |
 | 认证 | JWT（Access + Refresh） | 身份验证 |
 | 数据库 | MySQL + PostgreSQL/PostGIS | 业务 + 空间数据 |
@@ -114,7 +114,7 @@ MySQL 存业务数据（用户、申请、日志），PostgreSQL + PostGIS 存�
 
 ### 监控体系
 
-Prometheus 采集 11 个指标面板（请求速率、延迟、错误率、业务 KPI），Grafana 可视化 + 告警。
+Prometheus 采集指标，Grafana 配了 11 个指标面板（请求速率、延迟、错误率、业务 KPI），负责可视化 + 告警。
 
 告警规则：
 - 错误率超过阈值

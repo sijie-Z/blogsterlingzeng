@@ -47,7 +47,7 @@ Java 21 / Spring WebFlux / Python / FastAPI / PostgreSQL / Redis / Elasticsearch
 
 RAG / LangGraph / 向量数据库 / LoRA 微调 / 评测设计
 
-- **DocMind 消融实验**：7 组对照，L1 覆盖率 69% → 93.1%；同时如实记录 L2 只有 50%
+- **DocMind 消融实验**：5 组对照，L1 评测点覆盖率 69% → 93.1%；同时如实记录 L2 只有 50%
 - **NLP Training Lab**：4GB 显存跑通 BERT → LoRA 微调 Qwen2.5，adapter 仅 17MB
 - **MindPilot**：Self-RAG 自检、RAGAS 指标、GLM-4V 多模态理解
 
@@ -57,8 +57,8 @@ RAG / LangGraph / 向量数据库 / LoRA 微调 / 评测设计
 
 {% timeline %}
 2026.10 :: 博客上线系列阅读与系列订阅；字体子集化、CLS 与滚动性能优化；文章更新到 22 篇
-2026.09 :: 升入大四；博客 HTTPS 上线（Cloudflare）；NFT Launchpad Kit v1.0.0 发布并转向 Agent-Native 方向
-2026.08 :: MiQroGate 推进至 Phase 1 G7.4（响应缓存）；DocMind Agent 消融实验完成；博客补齐项目复盘
+2026.09 :: 升入大四；博客 HTTPS 上线（Cloudflare）
+2026.08 :: MiQroGate 推进至 Phase 1 G7.4（响应缓存）；DocMind Agent 消融实验完成；NFT Launchpad Kit v1.0.0 发布并转向 Agent-Native 方向；博客补齐项目复盘
 2026.07 :: NLP 训练实验框架（BERT → LoRA 微调 Qwen2.5）；GeoAI Assistant 产品化
 2026.06 :: A 股反转研究封档：IC 曲线全负，80 日反转 Alpha 的“信号存在 ≠ 策略可投资”
 2026.05 :: 博客上线，发布首批文章与项目展示
