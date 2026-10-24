@@ -57,6 +57,12 @@ HTTP_PROXY=http://127.0.0.1:7897 HTTPS_PROXY=http://127.0.0.1:7897 git push orig
 # 3. GitHub Actions 自动构建部署(1-3 分钟)
 ```
 
+### 文章日期与时区
+
+站点时区是 `Asia/Shanghai`，Content Check 和 Deploy 两个 workflow 都设置了 `TZ=Asia/Shanghai`。文章 `date` 请使用 **08:00 之后**的时间；`00:00–07:59` 在 UTC 构建里会被排到前一天，链接和实际产物路径会不一致。2026-10-24 就因此让 `/2026/10/23/hexo-series-reading-path/` 在线上 404，而文章实际生成在 `/2026/10/22/`。
+
+迁移文章 URL 时：在旧路径放一个带 `meta refresh` 和 `noindex` 的跳转页，并在 `scripts/redirects.js` 登记旧地址，构建时会把旧 URL 从 sitemap 和搜索索引里移除。
+
 ### 改 DNS 记录
 
 1. 登录 dash.cloudflare.com → `sterlingzeng.cn` → **DNS → Records**
