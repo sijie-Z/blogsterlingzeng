@@ -226,14 +226,15 @@ blogsterlingzeng/
 │   ├── bookmarks/index.md           # 书签页面
 │   ├── shuoshuo/index.md            # 说说页面
 │   ├── photos/index.md              # 照片墙页面
+│   ├── resume/index.md              # 一页式简历（可打印）
 │   ├── categories/index.md          # 分类页面
 │   ├── tags/index.md                # 标签页面
 │   ├── robots.txt                   # 爬虫规则
 │   ├── 404.md                       # 自定义 404
 │   │
-│   ├── css/custom.css               # 自定义样式 (~3400 行)
+│   ├── css/custom.css               # 自定义样式 (~3900 行)
 │   ├── css/series.css               # 系列阅读样式
-│   ├── js/custom.js                 # 自定义脚本 (~1600 行)
+│   ├── js/custom.js                 # 自定义脚本 (~2400 行)
 │   ├── live2d/                      # Live2D 组件 + DeepSeek 大肥鱼模型
 │   ├── fontawesome/webfonts/        # FontAwesome 子集字体
 │   └── images/                      # 图片资源
@@ -245,6 +246,7 @@ blogsterlingzeng/
 │       ├── banner-autumn.webp       # 秋季横幅
 │       ├── banner-winter.webp       # 冬季横幅
 │       ├── og-banner.jpg            # 社交分享图 (118KB)
+│       ├── og/                      # 每篇文章/系列/页面的 1200×630 OG 卡
 │       ├── cover-tech.jpg           # 文章封面 (53KB)
 │       ├── cover-code.jpg           # 文章封面 (73KB)
 │       ├── cover-design.jpg         # 文章封面 (122KB)
@@ -409,6 +411,7 @@ inject:
 | A 股量化研究平台 | `quant-platform-a-share-research.md` | 项目实战 | 从因子到回测的完整流水线 |
 | 22 篇文章，9 篇在系列里 | `hexo-series-reading-path.md` | 前端开发 | 用 front matter、generator 和 Atom 把有顺序的文章串成系列 |
 | 按显示尺寸交付 | `responsive-banner-live2d-texture.md` | 前端开发 | 横幅 srcset 与 Live2D 纹理按实际显示尺寸交付 |
+| 33MB 到 25MB | `static-assets-cleanup.md` | 前端开发 | 图标子集、moment 移除、长任务清理，以及一次被测量否决的 View Transition |
 
 ### 文章 Front Matter 格式
 
