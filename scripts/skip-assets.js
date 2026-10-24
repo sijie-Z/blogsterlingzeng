@@ -57,6 +57,11 @@ hexo.extend.filter.register('after_generate', function () {
       }
     }
   }
+  // js/libs 是主题源目录的副本,页面只引用 js/build/libs;字体只保留 woff2
+  for (const route of hexo.route.list()) {
+    if (/^js\/libs\//.test(route)) extras.push(route);
+    if (/^fonts\/.*\.(?:woff|ttf|eot)$/i.test(route)) extras.push(route);
+  }
   for (const path of extras) {
     try { if (hexo.route.get(path)) hexo.route.remove(path); } catch (e) {}
   }
