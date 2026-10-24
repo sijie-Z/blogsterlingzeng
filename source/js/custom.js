@@ -559,6 +559,8 @@
 
     document.addEventListener('keydown', e => {
       if (e.key !== 'Escape') return;
+      // 引用菜单打开时,Esc 先交给菜单,不要把专注模式一起关掉
+      if (document.querySelector('.cite-menu')) return;
       const sheet = document.getElementById('read-sheet');
       if (sheet && sheet.classList.contains('is-open')) {
         closeReadSheet(true);
@@ -577,9 +579,6 @@
   // ============================
   // Citation menu — Markdown / BibTeX / APA / 链接 / 系统分享
   // ============================
-  let citeMenu = null;
-  let citeTrigger = null;
-
   function citationData() {
     const el = document.getElementById('cj-citation');
     if (!el) return null;
@@ -611,12 +610,14 @@
     return { markdown, bibtex, apa, link: data.url };
   }
 
+  // 状态放在 DOM 上:脚本每次 SPA 换页都会重新执行,
+  // 闭包里的变量会被新一次执行覆盖,只有 DOM 是所有执行共享的。
   function closeCitationMenu(restoreFocus) {
-    if (!citeMenu) return;
-    const trigger = citeTrigger;
-    citeMenu.remove();
-    citeMenu = null;
-    citeTrigger = null;
+    const menu = document.querySelector('.cite-menu');
+    if (!menu) return;
+    const trigger = menu.__cjTrigger ||
+      document.querySelector('.post-side-share[aria-expanded="true"], #mobile-cite[aria-expanded="true"]');
+    menu.remove();
     if (trigger) {
       trigger.setAttribute('aria-expanded', 'false');
       if (restoreFocus) {
@@ -627,9 +628,12 @@
   window.__cjCloseCitationMenu = () => closeCitationMenu(false);
 
   function copyCitation(text, message) {
+    const menu = document.querySelector('.cite-menu');
     let settled = false;
-    const done = () => {
+    const finish = () => {
       if (settled) return;
+      // 菜单已经因换页/关闭而消失时,不要把提示和焦点带到新页面
+      if (menu && !menu.isConnected) return;
       settled = true;
       showToast(message);
       announceAction(message);
@@ -637,20 +641,14 @@
     };
     const fallback = () => {
       if (settled) return;
-      settled = true;
-      fallbackCopy(text, () => {
-        showToast(message);
-        announceAction(message);
-        closeCitationMenu(true);
-      }, () => {
-        showToast('复制失败，请手动选择');
-        closeCitationMenu(true);
+      fallbackCopy(text, finish, () => {
+        if (menu && !menu.isConnected) return;
+        // 保持菜单打开,用户可以直接再点一次
+        showToast('复制失败，请再试一次');
       });
     };
     if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(text).then(done).catch(fallback);
-      // 页面在后台/失焦时 Clipboard 可能一直 pending,别让菜单看起来没反应
-      setTimeout(() => { if (!settled) fallback(); }, 600);
+      navigator.clipboard.writeText(text).then(finish).catch(fallback);
     } else {
       fallback();
     }
@@ -667,11 +665,15 @@
       }
       return;
     }
-    if (citeMenu && citeTrigger === trigger) {
-      closeCitationMenu(true);
-      return;
+
+    const existing = document.querySelector('.cite-menu');
+    if (existing) {
+      if (existing.__cjTrigger === trigger) {
+        closeCitationMenu(true);
+        return;
+      }
+      closeCitationMenu(false);
     }
-    closeCitationMenu(false);
 
     const formats = citationFormats(data);
     const items = [
@@ -687,10 +689,11 @@
     menu.setAttribute('aria-label', '引用与分享本文');
     menu.style.visibility = 'hidden';
 
-    items.forEach(item => {
+    items.forEach((item, index) => {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.setAttribute('role', 'menuitem');
+      btn.tabIndex = index === 0 ? 0 : -1;
       btn.textContent = item.label;
       btn.addEventListener('click', () => copyCitation(item.text, item.toast));
       menu.appendChild(btn);
@@ -700,6 +703,7 @@
       const share = document.createElement('button');
       share.type = 'button';
       share.setAttribute('role', 'menuitem');
+      share.tabIndex = -1;
       share.textContent = '系统分享…';
       share.addEventListener('click', () => {
         closeCitationMenu(true);
@@ -709,8 +713,7 @@
     }
 
     document.body.appendChild(menu);
-    citeMenu = menu;
-    citeTrigger = trigger;
+    menu.__cjTrigger = trigger;
     trigger.setAttribute('aria-expanded', 'true');
 
     const rect = trigger.getBoundingClientRect();
@@ -738,20 +741,28 @@
         openCitationMenu(mobileTrigger);
         return;
       }
-      if (!citeMenu) return;
-      if (citeMenu.contains(e.target) || (citeTrigger && citeTrigger.contains(e.target))) return;
+      const menu = document.querySelector('.cite-menu');
+      if (!menu) return;
+      const trigger = menu.__cjTrigger;
+      if (menu.contains(e.target) || (trigger && trigger.contains(e.target))) return;
       closeCitationMenu(false);
     });
 
     document.addEventListener('keydown', e => {
-      if (!citeMenu) return;
+      const menu = document.querySelector('.cite-menu');
+      if (!menu) return;
+      // Tab 离开菜单:先收起再让焦点自然走,避免 focusin 在 headless/无后续元素时不触发
+      if (e.key === 'Tab') {
+        closeCitationMenu(false);
+        return;
+      }
       if (e.key === 'Escape') {
         e.preventDefault();
         closeCitationMenu(true);
         return;
       }
       if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) return;
-      const buttons = [...citeMenu.querySelectorAll('button')];
+      const buttons = [...menu.querySelectorAll('button')];
       const index = buttons.indexOf(document.activeElement);
       if (index === -1) return;
       e.preventDefault();
@@ -760,7 +771,17 @@
       if (e.key === 'ArrowUp') next = (index - 1 + buttons.length) % buttons.length;
       if (e.key === 'Home') next = 0;
       if (e.key === 'End') next = buttons.length - 1;
+      buttons.forEach((btn, i) => { btn.tabIndex = i === next ? 0 : -1; });
       try { buttons[next].focus({ preventScroll: true }); } catch (err) {}
+    });
+
+    // Tab 离开菜单(或焦点被别处拿走)时,同步收起并把 aria-expanded 复位
+    document.addEventListener('focusin', e => {
+      const menu = document.querySelector('.cite-menu');
+      if (!menu) return;
+      const trigger = menu.__cjTrigger;
+      if (menu.contains(e.target) || (trigger && trigger.contains(e.target))) return;
+      closeCitationMenu(false);
     });
 
     window.addEventListener('scroll', () => closeCitationMenu(false), { passive: true });

@@ -32,7 +32,7 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
   if (!page.date) return str;
 
   const config = this.config || {};
-  const theme = this.theme || {};
+  const theme = (locals && locals.theme) || (this.theme && this.theme.config) || {};
   const author = (page.author && page.author.name) ||
     (theme.info && theme.info.author) || config.author || 'Sterling Zeng';
   const site = (theme.info && theme.info.title) || config.title || 'Sterling Zeng';

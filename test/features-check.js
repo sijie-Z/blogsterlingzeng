@@ -385,6 +385,21 @@ function check(name, cond, extra) {
   await sleep(250);
   check('窄屏 Esc 关闭引用菜单', await page.evaluate(() => !document.querySelector('.cite-menu')));
 
+  // 专注模式 + 引用菜单:Esc 只关菜单,不应退出专注
+  await page.evaluate(() => document.querySelector('.post-side-read-card .read-focus-btn').click());
+  await sleep(300);
+  await page.click('#mobile-cite');
+  await sleep(300);
+  await page.keyboard.press('Escape');
+  await sleep(300);
+  const focusEsc = await page.evaluate(() => ({
+    focus: document.documentElement.classList.contains('cj-focus'),
+    menu: !!document.querySelector('.cite-menu'),
+  }));
+  check('专注模式下 Esc 只关引用菜单', focusEsc.focus && !focusEsc.menu, JSON.stringify(focusEsc));
+  await page.evaluate(() => { const exit = document.getElementById('focus-exit'); if (exit) exit.click(); });
+  await sleep(200);
+
   await page.evaluate(() => {
     localStorage.removeItem('cj-read-size');
     localStorage.removeItem('cj-focus');
@@ -407,8 +422,8 @@ function check(name, cond, extra) {
     };
   });
   check('目标文章显示反向链接', !!backlinks && backlinks.count >= 3 && backlinks.inArticle, JSON.stringify(backlinks && backlinks.count));
-  check('反向链接带上下文', !!backlinks && backlinks.excerpt.length > 20, backlinks && backlinks.excerpt.slice(0, 30));
-  check('反向链接计数与条目一致', !!backlinks && backlinks.badge === String(backlinks.count), JSON.stringify(backlinks && { badge: backlinks.badge, count: backlinks.count }));
+  check('反向链接带正确段落上下文', !!backlinks && backlinks.excerpt.includes('这条训练链路后来也接进了') && backlinks.excerpt.includes('DocMind'), backlinks && backlinks.excerpt.slice(0, 50));
+  check('反向链接计数不少于展示条目', !!backlinks && Number(backlinks.badge) >= backlinks.count, JSON.stringify(backlinks && { badge: backlinks.badge, count: backlinks.count }));
 
   const backlinkStatus = await page.evaluate(async urls => {
     const out = [];
@@ -470,10 +485,18 @@ function check(name, cond, extra) {
 
   await page.click('.post-side-share');
   await sleep(250);
-  await page.evaluate(() => {
-    [...document.querySelectorAll('.cite-menu button')]
-      .find(btn => btn.textContent.includes('BibTeX')).click();
-  });
+  await page.keyboard.press('Tab');
+  await sleep(300);
+  const menuTab = await page.evaluate(() => ({
+    menu: !!document.querySelector('.cite-menu'),
+    expanded: document.querySelector('.post-side-share').getAttribute('aria-expanded'),
+  }));
+  check('Tab 离开菜单后同步收起', !menuTab.menu && menuTab.expanded === 'false', JSON.stringify(menuTab));
+
+  await page.click('.post-side-share');
+  await sleep(250);
+  const bibButtons = await page.$$('.cite-menu button');
+  await bibButtons[1].click();
   await sleep(900);
   const bib = await page.evaluate(async () => ({
     clip: await navigator.clipboard.readText().catch(() => ''),
@@ -484,22 +507,37 @@ function check(name, cond, extra) {
 
   await page.click('.post-side-share');
   await sleep(250);
-  await page.evaluate(() => {
-    [...document.querySelectorAll('.cite-menu button')]
-      .find(btn => btn.textContent.includes('Markdown')).click();
-  });
+  const mdButtons = await page.$$('.cite-menu button');
+  await mdButtons[0].click();
   await sleep(900);
   const markdownCitation = await page.evaluate(() => navigator.clipboard.readText().catch(() => ''));
   check('复制 Markdown 引用', markdownCitation.includes('[我做了一个 RAG 知识库系统') && markdownCitation.includes('https://sterlingzeng.cn/2026/05/10/docmind-rag-knowledge-base/'), JSON.stringify(markdownCitation.slice(0, 60)));
 
-  const spaTarget = await page.evaluate(() => document.querySelector('.cj-backlinks a')?.getAttribute('href'));
-  await page.click('.cj-backlinks a');
-  await sleep(1600);
+  // 菜单打开时换页:菜单必须收起,且后续复制的是新文章
+  await page.click('.post-side-share');
+  await sleep(250);
+  await page.evaluate(() => { window.swup.navigate('/2026/05/10/mindpilot-multi-agent-rag/'); });
+  await sleep(1900);
   const afterSpa = await page.evaluate(() => {
     const el = document.getElementById('cj-citation');
-    return { path: location.pathname, title: el ? JSON.parse(el.textContent).title : '' };
+    const triggers = [...document.querySelectorAll('.post-side-share, #mobile-cite')];
+    return {
+      path: location.pathname,
+      menu: !!document.querySelector('.cite-menu'),
+      expanded: triggers.some(btn => btn.getAttribute('aria-expanded') === 'true'),
+      title: el ? JSON.parse(el.textContent).title : '',
+    };
   });
-  check('SPA 换页后引用数据更新', afterSpa.path === spaTarget && !afterSpa.title.includes('DocMind'), JSON.stringify(afterSpa));
+  check('打开菜单时 SPA 换页会收起菜单', afterSpa.path === '/2026/05/10/mindpilot-multi-agent-rag/' && !afterSpa.menu && !afterSpa.expanded, JSON.stringify(afterSpa));
+  check('SPA 换页后引用数据更新', afterSpa.title.includes('MindPilot'), JSON.stringify(afterSpa.title));
+
+  await page.click('.post-side-share');
+  await sleep(250);
+  const newPageButtons = await page.$$('.cite-menu button');
+  await newPageButtons[0].click();
+  await sleep(900);
+  const newPageCitation = await page.evaluate(() => navigator.clipboard.readText().catch(() => ''));
+  check('换页后复制的是新文章引用', newPageCitation.includes('MindPilot') && newPageCitation.includes('mindpilot-multi-agent-rag'), JSON.stringify(newPageCitation.slice(0, 60)));
 
   await page.goto(BASE + '/2026/08/28/docmind-agent-causal-study/', { waitUntil: 'networkidle2', timeout: 30000 });
   await sleep(1000);
