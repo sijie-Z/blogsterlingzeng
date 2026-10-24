@@ -18,14 +18,17 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      # 与 Hexo 的 timezone 保持一致,避免日期路径在 UTC 下漂移
+      TZ: Asia/Shanghai
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: true
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: "20"
           cache: "npm"

@@ -152,9 +152,9 @@ test/                    12 套 Puppeteer / Node 检查
 | `test:resume` | 7 | 阅读位置记忆与继续阅读 |
 | `test:archive` | 16 | 归档热力图与移动端 |
 | `test:content` | 23 篇 | front matter、站内链接、图片、OG 卡、文风硬规则 |
-| `test:links` | 100 HTML | 构建产物站内 href 断链检查 |
+| `test:links` | 101 HTML | 构建产物站内 href 断链检查 |
 
-合计 456 项浏览器检查、23 篇文章的内容检查和 100 个 HTML 的内链检查。所有套件在本机通过；CI 目前只跑不依赖浏览器的 `test:content`。
+合计 456 项浏览器检查、23 篇文章的内容检查和 101 个 HTML 的内链检查。所有套件在本机通过；CI 目前只跑不依赖浏览器的 `test:content`。
 
 ## 8. 已知边界
 
@@ -169,6 +169,7 @@ test/                    12 套 Puppeteer / Node 检查
 - **剪贴板**：后台标签页里 `navigator.clipboard` 可能一直 pending，菜单会保持打开并提示重试；引用菜单的状态存在 DOM 上而不是闭包里，SPA 换页会收起，复制内容始终来自当前文章的 JSON。
 - **阅读设置**：只改正文字号，标题仍走主题的 rem 阶梯；专注模式只作用于文章页，离开文章自动收起。
 - **构建缓存**：`scripts/` 里的 tag/renderer 改动不会让 Hexo 的文章缓存失效（缓存按源文件内容哈希）；改标签或渲染器后需要重建缓存或改动文章内容才会重新渲染。
+- **时区**：站点时区是 `Asia/Shanghai`，两个 GitHub Actions workflow 都设置 `TZ=Asia/Shanghai`。`test:content` 会拒绝 08:00 之前的 `date`，因为 UTC 构建会把这类文章排到前一天，导致链接和实际产物路径不一致。
 - **Live2D**：默认不加载，用户点击“召唤宠物”后才请求；暂停/恢复仍由滚动自动管理，没有常驻可见控件。
 - **按页拆 CSS/JS 暂未做**：coverage 显示 custom.css 单页只用 14–30%，但 Swup 只替换 `#swup`，按页注入到 head 的样式表在 SPA 跳转时不会加载；要做需要把 `<link>` 放进被替换内容或加运行时 loader，收益（约 8–10KB gzip/页）不足以抵消闪烁和维护成本。
 - **文章导航的 head 链接只在首屏 HTML 生效**：Swup 不替换 `<head>`，SPA 换页后 `rel=prev/next` 仍是进入站点时的页面；文末卡片每次换页都会重建，键盘 `[` `]` 也用当前页的卡片，不受影响。

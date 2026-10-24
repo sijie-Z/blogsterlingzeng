@@ -43,6 +43,15 @@ for (const file of files) {
   }
   const titleMatch = meta.match(/^title:\s*["']?(.+?)["']?\s*$/m);
   const title = titleMatch ? titleMatch[1].trim() : '';
+  // 站点时区是 Asia/Shanghai;00:00–07:59 的日期在 UTC 构建里会漂到前一天,
+  // 之前 hexo-series-reading-path 因此在 CI/线上变成了另一个 URL。
+  const dateMatch = meta.match(/^date:\s*(\d{4}-\d{2}-\d{2})(?:[ T](\d{2}):(\d{2}))?/m);
+  if (dateMatch) {
+    const hour = dateMatch[2] === undefined ? 0 : Number(dateMatch[2]);
+    if (hour < 8) {
+      errors.push(`${file}: date 时间早于 08:00（或只有日期），UTC 构建会把文章路径移到前一天；请使用 08:00 之后的时间`);
+    }
+  }
   const posterTitle = ogManifest[`${slug}.jpg`];
   if (!posterTitle) {
     errors.push(`${file}: OG manifest 缺少 ${slug}.jpg（运行 npm run og:images）`);

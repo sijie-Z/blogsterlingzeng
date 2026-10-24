@@ -10,12 +10,15 @@ on:
 jobs:
   content:
     runs-on: ubuntu-latest
+    env:
+      # 站点时区是 Asia/Shanghai;CI 默认 UTC 会让 00:00 的文章路径漂到前一天
+      TZ: Asia/Shanghai
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: "20"
           cache: "npm"

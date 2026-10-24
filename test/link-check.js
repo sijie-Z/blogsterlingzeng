@@ -38,7 +38,12 @@ for (const file of files) {
 }
 
 for (const [href, from] of broken) {
-  console.log('BROKEN', href, '<-', path.relative(ROOT, from));
+  const source = path.relative(ROOT, from).replace(/\\/g, '/');
+  console.log('BROKEN', href, '<-', source);
+  // GitHub Actions 注解:无需登录也能通过 check-runs API 读到具体断链
+  if (process.env.GITHUB_ACTIONS) {
+    console.log(`::error file=${source},line=1::BROKEN ${href} <- ${source}`);
+  }
 }
 console.log(`\n${files.length} 个 HTML,${broken.size} 个断链`);
 process.exit(broken.size ? 1 : 0);

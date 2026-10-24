@@ -191,7 +191,7 @@ npm run test:features       # 98 项边注 / 内链预览 / 公式复制 / 脚�
 npm run test:l2d            # Live2D 加载诊断(模型 / Core / 404)
 npm run test:smooth         # 26 项滚动与动效平滑度回归
 npm run test:content        # 文章 front matter / 站内链接 / 图片 / OG 卡 / 文风检查
-npm run test:links          # 构建产物内链检查（100 个 HTML）
+npm run test:links          # 构建产物内链检查（101 个 HTML）
 npm run test:transitions    # 46 项 SPA 跳转 / 连点 / 前后退 / 搜索焦点 / 路由播报
 npm run test:sidebar        # 39 项文章侧栏 / 进度 / 锚点 / 表格 / 面包屑 / 代码全屏
 npm run test:series         # 53 项系列页 / 徽章 / 系列卡 / SPA / 移动端
@@ -445,7 +445,7 @@ cover: /images/cover.jpg
 ```
 
 - `title` — 文章标题
-- `date` — 发布日期，影响排序和 URL
+- `date` — 发布日期，影响排序和 URL；站点时区是 `Asia/Shanghai`，CI 也固定 `TZ=Asia/Shanghai`。请使用 08:00 之后的时间（或确保日期不会在 UTC 下漂到前一天），`test:content` 会检查这一点
 - `categories` — 分类（只能一个）
 - `tags` — 标签（可以多个）
 - `description` — 摘要，显示在首页卡片
