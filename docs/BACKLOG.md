@@ -25,28 +25,30 @@
 
 ## 验证数字
 
-- 文章首屏 CLS：0.0001；首页首屏 CLS：0.002–0.004。
+- 文章首屏 CLS：0.0001；首页首屏 CLS：约 0.001–0.002；移动端文章滚动 CLS：约 0.007。
+- 文章 LCP：约 0.45–0.49s；首页首屏 58 个请求，search.xml / APlayer 不在首屏请求。
 - 点击 → 内容替换：约 21–43ms；点击 → 导航结束：134–246ms。
 - 部署产物：约 22MB（含 31 张 OG 卡）；原 33MB+。
-- FontAwesome CSS：65KB；字体子集：solid 5KB / regular 7KB / brands 1KB。
-- `npm run test:assets` 39、`test:a11y` 61、`test:sidebar` 36、`test:transitions` 44、`test:series` 53、`test:search` 17、`test:smooth` 26、`test` 33、`test:resume` 7、`test:archive` 12。
+- FontAwesome CSS：65KB；字体子集：solid 5KB / regular 7KB / brands 1KB；封面已换 WebP。
+- 检查：transitions 46、sidebar 39、series 53、assets 49、a11y 68、search 20、smooth 26、e2e 33、resume 7、archive 16，合计 357 项浏览器检查；22 篇文章内容检查；99 个 HTML 内链检查。
 
 ## 下次可以继续做（按价值排序）
 
-1. **线上缓存头**：给 Nginx / Cloudflare 的带版本号静态资源加 `Cache-Control: public, max-age=31536000, immutable`，HTML 短缓存。这是首屏之外最大的重复访问收益，本次只写进了文档，没有服务器权限落地。
-2. **边注**：脚注已支持；Maggie Appleton 式的右侧边注需要 ≥1440px 布局和额外的 hover/focus 预览，暂不做。
-3. **代码块文档化**：`{% codeblock %}` 文件名标题、`mark:` 行高亮和行号永久链接（`#cb1-L3`）都已落地；剩下的是跨代码块的全局 `#L3` 语义（需要处理重复 id）。
-4. **图片查看器**：双指缩放、说明文字和 aria 关联均已完成；如果以后要支持旋转/平移手势，再扩展 Pointer Events。
-5. **`content-visibility: auto`**：已实测给 `#giscus-container` 加会让文章页 final CLS 升到 0.0998（评论高度估算不准），已回退；如果要做，需要给评论容器固定高度或改用 IntersectionObserver 懒加载 iframe。
-6. **数学公式**：若要写算法/GIS 公式，优先构建期渲染（KaTeX/MathJax SVG），不引客户端大包；mermaid 目前刻意关闭，重新启用前先评估包体与 Swup 重初始化。
-7. **主题标签**：timeline 已落地；gallery 可作为 Hexo tag plugin 补上，用在项目复盘与照片页；主题已有 callout / tabs / folding。
-8. **动态 OG**：目前是本地生成后提交；标题常改的话，把 `tools/gen-og-images.js` 接进写作流程或 CI（需要中文字体与 Chrome）。
-9. **备份清理（需明确授权，未执行）**：`source/pet/` 约 2.7MB 的 webm 目前没有任何代码引用，但仍在构建产物里；`.claude/launch.json` 是本机启动配置。两者都未提交、未删除，等确认用途后再处理。
+1. **线上缓存头**：Nginx / Cloudflare 给带版本号的静态资源加 `Cache-Control: public, max-age=31536000, immutable`，HTML 短缓存；文档已有配置片段，尚未在服务器落地。
+2. **按页拆 CSS/JS**：style.css / custom.css / FontAwesome 子集仍有大量未使用字节；可在构建期按页面类型拆包，或对非文章页移除 imageViewer。
+3. **Live2D 体积**：3MB 模型仍在 load 后空闲加载；延迟/交互方案与 SPA 导航竞争会触发模型未就绪错误，已回退。下一步应改为显式“加载宠物”按钮，而不是自动加载。
+4. **标签页策略**：标签已从 73 合并到 41，但仍有单篇标签页；可以给少于 2 篇的标签加 noindex，或继续合并。
+5. **侧注/边注**：脚注已支持；右侧边注需要 ≥1440px 布局与 hover/focus 预览。
+6. **代码行全局锚点**：`#cb1-L3` 已可用；若要做跨代码块 `#L3`，需要处理重复 id。
+7. **图片查看器**：双指缩放/说明/键盘已完成；如要支持旋转与双指平移，再扩展 Pointer Events。
+8. **动态 OG**：目前本地生成后提交；标题常改时可把 `tools/gen-og-images.js` 接进写作流程或 CI。
+9. **清理确认（未删除）**：`source/pet/` 的 2.7MB WebM 已进入版本库但构建时跳过部署；`.claude/launch.json` 仍未跟踪。是否移出版本库/删除需你明确确认。
 
 ## 已知边界
 
-- Swup 的 `native: true` View Transition 在本站实测会让首页快照多花约 350ms（content:replace 37→381ms），已回退，只保留主题切换的 View Transition；换页仍用 0.28s 入场动画。
-- 首页首屏冷启动的整页布局任务从约 300ms 降到约 180ms（字体 preload 生效）；仍有一次字体/布局成本，CLS 不受影响。下一步若要继续压，减少首屏 backdrop-filter 或把字体换成 `font-display: optional`。
-- JSON Feed 是加分项而非 SEO 必需；参考站点大多只提供 Atom。保留它是因为成本低、对脚本消费者友好。
+- Swup 的 `native: true` View Transition 实测会让首页快照多花约 350ms（content:replace 37→381ms），已回退，只保留主题切换的 View Transition。
+- 首页字体 preload 后仍有约 180ms 的整页布局任务；CLS 不受影响。
+- Live2D 模型约 3MB，移动端跳过，桌面端在 load 后空闲加载；这是当前最大的单页网络成本。
+- JSON Feed 是加分项而非 SEO 必需；保留它是因为成本低、对脚本消费者友好。
 - OG 卡是本地 Chrome 渲染产物；换机器/改标题后重新跑 `npm run og:images`。
 - 主题补丁目标是 `hexo-theme-redefine@2.9.0`，升级前先核对 `scripts/theme-patch.js` 的标记。
