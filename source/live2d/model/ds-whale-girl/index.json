@@ -4,7 +4,7 @@
     "Moc": "model/c_0120.moc3",
     "Textures": [
       "textures/texture_00.webp",
-      "textures/texture_01.png"
+      "textures/texture_01.webp"
     ],
     "Physics": "model/c_0120.physics3.json",
     "DisplayInfo": "model/c_0120.cdi3.json",
