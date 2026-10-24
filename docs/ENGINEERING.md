@@ -112,7 +112,7 @@ test/                    11 套 Puppeteer / Node 检查
 | `test:archive` | 12 | 归档热力图与移动端 |
 | `test:content` | 22 篇 | front matter、站内链接、图片、文风硬规则 |
 
-合计 338 项浏览器检查和 22 篇文章的内容检查。所有套件在本机通过；CI 目前只跑不依赖浏览器的 `test:content`。
+合计 339 项浏览器检查和 22 篇文章的内容检查。所有套件在本机通过；CI 目前只跑不依赖浏览器的 `test:content`。
 
 ## 7. 已知边界
 
