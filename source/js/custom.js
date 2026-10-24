@@ -704,8 +704,19 @@
     const bar = document.querySelector('.navbar-bar');
     const drawer = document.querySelector('.navbar-drawer');
     const open = document.body.classList.contains('navbar-drawer-show');
+    const wasOpen = window.__cjDrawerOpen === true;
     if (drawer) drawer.toggleAttribute('inert', !open);
-    if (bar) bar.setAttribute('aria-expanded', String(open));
+    if (bar) {
+      bar.setAttribute('aria-expanded', String(open));
+      bar.setAttribute('aria-label', open ? '关闭菜单' : '打开菜单');
+    }
+    if (open && !wasOpen && drawer) {
+      const first = drawer.querySelector('a[href], button');
+      if (first) setTimeout(() => first.focus({ preventScroll: true }), 60);
+    } else if (!open && wasOpen && bar) {
+      bar.focus({ preventScroll: true });
+    }
+    window.__cjDrawerOpen = open;
   }
 
   // 搜索按钮随 Swup 换页重建;快捷键提示要每次 init 重新挂
@@ -741,6 +752,15 @@
       a.setAttribute('aria-current', 'page');
     });
     syncDrawerA11y();
+    if (!window.__cjDrawerEsc) {
+      window.__cjDrawerEsc = true;
+      document.addEventListener('keydown', e => {
+        if (e.key !== 'Escape' || !document.body.classList.contains('navbar-drawer-show')) return;
+        document.body.classList.remove('navbar-drawer-show');
+        const bar = document.querySelector('.navbar-bar');
+        if (bar) bar.focus({ preventScroll: true });
+      });
+    }
     if (!window.__cjDrawerA11yObserver) {
       window.__cjDrawerA11yObserver = new MutationObserver(syncDrawerA11y);
       window.__cjDrawerA11yObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
@@ -1434,6 +1454,34 @@
           }
         });
       });
+
+      if (!container.dataset.cjLineKb) {
+        container.dataset.cjLineKb = '1';
+        container.tabIndex = 0;
+        container.setAttribute('role', 'group');
+        container.setAttribute('aria-label', '代码块：上下方向键选择行，回车复制行链接');
+        let active = 0;
+        const mark = index => {
+          active = Math.max(0, Math.min(codeLines.length - 1, index));
+          codeLines.forEach(line => line.classList.remove('code-line-active'));
+          const line = codeLines[active];
+          if (line) {
+            line.classList.add('code-line-active');
+            line.scrollIntoView({ block: 'nearest' });
+          }
+        };
+        container.addEventListener('focus', () => mark(active));
+        container.addEventListener('keydown', e => {
+          if (e.target !== container) return;
+          if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            mark(active + (e.key === 'ArrowDown' ? 1 : -1));
+          } else if (e.key === 'Enter') {
+            e.preventDefault();
+            gutterLines[active]?.click();
+          }
+        });
+      }
     });
 
     const applyHash = () => {

@@ -337,6 +337,21 @@ async function waitIdle(page, timeout = 8000) {
     inert: document.querySelector('.navbar-drawer')?.hasAttribute('inert'),
   }));
   check('抽屉可打开', drawerOpen.open && !drawerOpen.inert, JSON.stringify(drawerOpen));
+  const drawerA11y = await mobile.evaluate(() => ({
+    expanded: document.querySelector('.navbar-bar')?.getAttribute('aria-expanded'),
+    label: document.querySelector('.navbar-bar')?.getAttribute('aria-label'),
+    focusInDrawer: !!document.activeElement?.closest('.navbar-drawer'),
+  }));
+  check('抽屉焦点与按钮标签正确', drawerA11y.expanded === 'true' && drawerA11y.label === '关闭菜单' && drawerA11y.focusInDrawer, JSON.stringify(drawerA11y));
+  await mobile.keyboard.press('Escape');
+  await sleep(300);
+  const drawerClosed = await mobile.evaluate(() => ({
+    open: document.body.classList.contains('navbar-drawer-show'),
+    focusBar: document.activeElement?.classList.contains('navbar-bar') || false,
+  }));
+  check('Esc 关闭抽屉并归还焦点', !drawerClosed.open && drawerClosed.focusBar, JSON.stringify(drawerClosed));
+  await mobile.click('.navbar-bar').catch(() => {});
+  await sleep(300);
   const drawerAbout = await mobile.$('.navbar-drawer a[href="/about"]');
   if (drawerAbout) {
     await drawerAbout.click();

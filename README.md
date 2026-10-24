@@ -179,8 +179,8 @@ npm run test:l2d            # Live2D 加载诊断(模型 / Core / 404)
 npm run test:smooth         # 26 项滚动与动效平滑度回归
 npm run test:content        # 文章 front matter / 站内链接 / 图片 / OG 卡 / 文风检查
 npm run test:links          # 构建产物内链检查（127 个 HTML）
-npm run test:transitions    # 44 项 SPA 跳转 / 连点 / 前后退 / 搜索焦点 / 路由播报
-npm run test:sidebar        # 38 项文章侧栏 / 进度 / 锚点 / 表格 / 面包屑 / 代码全屏
+npm run test:transitions    # 46 项 SPA 跳转 / 连点 / 前后退 / 搜索焦点 / 路由播报
+npm run test:sidebar        # 39 项文章侧栏 / 进度 / 锚点 / 表格 / 面包屑 / 代码全屏
 npm run test:series         # 53 项系列页 / 徽章 / 系列卡 / SPA / 移动端
 npm run test:assets         # 45 项响应式横幅 / WebP 纹理 / JSON Feed / 图标子集 / JSON-LD
 npm run test:search         # 20 项搜索 combobox / 方向键 / Enter / 空态 / IME

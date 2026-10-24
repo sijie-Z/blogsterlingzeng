@@ -147,6 +147,19 @@ function check(name, cond, extra) {
     };
   });
   check('代码行有唯一 id 且可复制行链接', !codeLine.missing && codeLine.total > 5 && /^#cb\d+-L\d+$/.test(codeLine.hash) && codeLine.target, JSON.stringify(codeLine));
+  const keyboardLine = await page.evaluate(() => {
+    const container = document.querySelector('.highlight-container');
+    if (!container) return { missing: true };
+    container.focus();
+    container.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }));
+    container.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+    return {
+      missing: false,
+      hash: location.hash,
+      active: [...container.querySelectorAll('.code-line-active')].length,
+    };
+  });
+  check('代码行可用键盘选择并复制', !keyboardLine.missing && /^#cb\d+-L\d+$/.test(keyboardLine.hash) && keyboardLine.active === 1, JSON.stringify(keyboardLine));
   check('无横向溢出', first.overflow <= 2, String(first.overflow));
   check('首屏 CLS < 0.12', first.cls < 0.12, first.cls.toFixed(4));
   console.log('  CLS', first.cls.toFixed(4));
