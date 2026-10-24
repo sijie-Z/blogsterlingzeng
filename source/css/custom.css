@@ -2541,6 +2541,11 @@ footer.footer .info-container .customize-info {
     display: none !important;
   }
 
+  /* 首屏页脚只保留版权与备案,运行时长放到页面末尾 */
+  footer.footer .info-container > div:not([class]) {
+    display: none !important;
+  }
+
   .mobile .icon-item {
     display: inline-flex;
     align-items: center;
