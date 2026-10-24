@@ -659,6 +659,11 @@ patchText('layout/components/scripts.ejs', [
     '<% if (isMasonryPage) { %>',
     'masonry only on photos page',
   ],
+  [
+    '<% if (theme.articles.pangu_js) { %>',
+    '<% if (theme.articles.pangu_js && (is_home() || page.__post || page.layout === \'page\')) { %>',
+    'pangu only on content pages',
+  ],
 ]);
 
 // moment 从客户端移除后,主题 main.js 里的 typeof moment 守卫会吞掉
