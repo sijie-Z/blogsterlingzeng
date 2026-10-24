@@ -48,7 +48,7 @@
 
 ## 下次可以继续做（按价值排序）
 
-1. **按页拆 CSS/JS**：style.css / custom.css / FontAwesome 子集仍有未使用字节；可在构建期按页面类型拆包，或对非文章页移除 imageViewer。
+1. **按页拆 CSS/JS**：Chrome coverage 实测 custom.css 只用到 14–30%、custom.js 29–40%，但 Swup 只替换 `#swup`，head 里按页注入的 `<link>` 在 SPA 跳转时不会生效。正确做法是把条件样式 `<link>` 放进被替换的正文或用运行时 loader；收益约 8–10KB gzip/页，风险高于收益，暂时搁置。
 2. **Cloudflare 缓存头落地**：`docs/DEPLOYMENT.md` 已给出精确的 Transform Rule（`immutable`）和 Cache Rule（HTML 回源），待在控制台执行并用 `curl -I` 验证。
 3. **代码行全局锚点**：`#cb1-L3` 已可用；跨代码块 `#L3` 需要处理重复 id，价值一般。
 4. **图片查看器**：双指缩放/说明/键盘已完成；旋转与双指平移可按需扩展 Pointer Events。
