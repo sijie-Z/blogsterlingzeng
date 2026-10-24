@@ -20,6 +20,8 @@ scripts/                 构建期脚本（Hexo 启动时加载）
 ├── link-preview.js      站内链接预览数据 link-preview.json
 ├── citation.js          citation_* 元数据 + 引用菜单 JSON
 ├── backlinks.js         扫描正文内链，生成“引用本文的文章”
+├── post-nav.js          文末更早/更新一篇 + head rel=prev/next
+├── recent-posts.js      404 页最近文章
 ├── math.js              $...$ / $$...$$ 构建期 KaTeX MathML + 复制按钮
 ├── footnotes.js         [^id] 脚注：doc-noteref / doc-endnotes
 ├── markdown-route.js    /<path>/index.md 与 llms.txt
@@ -108,6 +110,8 @@ test/                    12 套 Puppeteer / Node 检查
 | 引用与分享 | head 输出 `citation_*`；侧栏菜单复制 Markdown / BibTeX / APA / GB/T 7714 / RIS / 链接；body JSON 随 Swup 换页更新 | 0 请求 |
 | 键盘快捷键 | `?` 打开原生 `<dialog>` 帮助；`t` 切换主题；`g h` / `g a` 站内跳转；输入框和弹层打开时不触发 | 0 请求 |
 | 反向链接 | 构建期扫描所有文章正文内链，目标文章底部列出来源与上下文 | 0 请求 |
+| 文章导航 | 按发布日期生成“更早/更新一篇”，head 输出 `rel=prev/next`，`[` `]` 快捷键复用链接点击 | 0 请求 |
+| 404 最近文章 | 构建期把最近 5 篇写进 404 页，避免用户只剩搜索一条路 | 0 请求 |
 
 边注的宽屏阈值是 1680px：正文 957px + 左页边 235px，低于这个宽度放不下 212px 的注释列，因此降级为底部卡片。底部卡片、边注、预览卡都挂在 `body` 上，避免正文祖先的 `transform`（Swup 入场）把 `position: fixed` 变成相对定位。
 
@@ -144,13 +148,13 @@ test/                    12 套 Puppeteer / Node 检查
 | `test:search` | 20 | combobox/listbox、方向键、Enter、空态、IME、SPA |
 | `test:smooth` | 26 | 滚动、Live2D 暂停、reduced-motion、移动端溢出 |
 | `test` | 34 | 端到端页面、主题切换、Live2D 显式召唤、次级页面 |
-| `test:features` | 89 | 边注、内链预览、公式复制、脚注预览、阅读设置、引用菜单、反向链接、键盘快捷键、图片双指平移 |
+| `test:features` | 98 | 边注、内链预览、公式复制、脚注预览、阅读设置、引用菜单、反向链接、键盘快捷键、图片双指平移、文章导航、404 |
 | `test:resume` | 7 | 阅读位置记忆与继续阅读 |
 | `test:archive` | 16 | 归档热力图与移动端 |
 | `test:content` | 23 篇 | front matter、站内链接、图片、OG 卡、文风硬规则 |
 | `test:links` | 100 HTML | 构建产物站内 href 断链检查 |
 
-合计 447 项浏览器检查、23 篇文章的内容检查和 100 个 HTML 的内链检查。所有套件在本机通过；CI 目前只跑不依赖浏览器的 `test:content`。
+合计 456 项浏览器检查、23 篇文章的内容检查和 100 个 HTML 的内链检查。所有套件在本机通过；CI 目前只跑不依赖浏览器的 `test:content`。
 
 ## 8. 已知边界
 
@@ -167,6 +171,8 @@ test/                    12 套 Puppeteer / Node 检查
 - **构建缓存**：`scripts/` 里的 tag/renderer 改动不会让 Hexo 的文章缓存失效（缓存按源文件内容哈希）；改标签或渲染器后需要重建缓存或改动文章内容才会重新渲染。
 - **Live2D**：默认不加载，用户点击“召唤宠物”后才请求；暂停/恢复仍由滚动自动管理，没有常驻可见控件。
 - **按页拆 CSS/JS 暂未做**：coverage 显示 custom.css 单页只用 14–30%，但 Swup 只替换 `#swup`，按页注入到 head 的样式表在 SPA 跳转时不会加载；要做需要把 `<link>` 放进被替换内容或加运行时 loader，收益（约 8–10KB gzip/页）不足以抵消闪烁和维护成本。
+- **文章导航的 head 链接只在首屏 HTML 生效**：Swup 不替换 `<head>`，SPA 换页后 `rel=prev/next` 仍是进入站点时的页面；文末卡片每次换页都会重建，键盘 `[` `]` 也用当前页的卡片，不受影响。
+- **Giscus 主题同步**：主题在 iframe 被 Swup 移除后仍可能对 null `contentWindow` 调 `postMessage`；`theme-patch.js` 已在源码和构建产物里补 `isConnected/contentWindow` 守卫。
 - **主题升级**：补丁目标是 2.9.0 的模板文本；版本已锁定，升级时需要重新核对 `theme-patch.js` 的标记。
 
 ## 9. 如果继续做

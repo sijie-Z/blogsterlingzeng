@@ -69,6 +69,7 @@
         '<div><dt><kbd>?</kbd></dt><dd>打开快捷键帮助</dd></div>' +
         '<div><dt><kbd>/</kbd> 或 <kbd>⌘ K</kbd></dt><dd>站内搜索</dd></div>' +
         '<div><dt><kbd>t</kbd></dt><dd>切换明暗主题</dd></div>' +
+        '<div><dt><kbd>[</kbd> <kbd>]</kbd></dt><dd>更早 / 更新一篇</dd></div>' +
         '<div><dt><kbd>g</kbd> <kbd>h</kbd></dt><dd>回到首页</dd></div>' +
         '<div><dt><kbd>g</kbd> <kbd>a</kbd></dt><dd>打开归档</dd></div>' +
         '<div><dt><kbd>Esc</kbd></dt><dd>关闭弹层 / 退出全屏</dd></div>' +
@@ -159,6 +160,17 @@
           const toggle = document.querySelector('.tool-dark-light-toggle');
           if (toggle) toggle.click();
           else toggleDarkManually(!document.documentElement.classList.contains('dark'));
+          return;
+        }
+
+        if (e.key === '[' || e.key === ']') {
+          const link = document.querySelector(
+            e.key === '[' ? 'a.cj-post-nav-item.is-prev' : 'a.cj-post-nav-item.is-next'
+          );
+          if (link && !overlayOpen) {
+            e.preventDefault();
+            link.click();
+          }
           return;
         }
       }

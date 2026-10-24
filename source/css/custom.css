@@ -5073,3 +5073,138 @@ html:has(dialog.shortcut-help[open]) body {
     display: none !important;
   }
 }
+
+/* ========================================
+   POST NAV — 更早 / 更新一篇
+   ======================================== */
+.cj-post-nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 2rem 2rem 0.6rem;
+}
+
+.cj-post-nav-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--bg-card);
+  text-decoration: none !important;
+  background-image: none !important;
+  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.cj-post-nav-item:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--primary-color) 32%, var(--border-color));
+  box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.06));
+}
+
+.cj-post-nav-item.is-next {
+  text-align: right;
+}
+
+.cj-post-nav-item.is-empty {
+  visibility: hidden;
+}
+
+.cj-post-nav-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--primary-color);
+}
+
+.cj-post-nav-title {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.cj-post-nav-date {
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+}
+
+@media (max-width: 640px) {
+  .cj-post-nav {
+    grid-template-columns: 1fr;
+    margin-left: 0.75rem;
+    margin-right: 0.75rem;
+  }
+
+  .cj-post-nav-item.is-next {
+    text-align: left;
+  }
+
+  .cj-post-nav-item.is-empty {
+    display: none;
+  }
+}
+
+/* ========================================
+   RECENT POSTS — 404 页的最近文章
+   ======================================== */
+.cj-recent {
+  max-width: 560px;
+  margin: 2rem auto 0;
+  text-align: left;
+}
+
+.cj-recent-title {
+  margin: 0 0 10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.cj-recent ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cj-recent li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--border-color);
+}
+
+.cj-recent a {
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  text-decoration: none;
+}
+
+.cj-recent a:hover {
+  color: var(--primary-color);
+}
+
+.cj-recent time {
+  flex: none;
+  color: var(--text-tertiary);
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+@media print {
+  .cj-post-nav,
+  .cj-recent {
+    display: none !important;
+  }
+}

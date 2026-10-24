@@ -17,7 +17,8 @@
 - **新文章**：《读完一篇长文，不该被打断》进入博客工程化系列第 7 篇，记录边注、预览、引用、反向链接、阅读设置和快捷键，以及按页拆包被测量否决的原因。
 - **OG 卡防过期**：生成器同时写 `og-manifest.json`，`test:content` 比对文章标题；改了标题但忘记重跑 `npm run og:images` 时 CI 直接失败，不需要在 CI 里装 Chrome。
 - **图片查看器双指平移**：缩放后两指同向移动复用主题的拖拽逻辑，把中点位移翻译成 mousedown/mousemove/mouseup，不另写 transform 状态；测试用 CDP 真实多点触摸验证。
-- **测试**：新增 `test:features`，目前 89 项；浏览器检查合计 447 项，23 篇内容检查，100 个 HTML 内链检查。
+- **文章导航与 404**：文末按发布日期生成“更早/更新一篇”，head 输出 `rel=prev/next`，`[` `]` 快捷键复用链接点击；404 页补最近 5 篇文章。顺手修掉主题 Giscus 主题同步在 iframe 被换页移除后对 null `contentWindow` 调 `postMessage` 的报错。
+- **测试**：新增 `test:features`，目前 98 项；浏览器检查合计 456 项，23 篇内容检查，100 个 HTML 内链检查。
 
 ## 这一轮已完成
 
@@ -67,5 +68,7 @@
 - 阅读设置只改正文字号，标题仍走主题 rem 阶梯；专注模式只作用于文章页。
 - JSON Feed 是加分项而非 SEO 必需；保留它是因为成本低、对脚本消费者友好。
 - OG 卡是本地 Chrome 渲染产物；`og-manifest.json` 记录标题，`test:content` 会在标题变化但没重跑 `npm run og:images` 时失败。
+- 文章导航的 head rel 链接只在首屏 HTML 生效（Swup 不替换 head）；文末卡片和 `[` `]` 每次换页都会用当前页数据。
+- Giscus 主题同步在 iframe 被换页移除后会报 null `contentWindow`，`theme-patch.js` 已加守卫。
 - 主题补丁目标是 `hexo-theme-redefine@2.9.0`，升级前先核对 `scripts/theme-patch.js` 的标记。
 - 构建缓存按文章源文件内容哈希失效；改 `scripts/` 里的 tag/renderer 后需要重建缓存或改动文章内容才会重新渲染。

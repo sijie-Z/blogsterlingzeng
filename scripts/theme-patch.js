@@ -1117,3 +1117,26 @@ try {
 } catch (e) {
   console.error('[theme-patch] 失败(不影响构建):', e.message);
 }
+
+// Giscus 主题同步:主题在 iframe 被 Swup 换页移除后仍会对 null contentWindow
+// 调 postMessage,快速连跳时会抛 "Cannot read properties of null"。
+// 源码和构建产物都要补 isConnected / contentWindow 检查。
+patchText('source/js/tools/lightDarkSwitch.js', [
+  [
+    `    theme ??= styleStatus.isDark ? "dark" : "light";
+    giscusFrame.contentWindow.postMessage(`,
+    `    theme ??= styleStatus.isDark ? "dark" : "light";
+    if (!giscusFrame.isConnected || !giscusFrame.contentWindow) {
+      return;
+    }
+    giscusFrame.contentWindow.postMessage(`,
+    'giscus source guard',
+  ],
+]);
+patchText('source/js/build/tools/lightDarkSwitch.js', [
+  [
+    'e??=t.isDark?"dark":"light",i.contentWindow.postMessage(',
+    'e??=t.isDark?"dark":"light",i.isConnected&&i.contentWindow&&i.contentWindow.postMessage(',
+    'giscus build guard',
+  ],
+]);

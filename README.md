@@ -60,9 +60,10 @@
 | 脚注预览 | 悬停/聚焦脚注引用时直接显示脚注正文 | `source/js/custom.js` |
 | 公式复制 | 块级公式右上角一键复制 LaTeX 源码（读 MathML annotation） | `scripts/math.js` |
 | 阅读设置 | 三档字号 + 专注阅读（隐藏目录、正文居中），刷新保持；窄屏 Aa 面板 | `scripts/post-sidebar.js` |
-| 键盘快捷键 | `?` 打开帮助；`t` 切换明暗；`g h` / `g a` 快速跳转；输入框内不触发 | `source/js/custom.js` |
+| 键盘快捷键 | `?` 打开帮助；`t` 切换明暗；`[` `]` 上一篇/下一篇；`g h` / `g a` 快速跳转；输入框内不触发 | `source/js/custom.js` |
 | 引用与分享 | 侧栏菜单复制 Markdown / BibTeX / APA / GB/T 7714 / RIS / 链接；窄屏用左下角浮动引用按钮；head 输出 `citation_*` 元数据 | `scripts/citation.js` |
 | 反向链接 | 构建期扫描正文内链，在目标文章底部列出引用来源与上下文 | `scripts/backlinks.js` |
+| 文章导航 | 文末“更早 / 更新一篇”，head 输出 `rel=prev/next`，支持 `[` `]` 快捷键 | `scripts/post-nav.js` |
 | Live2D 按需加载 | 默认 0 请求，点击“召唤宠物”后才加载约 4MB 模型 | `source/js/custom.js` |
 | 数学公式 | `$...$` / `$$...$$` 构建期 KaTeX MathML，无客户端 JS/字体 | `scripts/math.js` |
 | 图片集 | `{% gallery %}` 图片网格，复用查看器与懒加载 | `scripts/gallery.js` |
@@ -77,7 +78,7 @@
 | 系列文章 | `series` / `series_order` 声明，构建期生成系列总览、系列页与 Atom 订阅；文章内显示进度徽章、系列内上下篇、折叠目录（0 运行时 JS） | `scripts/series.js` |
 | 响应式横幅 | 960 / 1280 / 1920 三档 WebP srcset，手机按 DPR 自动选图 | `scripts/responsive-images.js` |
 | 轻量模型纹理 | Live2D 主纹理重采样为 1024 WebP，1.7MB → 308KB | `source/live2d/model/ds-whale-girl/` |
-| 404 页面 | 自定义 404 + 快捷搜索入口（Ctrl K / 斜杠） | `source/404.md` |
+| 404 页面 | 自定义 404 + 快捷搜索入口（Ctrl K / 斜杠）+ 最近 5 篇文章 | `source/404.md` |
 | 阅读体验 | 阅读位置记忆 + “继续阅读”胶囊、标题锚点复制、宽表格横向滚动 | `source/js/custom.js` |
 | 开放内容 | 每篇文章生成 `index.md` 原文，站点级 `llms.txt` 索引 | `scripts/markdown-route.js` |
 | 归档页 | 构建期写作足迹热力图（内联 SVG，零运行时） | `scripts/archive-heatmap.js` |
@@ -125,7 +126,7 @@
 | SPA 整次导航 | **~134ms** | Swup 只替换 `#swup`，滚动即时归零 |
 | Live2D 主纹理 | **1.7MB → 308KB** | 2048 PNG 重采样为 1024 WebP |
 | 手机首屏横幅 | **63KB → 35KB**（亮色） | 960/1280/1920 srcset + DPR 选图 |
-| 自动化浏览器检查 | **447 项** | 跳转、侧栏、系列、阅读记忆、归档、平滑度、资源、内容、边注/预览/阅读设置/引用/反向链接/快捷键/图片平移 |
+| 自动化浏览器检查 | **456 项** | 跳转、侧栏、系列、阅读记忆、归档、平滑度、资源、内容、边注/预览/阅读设置/引用/反向链接/快捷键/图片平移/文章导航 |
 
 **构建期优先**：系列页、写作热力图、文章侧栏、JSON-LD、Markdown 原文、llms.txt 全部在 `hexo generate` 阶段生成，运行时不发额外请求、不引入布局抖动。主题通过 `scripts/theme-patch.js` 做可审计的最小补丁（Swup、TOC、搜索防抖、APlayer 延迟加载等），补丁可重复执行。
 
@@ -186,7 +187,7 @@ npm run serve               # http://127.0.0.1:4140
 
 # 测试(需要 puppeteer-core 与本机 Chrome)
 npm test                    # 34 项端到端检查(含 8 个次级页面、Live2D 显式召唤)
-npm run test:features       # 89 项边注 / 内链预览 / 公式复制 / 脚注预览 / 阅读设置 / 引用 / 反向链接 / 快捷键 / 图片平移
+npm run test:features       # 98 项边注 / 内链预览 / 公式复制 / 脚注预览 / 阅读设置 / 引用 / 反向链接 / 快捷键 / 图片平移 / 文章导航
 npm run test:l2d            # Live2D 加载诊断(模型 / Core / 404)
 npm run test:smooth         # 26 项滚动与动效平滑度回归
 npm run test:content        # 文章 front matter / 站内链接 / 图片 / OG 卡 / 文风检查

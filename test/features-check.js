@@ -626,7 +626,58 @@ function check(name, cond, extra) {
   await sleep(1800);
   check('g h 回到首页', await page.evaluate(() => location.pathname === '/'), await page.evaluate(() => location.pathname));
 
-  console.log('=== 10. 图片查看器双指平移 ===');
+  console.log('=== 10. 上一篇 / 下一篇与 404 ===');
+  await page.setViewport({ width: 1440, height: 1000 });
+  await page.goto(BASE + '/2026/10/24/reading-experience-as-features/', { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(1200);
+  const postNav = await page.evaluate(() => {
+    const prev = document.querySelector('a.cj-post-nav-item.is-prev');
+    const next = document.querySelector('a.cj-post-nav-item.is-next');
+    return {
+      prevHref: prev?.getAttribute('href') || '',
+      prevTitle: prev?.querySelector('.cj-post-nav-title')?.textContent || '',
+      hasNext: !!next,
+      headPrev: document.querySelector('link[rel="prev"]')?.getAttribute('href') || '',
+      aria: document.querySelector('.cj-post-nav')?.getAttribute('aria-label') || '',
+    };
+  });
+  check('文末显示更早一篇', postNav.prevHref === '/2026/10/23/static-assets-cleanup/' && postNav.prevTitle.includes('33MB'), JSON.stringify(postNav));
+  check('最新文章没有下一篇', !postNav.hasNext, JSON.stringify(postNav.hasNext));
+  check('head 输出 rel=prev', postNav.headPrev === '/2026/10/23/static-assets-cleanup/', postNav.headPrev);
+  check('文章导航有可访问名称', postNav.aria === '文章导航', postNav.aria);
+
+  await page.keyboard.press('[');
+  await sleep(1600);
+  check('[ 跳到更早一篇', await page.evaluate(() => location.pathname === '/2026/10/23/static-assets-cleanup/'), await page.evaluate(() => location.pathname));
+  const afterPrev = await page.evaluate(async () => {
+    const html = await (await fetch('/2026/10/23/static-assets-cleanup/')).text();
+    return (html.match(/<link rel="next" href="([^"]+)">/) || [])[1] || '';
+  });
+  check('静态 HTML 的 rel=next 正确', afterPrev === '/2026/10/24/reading-experience-as-features/', afterPrev);
+  await page.keyboard.press(']');
+  await sleep(1600);
+  check('] 跳到更新一篇', await page.evaluate(() => location.pathname === '/2026/10/24/reading-experience-as-features/'), await page.evaluate(() => location.pathname));
+
+  await page.goto(BASE + '/404.html', { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(900);
+  const recent = await page.evaluate(() => ({
+    count: document.querySelectorAll('.cj-recent li').length,
+    label: document.querySelector('.cj-recent')?.getAttribute('aria-label') || '',
+    links: [...document.querySelectorAll('.cj-recent li a')].map(a => a.getAttribute('href')),
+    first: document.querySelector('.cj-recent li a')?.textContent || '',
+  }));
+  check('404 显示最近文章', recent.count === 5 && recent.label === '最近文章', JSON.stringify(recent));
+  const recentStatus = await page.evaluate(async urls => {
+    const out = [];
+    for (const url of urls.slice(0, 3)) {
+      const res = await fetch(url);
+      out.push(res.status);
+    }
+    return out;
+  }, recent.links);
+  check('404 最近文章可访问', recentStatus.length > 0 && recentStatus.every(s => s === 200), JSON.stringify(recentStatus));
+
+  console.log('=== 11. 图片查看器双指平移 ===');
   await page.setViewport({ width: 1440, height: 1000 });
   await page.goto(BASE + ARTICLE, { waitUntil: 'networkidle2', timeout: 30000 });
   await sleep(1400);
@@ -686,7 +737,7 @@ function check(name, cond, extra) {
   await sleep(300);
   check('Esc 关闭查看器', await page.evaluate(() => !document.querySelector('.image-viewer-container.active')));
 
-  console.log('=== 11. 页面错误 ===');
+  console.log('=== 12. 页面错误 ===');
   check('零页面错误', errors.length === 0, errors.join(' | '));
 
   await browser.close();
