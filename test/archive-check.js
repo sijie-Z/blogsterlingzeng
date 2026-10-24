@@ -35,6 +35,10 @@ function check(name, cond, extra) {
     months: document.querySelectorAll('.wh-month').length,
     stats: document.querySelector('.writing-heatmap-stats')?.textContent || '',
     archiveList: !!document.querySelector('.archive-container'),
+    posts: document.querySelectorAll('.article-title').length,
+    firstTitle: document.querySelector('.article-title')?.textContent.trim() || '',
+    paginator: !!document.querySelector('.paginator'),
+    likeButtons: document.querySelectorAll('.like-btn').length,
     overflow: document.documentElement.scrollWidth - innerWidth,
   }));
   check('写作足迹卡片存在', state.card);
@@ -43,7 +47,31 @@ function check(name, cond, extra) {
   check('月份标签已生成', state.months >= 5, String(state.months));
   check('累计输出统计存在', /万字|字/.test(state.stats), state.stats);
   check('原归档列表仍在', state.archiveList);
+  check('归档首页有分页', state.posts > 0 && state.posts <= 10 && state.paginator, JSON.stringify({ posts: state.posts, paginator: state.paginator }));
+  check('归档条目没有错误插入点赞按钮', state.likeButtons === 0, String(state.likeButtons));
   check('桌面无横向溢出', state.overflow <= 2, String(state.overflow));
+
+  const pagerPage = await browser.newPage();
+  await pagerPage.setViewport({ width: 1440, height: 1000 });
+  await pagerPage.goto(`${BASE}/archives/page/2/`, { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(600);
+  const pagerState = await pagerPage.evaluate(() => ({
+    posts: document.querySelectorAll('.article-title').length,
+    firstTitle: document.querySelector('.article-title')?.textContent.trim() || '',
+    paginator: !!document.querySelector('.paginator'),
+  }));
+  check('归档第 2 页与首页不同', pagerState.posts > 0 && pagerState.firstTitle !== state.firstTitle && pagerState.paginator, JSON.stringify(pagerState));
+  await pagerPage.close();
+
+  const monthPage = await browser.newPage();
+  await monthPage.setViewport({ width: 1440, height: 1000 });
+  await monthPage.goto(`${BASE}/archives/2026/10/`, { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(600);
+  const monthState = await monthPage.evaluate(() => ({
+    posts: document.querySelectorAll('.article-title').length,
+  }));
+  check('月归档只列当月文章', monthState.posts > 0 && monthState.posts < state.posts, JSON.stringify(monthState));
+  await monthPage.close();
 
   const yearPage = await browser.newPage();
   await yearPage.setViewport({ width: 1440, height: 1000 });

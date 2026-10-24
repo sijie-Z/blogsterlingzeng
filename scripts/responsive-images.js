@@ -35,10 +35,12 @@ hexo.extend.filter.register('after_render:html', function (str) {
   });
 
   // 亮/暗两张横幅只有一张会显示。暗色图不再 eager + high:
-  // 亮色模式直接不下载,暗色模式下它进入视口仍会正常加载。
+  // 亮色模式直接不下载,暗色模式由 custom.js 把 data-src 换成真实地址。
   str = str.replace(/<img\b[^>]*banner-dark\.webp[^>]*>/g, tag => {
     let out = tag.replace(/\sloading="eager"/i, ' loading="lazy"');
     out = out.replace(/\sfetchpriority="high"/i, '');
+    out = out.replace(/\bsrc="([^"]+)"/i, (m, src) => `src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'/%3E" data-src="${src}"`);
+    out = out.replace(/\bsrcset="([^"]+)"/i, (m, srcset) => `data-srcset="${srcset}"`);
     if (!/\bloading=/i.test(out)) out = out.replace(/\s*\/?>$/, end => ' loading="lazy"' + end);
     return out;
   });

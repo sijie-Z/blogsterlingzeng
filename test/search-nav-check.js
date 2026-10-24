@@ -88,6 +88,7 @@ async function typeQuery(page, text) {
   check('页面结果使用目录 URL', pageHrefs.includes('/resume/') && !pageHrefs.some(h => h.includes('index.html')), JSON.stringify(pageHrefs.slice(0, 5)));
   const searchXml = await page.evaluate(async () => (await fetch('/search.xml')).text());
   check('404 页不进搜索索引', !searchXml.includes('/404.html'), '404 found');
+  check('搜索索引包含文章而非只有页面', /<url>\/2026\//.test(searchXml) && (searchXml.match(/<entry>/g) || []).length >= 30, String((searchXml.match(/<entry>/g) || []).length));
 
   console.log('=== 2. 方向键高亮 ===');
   await page.keyboard.press('ArrowDown');

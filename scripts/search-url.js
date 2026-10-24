@@ -27,8 +27,8 @@ hexo.extend.filter.register('after_generate', function () {
     let out = xml
       .replace(/<url>\/\/([^<]+)<\/url>/g, '<url>/$1</url>')
       .replace(/<url>([^<]*?)\/index\.html<\/url>/g, '<url>$1/</url>')
-      // 404 页不应该出现在搜索结果里
-      .replace(/<entry>[\s\S]*?<url>\/404\.html<\/url>[\s\S]*?<\/entry>\s*/g, '');
+      // 逐条删除 404,不能用跨 entry 的贪婪区间(会把所有文章一起删掉)
+      .replace(/<entry>[\s\S]*?<\/entry>\s*/g, entry => entry.includes('<url>/404.html</url>') ? '' : entry);
     hexo.route.set('search.xml', out);
   });
 });

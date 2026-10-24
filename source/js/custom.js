@@ -95,7 +95,13 @@
     document.querySelectorAll('.aplayer button').forEach(btn => {
       if (btn.dataset.cjA11y) return;
       const cls = [...btn.classList].find(name => labels[name]);
-      if (!cls) return;
+      if (!cls) {
+        if (btn.classList.contains('aplayer-icon') && btn.closest('.aplayer-miniswitcher')) {
+          btn.dataset.cjA11y = '1';
+          btn.setAttribute('aria-label', '展开或收起播放器');
+        }
+        return;
+      }
       btn.dataset.cjA11y = '1';
       btn.setAttribute('aria-label', labels[cls]);
     });
@@ -1522,7 +1528,7 @@
   // Tables — 宽表格放进横向滚动容器,避免移动端撑破正文
   // ============================
   function initTableScroll() {
-    document.querySelectorAll('.article-content table').forEach(table => {
+    document.querySelectorAll('.article-content table, .page-template-content table').forEach(table => {
       if (table.closest('.table-scroll')) return;
       const wrap = document.createElement('div');
       wrap.className = 'table-scroll';
@@ -2068,6 +2074,7 @@
   // 统计行由构建期模板输出(见 scripts/theme-patch.js),首屏已有占位;
   // 这里只更新数字和点赞状态,不再插入节点,避免文章头部 CLS。
   function initPostStats() {
+    if (!document.querySelector('.post-page-container')) return;
     const postTitle = document.querySelector('.article-title');
     if (!postTitle) return;
     const path = window.location.pathname;
@@ -2147,8 +2154,24 @@
 
     const currentPath = window.location.pathname.replace(/\/+$/, '') + '/';
 
+    // 先插入等高占位,避免 fetch 返回后把下方版权/评论整体推移造成 CLS
+    const wrapper = document.createElement('div');
+    wrapper.className = 'related-posts related-loading';
+    wrapper.innerHTML = `
+      <div class="related-posts-header">
+        <h2 class="related-posts-title">相关阅读</h2>
+        <span class="related-posts-hint">同一主题下的文章</span>
+      </div>
+      <div class="related-posts-list" aria-hidden="true">
+        ${[0, 1, 2].map(() => `<div class="related-post-item related-post-skeleton">
+          <div class="related-post-cover"></div>
+          <div class="related-post-info"><div class="related-post-title">&nbsp;</div><div class="related-post-meta">&nbsp;</div></div>
+        </div>`).join('')}
+      </div>`;
+    const seriesCard = content.parentElement.querySelector('.post-series-card');
+    (seriesCard || content).after(wrapper);
+
     function render(list) {
-      const wrapper = document.createElement('div');
       wrapper.className = 'related-posts';
       wrapper.innerHTML = `
         <div class="related-posts-header">
@@ -2167,10 +2190,6 @@
             </a>`;
           }).join('')}
         </div>`;
-      // 系列卡由构建期插在正文后面;相关阅读排在系列卡之后,
-      // 保持“正文 → 系列 → 相关阅读 → 版权”的固定顺序。
-      const seriesCard = content.parentElement.querySelector('.post-series-card');
-      (seriesCard || content).after(wrapper);
     }
 
     function relatedFor(all, current) {
@@ -2207,11 +2226,12 @@
       .then(res => res.json())
       .then(all => {
         const current = all.find(p => currentPath.includes(p.path));
-        if (!current) return;
+        if (!current) { wrapper.remove(); return; }
         const picks = relatedFor(all, current);
         if (picks.length > 0) render(picks);
+        else wrapper.remove();
       })
-      .catch(() => {});
+      .catch(() => { wrapper.remove(); });
   }
 
   // ============================
@@ -2308,6 +2328,7 @@
     initRelatedPosts();
     initSeason();
     initThemeSwitcher();
+    syncBannerTheme();
     initReveal();
     // 表格包裹和标题锚点不需要赶在内容替换的同一个任务里完成:
     // 延后到入场动画开始后再改 DOM,避免把 click→content:replace 拖长。
@@ -2397,6 +2418,18 @@
     }
   }
 
+  // 暗色横幅延迟到真正需要时再下载
+  function syncBannerTheme() {
+    const img = document.querySelector('img[data-src*="banner-dark"]');
+    if (!img) return;
+    const darkMode = document.documentElement.classList.contains('dark');
+    if (!darkMode || !img.dataset.src) return;
+    if (img.getAttribute('src') !== img.dataset.src) {
+      img.src = img.dataset.src;
+      if (img.dataset.srcset) img.srcset = img.dataset.srcset;
+    }
+  }
+
   // 手动切明暗(与 Redefine 的 enableDarkMode/enableLightMode 等效)
   function toggleDarkManually(dark) {
     const html = document.documentElement;
@@ -2420,6 +2453,7 @@
       st.isDark = dark;
       localStorage.setItem(key, JSON.stringify(st));
     } catch (e) {}
+    syncBannerTheme();
     // giscus 主题跟随(主题用的是 iframe postMessage,没有 window.giscus 全局)
     const giscusFrame = document.querySelector('iframe.giscus-frame');
     if (giscusFrame && giscusFrame.contentWindow) {
@@ -2451,6 +2485,9 @@
         const x = e.clientX || window.innerWidth / 2;
         const y = e.clientY || window.innerHeight / 2;
         switchTheme(() => toggleDarkManually(next), x, y);
+      } else {
+        lastDark = isDark;
+        syncBannerTheme();
       }
     }, true);
     // 不做 MutationObserver 兜底:切换已被捕获拦截接管,

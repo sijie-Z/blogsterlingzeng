@@ -892,7 +892,16 @@ patchText('layout/page.ejs', [
   ],
 ]);
 
-patchText('layout/pages/archive/archive.ejs', []);
+patchText('layout/pages/archive/archive.ejs', [
+  [
+    `	<%- partial('utils/posts-list', {posts: site.posts}) %>
+</div>`,
+    `	<%- partial('utils/posts-list', {posts: page.posts}) %>
+</div>
+<%- partial('utils/paginator', {pageObject: page}) %>`,
+    'archive use page.posts and paginator',
+  ],
+]);
 
 patchText('layout/pages/home/home-content.ejs', [
   [

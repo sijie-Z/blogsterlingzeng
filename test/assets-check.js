@@ -25,7 +25,10 @@ function check(name, cond, extra) {
 
   console.log('=== 1. 桌面横幅 ===');
   const page = await browser.newPage();
-  await page.evaluateOnNewDocument(() => localStorage.setItem('waifu-disabled', 'true'));
+  await page.evaluateOnNewDocument(() => {
+    localStorage.setItem('waifu-disabled', 'true');
+    localStorage.setItem('REDEFINE-THEME-STATUS', JSON.stringify({ isDark: false }));
+  });
   const musicRequests = [];
   page.on('request', r => { if (r.url().endsWith('/music/123.mp3')) musicRequests.push(r.url()); });
   await page.setViewport({ width: 1440, height: 900 });
@@ -211,6 +214,8 @@ function check(name, cond, extra) {
   check('关于页有 ProfilePage JSON-LD', aboutLd.includes('"ProfilePage"') && aboutLd.includes('"Person"'), aboutLd.slice(0, 120));
 
   console.log('=== 8. Feed / robots / sitemap / 图标子集 ===');
+  await page.goto(BASE, { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(400);
   const feeds = await page.evaluate(async () => {
     const read = async url => {
       const res = await fetch(url);
@@ -237,14 +242,18 @@ function check(name, cond, extra) {
     robots: document.querySelector('meta[name="robots"]')?.content || '',
     iconCss: [...document.querySelectorAll('link[rel="stylesheet"]')].some(link => link.href.includes('fontawesome-icons-subset.css')),
     fullFaCss: [...document.querySelectorAll('link[rel="stylesheet"]')].some(link => /fontawesome\/(fontawesome|brands|solid|regular)\.min\.css/.test(link.href)),
-    darkBanner: document.querySelector('img[src*="banner-dark"]')?.getAttribute('loading') || '',
+    darkBanner: (() => {
+      const img = document.querySelector('img[data-src*="banner-dark"]');
+      return img ? { src: img.getAttribute('src') || '', data: img.dataset.src || '', loading: img.getAttribute('loading') || '' } : null;
+    })(),
   }));
   check('robots 声明 max-image-preview:large', seoMeta.robots.includes('max-image-preview:large'), seoMeta.robots);
   check('只加载图标类名子集 CSS', seoMeta.iconCss && !seoMeta.fullFaCss, JSON.stringify(seoMeta));
-  check('暗色横幅不再 eager 下载', seoMeta.darkBanner !== 'eager', seoMeta.darkBanner);
+  check('暗色横幅按需加载', !!seoMeta.darkBanner && seoMeta.darkBanner.loading !== 'eager' && /banner-dark\.webp/.test(seoMeta.darkBanner.data), JSON.stringify(seoMeta.darkBanner));
 
   const sitemapXml = await page.evaluate(async () => (await (await fetch('/sitemap.xml')).text()));
   check('sitemap 不再包含 index.html', !sitemapXml.includes('/index.html</loc>'), 'index.html found');
+  check('sitemap 收录归档入口', sitemapXml.includes('/archives/</loc>'), 'archives missing');
 
   await browser.close();
   server.close();

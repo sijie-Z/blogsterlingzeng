@@ -465,7 +465,12 @@ hexo.extend.filter.register('after_generate', function () {
   if (!routeStream) return;
 
   const root = String(hexo.config.url || '').replace(/\/+$/, '');
+  const latestPost = hexo.locals.get('posts').toArray().sort((a, b) => b.date - a.date)[0];
   const entries = [{
+    loc: root + '/archives/',
+    lastmod: latestPost ? dateText(latestPost) : '',
+    priority: '0.7',
+  }, {
     loc: root + '/series/',
     lastmod: list.length ? dateText(list[0].latest) : '',
     priority: '0.7',
