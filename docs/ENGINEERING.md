@@ -173,6 +173,6 @@ test/                    12 套 Puppeteer / Node 检查
 
 1. **按页拆 CSS/JS**：style.css / custom.css / FontAwesome 子集仍有未使用字节，可在构建期按页面类型拆包。
 2. **内容哈希替代手写版本号**：现在靠 `?v=` 手工推进，改成构建期内容哈希可以彻底消除缓存不一致。
-3. **动态 OG 接入 CI**：标题常改时把 `tools/gen-og-images.js` 放进写作流程或 CI，避免图片和标题漂移。
+3. **OG 卡自动生成**：`og-manifest.json` 已能让 CI 发现“标题改了但没重跑”的卡片；若要在 CI 直接重渲染，需要安装 Chrome 并接受约 1 分钟的构建时间。
 4. **CI**：跑 `test:content` + 构建，浏览器套件留在本地或 self-hosted runner。
 5. **Cloudflare 缓存规则落地**：`docs/DEPLOYMENT.md` 已给出精确的 Transform Rule / Cache Rule 配置，待在控制台执行并 `curl -I` 验证。

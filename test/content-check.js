@@ -14,6 +14,9 @@ const KNOWN_PAGES = new Set([
   '/bookmarks', '/shuoshuo', '/photos', '/resume', '/series',
 ]);
 const OG_DIR = path.join(ROOT, 'source', 'images', 'og');
+const OG_MANIFEST = path.join(OG_DIR, 'og-manifest.json');
+let ogManifest = {};
+try { ogManifest = JSON.parse(fs.readFileSync(OG_MANIFEST, 'utf8')); } catch (e) { ogManifest = {}; }
 
 const errors = [];
 const warnings = [];
@@ -37,6 +40,14 @@ for (const file of files) {
   const slug = file.replace(/\.md$/, '');
   if (!fs.existsSync(path.join(OG_DIR, `${slug}.jpg`))) {
     errors.push(`${file}: 缺少 OG 分享卡（运行 npm run og:images）`);
+  }
+  const titleMatch = meta.match(/^title:\s*["']?(.+?)["']?\s*$/m);
+  const title = titleMatch ? titleMatch[1].trim() : '';
+  const posterTitle = ogManifest[`${slug}.jpg`];
+  if (!posterTitle) {
+    errors.push(`${file}: OG manifest 缺少 ${slug}.jpg（运行 npm run og:images）`);
+  } else if (title && posterTitle !== title) {
+    errors.push(`${file}: OG 卡标题过期（清单 "${posterTitle}"，当前 "${title}"），运行 npm run og:images`);
   }
 
   const body = text.slice(fm[0].length);

@@ -51,7 +51,7 @@
 | 阅读进度 | 顶部渐变进度条 | `source/js/custom.js` |
 | RSS 订阅 | Atom 格式 + 页脚订阅图标 | `hexo-generator-feed` |
 | JSON Feed | 站点与系列级 `feed.json`，全文 HTML + 绝对 URL | `scripts/json-feed.js` |
-| 分享卡片 | 每篇文章 / 系列 / 页面生成 1200×630 OG 图 | `tools/gen-og-images.js` |
+| 分享卡片 | 每篇文章 / 系列 / 页面生成 1200×630 OG 图；manifest 在 CI 检查标题是否过期 | `tools/gen-og-images.js` |
 | 简历页 | 一页式 HTML 简历，可打印 / 存 PDF | `source/resume/` |
 | 复制 Markdown | 侧栏一键复制文章 Markdown 原文 | `scripts/post-sidebar.js` |
 | 脚注 | `[^id]` 语法，构建期生成 doc-noteref / doc-endnotes | `scripts/footnotes.js` |

@@ -3,6 +3,8 @@
  *
  * 这是开发期工具,不进 CI:`npm run og:images` 在本地用 Chrome 渲染,
  * 产物提交到 source/images/og/。标题/系列改名后重新跑一次即可。
+ * 同时写出 og-manifest.json(文件名 → 标题),test:content 会比对它,
+ * 改了标题但忘记重跑时 CI 直接报错,不需要在 CI 里装 Chrome。
  */
 
 'use strict';
@@ -121,12 +123,13 @@ async function main() {
       ? post.date.toISOString().slice(0, 10)
       : String(post.date || '').slice(0, 10);
     const meta = `<b>${esc(Array.isArray(post.categories) ? post.categories[0] : post.categories || '文章')}</b><span>${esc(tags)}</span><span>${esc(date)}</span>`;
-    jobs.push({ name: `${post.slug}.jpg`, html: template({ title: post.title || post.slug, kicker: SITE, meta, cover, avatar }) });
+    jobs.push({ name: `${post.slug}.jpg`, title: post.title || post.slug, html: template({ title: post.title || post.slug, kicker: SITE, meta, cover, avatar }) });
   }
   for (const [slug, info] of series) {
     const count = seriesCounts.get(slug) || 0;
     jobs.push({
       name: `series-${slug}.jpg`,
+      title: info.name || slug,
       html: template({
         title: info.name || slug,
         kicker: '系列阅读',
@@ -139,24 +142,34 @@ async function main() {
   }
   jobs.push({
     name: 'page-projects.jpg',
+    title: '项目案例：问题、取舍与证据',
     html: template({ title: '项目案例：问题、取舍与证据', kicker: SITE, meta: '<b>MiQroGate</b><span>quant_platform</span><span>DocMind</span>', cover: fallbackCover, avatar }),
   });
   jobs.push({
     name: 'page-about.jpg',
+    title: '关于我：用代码解决问题',
     html: template({ title: '关于我：用代码解决问题', kicker: SITE, meta: '<b>前端 / 全栈 / AI 应用工程</b><span>地信（GIS）· 大四</span>', cover: fallbackCover, avatar }),
   });
   jobs.push({
     name: 'page-resume.jpg',
+    title: 'Sterling Zeng · 简历',
     html: template({ title: 'Sterling Zeng · 简历', kicker: 'RESUME', meta: '<b>项目经历</b><span>技术栈</span><span>写作与开源</span>', cover: fallbackCover, avatar }),
   });
   jobs.push({
     name: 'page-series.jpg',
+    title: '系列文章：顺着一条线读完',
     html: template({ title: '系列文章：顺着一条线读完', kicker: '系列阅读', meta: '<b>博客工程化</b><span>Agent 与 RAG 实战</span>', cover: fallbackCover, avatar, accent: '#22d3ee' }),
   });
   jobs.push({
     name: 'home.jpg',
+    title: "Sterling's Space",
     html: template({ title: "Sterling's Space", kicker: 'KEEP ROLLING, KEEP CODING', meta: '<b>技术笔记</b><span>项目复盘</span><span>性能与工程</span>', cover: fallbackCover, avatar }),
   });
+
+  // 记录每张卡对应的标题,供 test:content 检查“改了标题但没重跑 OG”
+  const manifest = {};
+  for (const job of jobs) manifest[job.name] = job.title;
+  fs.writeFileSync(path.join(OUT, 'og-manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
 
   const browser = await puppeteer.launch({
     executablePath: CHROME,
