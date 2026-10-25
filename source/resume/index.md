@@ -15,6 +15,13 @@ comments: false
 
 <button type="button" class="resume-print" onclick="window.print()">打印 / 存为 PDF</button>
 
+<div class="resume-downloads" aria-label="简历 PDF 下载">
+  <span class="resume-downloads-label">PDF</span>
+  <a href="/files/resume/resume-ai-agent-zh.pdf" download>AI Agent 中文版</a>
+  <a href="/files/resume/resume-fullstack-zh.pdf" download>后端全栈 中文版</a>
+  <a href="/files/resume/resume-ai-agent-en.pdf" download>AI Agent 英文版</a>
+</div>
+
 ## 求职方向
 
 前端开发、全栈开发、AI 应用工程；实习或校招均可。

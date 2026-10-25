@@ -677,7 +677,25 @@ function check(name, cond, extra) {
   }, recent.links);
   check('404 最近文章可访问', recentStatus.length > 0 && recentStatus.every(s => s === 200), JSON.stringify(recentStatus));
 
-  console.log('=== 11. 图片查看器双指平移 ===');
+  console.log('=== 11. 简历 PDF ===');
+  await page.goto(BASE + '/resume/', { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(900);
+  const resumePdfs = await page.evaluate(() => ({
+    links: [...document.querySelectorAll('.resume-downloads a')].map(a => a.getAttribute('href')),
+    allDownload: [...document.querySelectorAll('.resume-downloads a')].every(a => a.hasAttribute('download')),
+  }));
+  check('简历页有 3 个 PDF 下载', resumePdfs.links.length === 3 && resumePdfs.allDownload, JSON.stringify(resumePdfs.links));
+  const pdfStatus = await page.evaluate(async urls => {
+    const out = [];
+    for (const url of urls) {
+      const res = await fetch(url);
+      out.push(res.status);
+    }
+    return out;
+  }, resumePdfs.links);
+  check('PDF 文件可访问', pdfStatus.length === 3 && pdfStatus.every(s => s === 200), JSON.stringify(pdfStatus));
+
+  console.log('=== 12. 图片查看器双指平移 ===');
   await page.setViewport({ width: 1440, height: 1000 });
   await page.goto(BASE + ARTICLE, { waitUntil: 'networkidle2', timeout: 30000 });
   await sleep(1400);
@@ -737,7 +755,7 @@ function check(name, cond, extra) {
   await sleep(300);
   check('Esc 关闭查看器', await page.evaluate(() => !document.querySelector('.image-viewer-container.active')));
 
-  console.log('=== 12. 页面错误 ===');
+  console.log('=== 13. 页面错误 ===');
   check('零页面错误', errors.length === 0, errors.join(' | '));
 
   await browser.close();

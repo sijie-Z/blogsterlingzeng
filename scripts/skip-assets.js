@@ -33,6 +33,12 @@ hexo.extend.filter.register('after_generate', function () {
   if (!(theme.comment && theme.comment.system === 'waline')) {
     extras.push('js/libs/waline.js', 'js/build/libs/waline.js');
   }
+  // APlayer 已关闭,音频不再部署(保留 JS 供回归测试检查补丁标记)
+  if (!(plugins.aplayer && plugins.aplayer.enable)) {
+    for (const route of hexo.route.list()) {
+      if (/^music\//.test(route)) extras.push(route);
+    }
+  }
   // essays 页已改用 Intl 格式化日期,不再需要 375KB 的 moment
   extras.push('js/libs/moment-with-locales.min.js', 'js/build/libs/moment-with-locales.min.js');
   // 页脚数字由 runtime 直接写文本,odometer 动画已停用

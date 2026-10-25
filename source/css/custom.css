@@ -83,6 +83,11 @@ body {
    ======================================== */
 .navbar-container {
   transition: background-color 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
+  /* 主题默认给整条导航加 blur(10px);用户明确要求“和下面的卡片一样清楚”,
+     这里彻底关掉,背景改用不透明色,避免滚动时文字透过导航。 */
+  background: transparent !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
 }
 
 /* 收缩与展开共用同一组过渡,避免回到顶部时其余属性瞬间跳变
@@ -98,20 +103,13 @@ html body .navbar-container .navbar-content {
     box-shadow 0.28s ease;
 }
 
-/* 顶部常态 — 全宽玻璃 */
+/* 顶部常态 — 全宽实色,不加玻璃模糊 */
 .navbar-container:not(.scrolled) {
-  background: rgba(255, 255, 255, 0.65) !important;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+  background: var(--background-color) !important;
+  border-bottom: 1px solid var(--border-color);
 }
 
-html.dark .navbar-container:not(.scrolled) {
-  background: rgba(10, 14, 26, 0.75) !important;
-}
-
-/* 滚动后 — Dynamic Island 胶囊。
-   材质和下面的文章卡片保持一致:同一个 --background-color-transparent-80、
-   同一条 --border-color 描边,不再单独做 backdrop blur,
-   避免胶囊和卡片出现两种“玻璃”。 */
+/* 滚动后 — Dynamic Island 胶囊。和卡片同一条 --border-color、同一块实色背景。 */
 .navbar-container.scrolled {
   padding: 0 !important;
   border-bottom: none !important;
@@ -124,11 +122,35 @@ html.dark .navbar-container:not(.scrolled) {
   margin: 10px auto !important;
   padding: 7px 20px !important;
   border-radius: 999px !important;
-  background: var(--background-color-transparent-80, var(--bg-card)) !important;
+  background: var(--background-color) !important;
   border: 1px solid var(--border-color);
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.06)) !important;
+}
+
+/* 桌面端:logo 左、链接居中、控件右,避免所有链接挤在左边 */
+@media (min-width: 881px) {
+  .navbar-content {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .navbar-content > .left {
+    grid-column: 1;
+    justify-self: start;
+  }
+
+  .navbar-content > .right {
+    grid-column: 2;
+    justify-self: center;
+  }
+
+  .navbar-content > .nb-controls {
+    grid-column: 3;
+    justify-self: end;
+  }
 }
 
 /* 六个导航项时收回成胶囊要防换行,否则 logo 和菜单会各挤成两行 */
@@ -139,7 +161,7 @@ html.dark .navbar-container:not(.scrolled) {
 }
 
 html.dark .navbar-container.scrolled .navbar-content {
-  background: var(--background-color-transparent-80, var(--bg-card)) !important;
+  background: var(--background-color) !important;
   box-shadow: 0 10px 28px -22px rgba(0, 0, 0, 0.6) !important;
 }
 
@@ -5339,4 +5361,157 @@ footer.footer.at-bottom .footer-utility {
   color: var(--primary-color);
   text-decoration: none;
   border-bottom: 1px solid color-mix(in srgb, var(--primary-color) 40%, transparent);
+}
+
+/* ========================================
+   PRINT — 强制浅色,深色模式下打印简历/文章不反色
+   ======================================== */
+@media print {
+  html,
+  html.dark {
+    color-scheme: light !important;
+  }
+
+  html.dark {
+    --background-color: #fff;
+    --background-color-transparent-80: #fff;
+    --background-color-transparent-40: #fff;
+    --first-text-color: #111827;
+    --default-text-color: #1f2937;
+    --second-text-color: #374151;
+    --third-text-color: #4b5563;
+    --border-color: #d1d5db;
+    --shadow-color-1: #e5e7eb;
+  }
+
+  html,
+  body,
+  body.dark-mode,
+  .page-container,
+  .page-template-container,
+  .main-content,
+  .main-content-container,
+  .main-content-body,
+  .article-content-container,
+  .article-content,
+  .markdown-body,
+  .page-template-content,
+  .resume-page {
+    background: #fff !important;
+    color: #111827 !important;
+  }
+
+  .page-template-container {
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  html body .resume-page,
+  html body .resume-page * {
+    color: #111827 !important;
+  }
+
+  .resume-page {
+    box-shadow: none !important;
+  }
+
+  .resume-page a {
+    color: #1d4ed8 !important;
+  }
+
+  .article-content pre,
+  .article-content pre * {
+    background: #f6f8fa !important;
+    color: #111827 !important;
+  }
+}
+
+/* ========================================
+   PET — 阅读时让开正文
+   ======================================== */
+#waifu #live2d {
+  width: 170px !important;
+  height: 170px !important;
+}
+
+#waifu {
+  left: -18px;
+}
+
+#waifu.waifu-reading {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* ========================================
+   RESUME PDF DOWNLOADS
+   ======================================== */
+.resume-downloads {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0.9rem 0 1.5rem;
+}
+
+.resume-downloads-label {
+  margin-right: 2px;
+  color: var(--text-tertiary);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.resume-downloads a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  text-decoration: none !important;
+  background-image: none !important;
+  transition: color 0.16s ease, border-color 0.16s ease;
+}
+
+.resume-downloads a:hover {
+  color: var(--primary-color);
+  border-color: color-mix(in srgb, var(--primary-color) 34%, var(--border-color));
+}
+
+@media print {
+  .resume-downloads {
+    display: none !important;
+  }
+}
+
+@media print {
+  /* 主题的页面标题是渐变文字,深色模式下打印会发灰 */
+  html body .page-title,
+  html body .article-title,
+  html body h1 {
+    color: #111827 !important;
+    -webkit-text-fill-color: #111827 !important;
+    background-image: none !important;
+  }
+}
+
+@media print {
+  /* 固定浮层不应该出现在打印/PDF 里 */
+  .pet-toggle,
+  #waifu,
+  #waifu-toggle,
+  .side-tools,
+  .right-bottom-tools,
+  .tool-scroll-to-top,
+  .tool-scroll-to-bottom,
+  .nb-controls,
+  .read-toggle,
+  .focus-exit,
+  .mouse-follower {
+    display: none !important;
+  }
 }

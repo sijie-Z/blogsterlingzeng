@@ -52,7 +52,7 @@
 | RSS 订阅 | Atom 格式 + 页脚订阅图标 | `hexo-generator-feed` |
 | JSON Feed | 站点与系列级 `feed.json`，全文 HTML + 绝对 URL | `scripts/json-feed.js` |
 | 分享卡片 | 每篇文章 / 系列 / 页面生成 1200×630 OG 图；manifest 在 CI 检查标题是否过期 | `tools/gen-og-images.js` |
-| 简历页 | 一页式 HTML 简历，可打印 / 存 PDF | `source/resume/` |
+| 简历页 | 一页式 HTML 简历，可打印 / 存 PDF；附 AI Agent 中文、后端全栈中文、AI Agent 英文三份 PDF 下载 | `source/resume/` |
 | 复制 Markdown | 侧栏一键复制文章 Markdown 原文 | `scripts/post-sidebar.js` |
 | 脚注 | `[^id]` 语法，构建期生成 doc-noteref / doc-endnotes | `scripts/footnotes.js` |
 | 边注 | `{% margin %}`：≥1680px 浮动到左页边，窄屏点开底部卡片 | `scripts/marginnote.js` |
@@ -126,9 +126,9 @@
 | SPA 整次导航 | **~134ms** | Swup 只替换 `#swup`，滚动即时归零 |
 | Live2D 主纹理 | **1.7MB → 308KB** | 2048 PNG 重采样为 1024 WebP |
 | 手机首屏横幅 | **63KB → 35KB**（亮色） | 960/1280/1920 srcset + DPR 选图 |
-| 自动化浏览器检查 | **456 项** | 跳转、侧栏、系列、阅读记忆、归档、平滑度、资源、内容、边注/预览/阅读设置/引用/反向链接/快捷键/图片平移/文章导航 |
+| 自动化浏览器检查 | **460 项** | 跳转、侧栏、系列、阅读记忆、归档、平滑度、资源、内容、边注/预览/阅读设置/引用/反向链接/快捷键/图片平移/文章导航/简历 PDF |
 
-**构建期优先**：系列页、写作热力图、文章侧栏、JSON-LD、Markdown 原文、llms.txt 全部在 `hexo generate` 阶段生成，运行时不发额外请求、不引入布局抖动。主题通过 `scripts/theme-patch.js` 做可审计的最小补丁（Swup、TOC、搜索防抖、APlayer 延迟加载等），补丁可重复执行。
+**构建期优先**：系列页、写作热力图、文章侧栏、JSON-LD、Markdown 原文、llms.txt 全部在 `hexo generate` 阶段生成，运行时不发额外请求、不引入布局抖动。主题通过 `scripts/theme-patch.js` 做可审计的最小补丁（Swup、TOC、搜索防抖、Giscus 守卫等），补丁可重复执行。
 
 更完整的架构、测量方法和已知边界见 [docs/ENGINEERING.md](docs/ENGINEERING.md)；下一轮可以继续做的方向见 [docs/BACKLOG.md](docs/BACKLOG.md)。
 
@@ -187,7 +187,7 @@ npm run serve               # http://127.0.0.1:4140
 
 # 测试(需要 puppeteer-core 与本机 Chrome)
 npm test                    # 34 项端到端检查(含 8 个次级页面、Live2D 显式召唤)
-npm run test:features       # 98 项边注 / 内链预览 / 公式复制 / 脚注预览 / 阅读设置 / 引用 / 反向链接 / 快捷键 / 图片平移 / 文章导航
+npm run test:features       # 100 项边注 / 内链预览 / 公式复制 / 脚注预览 / 阅读设置 / 引用 / 反向链接 / 快捷键 / 图片平移 / 文章导航 / 简历 PDF
 npm run test:l2d            # Live2D 加载诊断(模型 / Core / 404)
 npm run test:smooth         # 26 项滚动与动效平滑度回归
 npm run test:content        # 文章 front matter / 站内链接 / 图片 / OG 卡 / 文风检查

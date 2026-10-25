@@ -47,12 +47,17 @@ function check(name, cond, extra) {
       name: a.querySelector('.series-index-name')?.textContent.trim() || '',
       meta: a.querySelector('.series-index-meta')?.textContent.trim() || '',
     })),
+    gridDisplay: (() => { const g = document.querySelector('.series-index-grid'); return g ? getComputedStyle(g).display : 'missing'; })(),
+    cardBorder: (() => { const c = document.querySelector('.series-index-card'); return c ? getComputedStyle(c).borderTopWidth : 'missing'; })(),
+    stats: document.querySelector('.series-index-stats')?.textContent.trim() || '',
     overflow: document.documentElement.scrollWidth - innerWidth,
   }));
   check('系列总览可访问', index.title === '系列文章', index.title);
   check('四个系列卡', index.cards.length === 4, JSON.stringify(index.cards));
   check('系列卡链接正确', index.cards.some(c => c.href === SERIES), JSON.stringify(index.cards));
   check('系列卡显示篇数', index.cards.every(c => /篇/.test(c.meta)), JSON.stringify(index.cards));
+  check('系列卡片样式生效', index.gridDisplay === 'grid' && parseFloat(index.cardBorder) > 0, JSON.stringify({ grid: index.gridDisplay, border: index.cardBorder }));
+  check('系列总览显示统计', /4 个系列/.test(index.stats) && /15 篇文章/.test(index.stats), index.stats);
   check('总览无横向溢出', index.overflow <= 2, String(index.overflow));
 
   console.log('=== 2. 系列页 ===');

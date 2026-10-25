@@ -84,7 +84,7 @@ test/                    13 套 Puppeteer / Node 检查
 | Live2D 主纹理 | 308KB WebP（原 1.7MB PNG） |
 | FontAwesome CSS | 65KB 类名子集（原 4 个文件约 200KB） |
 | 移除的脚本 | moment 375KB（essays 页改用 Intl） |
-| 首屏请求（首页） | 58 个；search.xml / APlayer 不在首屏请求 |
+| 首屏请求（首页） | 58 个；search.xml 不在首屏请求 |
 | 部署产物 | 约 21MB（含 32 张 OG 卡；移除全量 webfonts / source map / 重复 js/libs 后，原 33MB+） |
 | Live2D | 默认 0 请求；用户点击“召唤宠物”后才加载模型，选择记入 localStorage |
 
@@ -93,7 +93,7 @@ test/                    13 套 Puppeteer / Node 检查
 - **移除 Swup 退出动画**：旧流程先播 320ms 旧页退出，再替换 DOM，首跳 click→replace 实测 426ms。现在只播新页入场，代价是页面切换少了一层“退场”叙事，收益是内容快一个数量级到达。
 - **滚动期间暂停 Live2D**：用 `scrollend` + 180ms 时间窗避免程序化滚动每帧触发 resume。
 - **缓存文档高度**：主题的滚动进度/侧栏工具需要 `scrollHeight`，每帧读取会强制布局；改为 load/resize/fonts/换页后更新缓存，仅在接近页脚时读一次真实值。
-- **APlayer 延迟**：12 秒后才加载，并设置 `preload: none`；2.5MB 的 mp3 不在首屏请求。页脚数字关闭 odometer 滚动动画，由主题 runtime 每秒直接写文本，避免一次约 300ms 的布局任务。
+- **APlayer 已关闭**：占位音轨会显示 “123 - Unknown”，固定播放器展开后会遮挡正文；关闭后 2.5MB 的 mp3 也不再部署。需要背景音乐时可在 `plugins.aplayer.enable` 重新打开。
 - **PNG 纹理仍部署**：WebP 已切换，但旧 `index.json` 可能被缓存 10 分钟；PNG 作为回退保留。设置 `CJ_SKIP_OLD_TEXTURES=1` 可移除。
 
 ## 5. 阅读体验与内容增强
@@ -144,19 +144,19 @@ test/                    13 套 Puppeteer / Node 检查
 |---|---:|---|
 | `test:transitions` | 46 | SPA 跳转、连点、前进后退、搜索焦点、路由播报、800px 导航 |
 | `test:sidebar` | 39 | 侧栏卡片、进度环、锚点、表格、Markdown、代码全屏、面包屑、移动目录 |
-| `test:series` | 53 | 系列页、徽章/系列卡、Atom、归档入口、SPA、移动端 |
+| `test:series` | 55 | 系列页、徽章/系列卡、Atom、归档入口、SPA、移动端 |
 | `test:assets` | 49 | 响应式横幅、WebP 纹理、sitemap/llms、JSON-LD、JSON Feed、图标子集、OG 元数据、APlayer |
 | `test:a11y` | 68 | 名称、alt、列表语义、标题、地标、图片查看器键盘/双指缩放、脚注、项目/简历页 |
 | `test:search` | 20 | combobox/listbox、方向键、Enter、空态、IME、SPA |
 | `test:smooth` | 26 | 滚动、Live2D 暂停、reduced-motion、移动端溢出 |
 | `test` | 34 | 端到端页面、主题切换、Live2D 显式召唤、次级页面 |
-| `test:features` | 98 | 边注、内链预览、公式复制、脚注预览、阅读设置、引用菜单、反向链接、键盘快捷键、图片双指平移、文章导航、404 |
+| `test:features` | 100 | 边注、内链预览、公式复制、脚注预览、阅读设置、引用菜单、反向链接、键盘快捷键、图片双指平移、文章导航、404、简历 PDF |
 | `test:resume` | 7 | 阅读位置记忆与继续阅读 |
 | `test:archive` | 16 | 归档热力图与移动端 |
 | `test:content` | 23 篇 | front matter、站内链接、图片、OG 卡、文风硬规则 |
 | `test:links` | 101 HTML | 构建产物站内 href 断链检查 |
 
-合计 456 项浏览器检查、23 篇文章的内容检查和 101 个 HTML 的内链检查。所有套件在本机通过；CI 跑 `test:content`、构建和 `test:links`，浏览器套件留在本地或 self-hosted runner。
+合计 460 项浏览器检查、23 篇文章的内容检查和 101 个 HTML 的内链检查。所有套件在本机通过；CI 跑 `test:content`、构建和 `test:links`，浏览器套件留在本地或 self-hosted runner。
 
 ## 8. 已知边界
 
@@ -176,6 +176,9 @@ test/                    13 套 Puppeteer / Node 检查
 - **按页拆 CSS/JS 暂未做**：coverage 显示 custom.css 单页只用 14–30%，但 Swup 只替换 `#swup`，按页注入到 head 的样式表在 SPA 跳转时不会加载；要做需要把 `<link>` 放进被替换内容或加运行时 loader，收益（约 8–10KB gzip/页）不足以抵消闪烁和维护成本。
 - **文章导航的 head 链接只在首屏 HTML 生效**：Swup 不替换 `<head>`，SPA 换页后 `rel=prev/next` 仍是进入站点时的页面；文末卡片每次换页都会重建，键盘 `[` `]` 也用当前页的卡片，不受影响。
 - **Giscus 主题同步**：主题在 iframe 被 Swup 移除后仍可能对 null `contentWindow` 调 `postMessage`；`theme-patch.js` 已在源码和构建产物里补 `isConnected/contentWindow` 守卫。
+- **打印**：打印样式强制浅色背景和深色文字，深色模式下打印简历/文章不会反色；固定浮层（宠物、播放器、工具栏、鼠标跟随）全部隐藏。
+- **系列样式**：`series.css` 改为全站加载。之前按页注入 `<head>`，SPA 换页或缓存命中旧版本时卡片会失去布局，退化成一段连续文字。
+- **宠物**：画布缩到 170px，向下阅读时淡出、向上滚或回顶部恢复，避免遮挡正文。
 - **主题升级**：补丁目标是 2.9.0 的模板文本；版本已锁定，升级时需要重新核对 `theme-patch.js` 的标记。
 
 ## 9. 如果继续做

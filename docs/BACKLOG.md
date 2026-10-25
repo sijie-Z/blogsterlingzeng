@@ -20,7 +20,8 @@
 - **文章导航与 404**：文末按发布日期生成“更早/更新一篇”，head 输出 `rel=prev/next`，`[` `]` 快捷键复用链接点击；404 页补最近 5 篇文章。顺手修掉主题 Giscus 主题同步在 iframe 被换页移除后对 null `contentWindow` 调 `postMessage` 的报错。
 - **信息架构**：主导航 7 → 5（项目 / 关于 / 系列 / 友链），简历从关于页、首页 hero 和项目页进入，归档 / 标签 / 书签收进页脚展开态；关于页顶部改成“查看简历”主按钮 + 三个文字入口，系列页底部补归档入口（归档页本来就有系列入口）。
 - **CI 时区修复**：Content Check 从加入起就没绿过，根因是 GitHub Actions 用 UTC 构建，`hexo-series-reading-path` 的 `00:00` 日期被排到前一天，站内链接指向 `/10/23/` 而产物在 `/10/22/`，线上那篇确实 404。两个 workflow 现在固定 `TZ: Asia/Shanghai`，文章时间改到 10:00，旧 URL 加了跳转页并用 `scripts/redirects.js` 从 sitemap/搜索索引移除，`test:content` 会拦住 08:00 之前的日期。
-- **测试**：新增 `test:features`，目前 98 项；浏览器检查合计 456 项，23 篇内容检查，101 个 HTML 内链检查。
+- **视觉与可用性修复（2026-10-25）**：主导航改为实色、去掉主题的整条 `backdrop-filter`，滚动胶囊与页面卡片同一材质；桌面导航改为 logo 左 / 链接居中 / 控件右；系列总览改为 2×2 大卡并常驻 `series.css`，修复线上卡片退化成一行文字的问题；关于页加简历主按钮和 PDF 入口；打印强制浅色并隐藏所有固定浮层；APlayer 关闭（占位音轨会遮挡正文），宠物缩到 170px 并在向下阅读时淡出；简历页新增三份 PDF 下载。
+- **测试**：新增 `test:features`，目前 100 项；浏览器检查合计 460 项，23 篇内容检查，101 个 HTML 内链检查。
 
 ## 2026-10-23 第一轮（历史记录）
 
@@ -72,6 +73,9 @@
 - OG 卡是本地 Chrome 渲染产物；`og-manifest.json` 记录标题，`test:content` 会在标题变化但没重跑 `npm run og:images` 时失败。
 - 文章导航的 head rel 链接只在首屏 HTML 生效（Swup 不替换 head）；文末卡片和 `[` `]` 每次换页都会用当前页数据。
 - Giscus 主题同步在 iframe 被换页移除后会报 null `contentWindow`，`theme-patch.js` 已加守卫。
+- 打印样式强制浅色；深色模式打印简历/文章不会反色，固定浮层全部隐藏。
+- APlayer 已关闭：占位音轨会显示 “123 - Unknown”，固定播放器展开会遮挡正文；2.5MB mp3 不再部署。
+- 宠物画布 170px，向下阅读淡出、向上滚恢复，减少对正文的遮挡。
 - 主题补丁目标是 `hexo-theme-redefine@2.9.0`，升级前先核对 `scripts/theme-patch.js` 的标记。
 - 构建缓存按文章源文件内容哈希失效；改 `scripts/` 里的 tag/renderer 后需要重建缓存或改动文章内容才会重新渲染。
 - 站点时区是 `Asia/Shanghai`，CI 两个 workflow 都设 `TZ=Asia/Shanghai`；`test:content` 拦截 08:00 之前的日期，避免 UTC 构建把文章路径移到前一天。

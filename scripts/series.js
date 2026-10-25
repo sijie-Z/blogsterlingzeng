@@ -267,17 +267,23 @@ function renderSeriesPage(group) {
 }
 
 function renderSeriesIndex(list) {
+  const totalPosts = list.reduce((sum, group) => sum + group.posts.length, 0);
+  const totalMinutes = list.reduce((sum, group) => sum + group.minutes, 0);
+  const first = list[0];
   const cards = list.map(group => {
     return `<a class="series-index-card" href="${escapeHtml(seriesUrl(group.slug))}">
   <span class="series-index-kicker">系列</span>
   <span class="series-index-name">${escapeHtml(group.name)}</span>
   <span class="series-index-desc">${escapeHtml(group.description)}</span>
   <span class="series-index-meta">${seriesMeta(group, true)}</span>
+  <span class="series-index-foot">开始阅读</span>
 </a>`;
   }).join('');
   return `
 <div class="series-index" data-series-index>
-  <p class="series-index-desc">把主题相近的文章串成一条阅读路径，按顺序读比按时间读更连贯。</p>
+  <p class="series-index-lead">把主题相近的文章串成一条阅读路径，按顺序读比按时间读更连贯。</p>
+  <p class="series-index-stats">${list.length} 个系列，${totalPosts} 篇文章，约 ${totalMinutes} 分钟。</p>
+  ${first ? `<p class="series-index-start">第一次来，可以先读<a href="${escapeHtml(seriesUrl(first.slug))}">「${escapeHtml(first.name)}」</a>。</p>` : ''}
   <div class="series-index-grid">${cards}</div>
   <p class="series-archive-link">也可以按时间浏览：<a href="/archives/">全部文章归档</a></p>
 </div>`;
@@ -500,17 +506,6 @@ hexo.extend.filter.register('after_generate', function () {
     out = out.replace('</urlset>', () => (list.length ? extra : '') + '</urlset>');
     hexo.route.set('sitemap.xml', out);
   });
-});
-
-// series.css 只在会出现系列 UI 的页面加载
-hexo.extend.filter.register('after_render:html', function (str, locals) {
-  const page = locals && locals.page;
-  if (!str || !page || str.includes('data-series-css')) return str;
-  const route = String(page.path || '').replace(/^\/+/, '');
-  const needs = page.series || page.series_page || route.startsWith('archives/');
-  if (!needs || !str.includes('</head>')) return str;
-  return str.replace('</head>', () =>
-    '<link data-series-css rel="stylesheet" href="/css/series.css?v=20261023d">\n</head>');
 });
 
 module.exports = {

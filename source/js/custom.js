@@ -1236,6 +1236,7 @@
     }
     if (waifu.__cjObserved) return;
     waifu.__cjObserved = true;
+    if (window.scrollY > 160) waifu.classList.add('waifu-reading');
     const canvas = document.getElementById('live2d');
     if (canvas) canvas.setAttribute('aria-hidden', 'true');
     initLive2DDrag(waifu);
@@ -1898,6 +1899,19 @@
       // 同步暂停,不等 rAF:scrollend 恢复后新的 scroll 会再次暂停
       const l2d = window.__l2dApp;
       const waifu = document.querySelector('#waifu');
+      if (waifu) {
+        const y = window.scrollY;
+        const prevY = Number.isFinite(window.__cjLastScrollY) ? window.__cjLastScrollY : 0;
+        window.__cjLastScrollY = y;
+        if (waifu.matches(':hover')) {
+          waifu.classList.remove('waifu-reading');
+        } else if (y < 120 || y < prevY - 8) {
+          waifu.classList.remove('waifu-reading');
+        } else if (y > prevY + 8 && y > 160) {
+          // 向下阅读时让开正文;向上滚或回顶部再出现
+          waifu.classList.add('waifu-reading');
+        }
+      }
       if (l2d && waifu && waifu.classList.contains('waifu-active')) {
         if (!window.__l2dPaused) {
           window.__l2dPaused = true;
