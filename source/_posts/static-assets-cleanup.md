@@ -7,7 +7,7 @@ tags:
   - 性能优化
   - Hexo
   - 博客
-description: 博客看起来已经很快了，但首屏仍加载了 200KB 用不到的图标 CSS、375KB 的 moment 和 8.4MB 没人引用的字体。这篇文章记录一次“删依赖”而不是“加缓存”的性能清理，以及一次被测量否决的 View Transition 改造。
+description: 博客看起来已经很快了，但首屏仍加载了 200KB 用不到的图标 CSS、375KB 的 moment，部署目录还包含 8.4MB 未引用字体。这篇文章记录一次“删依赖”而不是“加缓存”的性能清理，以及一次被测量否决的 View Transition 改造。
 cover: /images/cover-tech.webp
 series: blog-engineering
 series_order: 5
@@ -63,7 +63,7 @@ regular.min.css         0.5KB
 ```text
 fontawesome-icons-subset.css  65KB（gzip 后约 8KB）
 保留 77 个图标 / 70 个码点
-sound-solid / regular / brands 子集字体 5KB + 7KB + 1KB
+fa-solid / fa-regular / fa-brands 子集字体 5KB + 7KB + 1KB
 ```
 
 同时把 `public/webfonts/` 整个目录从部署产物里移除。页面只引用 `/fontawesome/webfonts/*.subset.woff2`，全量字体没有任何引用。
@@ -103,7 +103,7 @@ lrcType: audioList.some(item => item.lrc) ? 3 : 0
 
 页脚的“博客已运行 X 天 X 小时”用了 odometer 数字滚动。它在字体就绪后一次性初始化四个数字，每个数字内部会生成多层 span 做翻转动画。
 
-但主题的 `runtime.js` 本来就会**每秒直接写 `innerHTML`**，odometer 的动画马上会被覆盖。也就是说，这 300ms 的布局任务没有任何视觉收益。
+但主题的 `runtime.js` 本来就会<strong>每秒直接写 <code>innerHTML</code></strong>，odometer 的动画马上会被覆盖。也就是说，这 300ms 的布局任务没有任何视觉收益。
 
 处理方式很简单：不再初始化 odometer，让 runtime 直接写文本。首屏长任务从约 300ms 降下来，页脚数字仍然每秒更新。
 
@@ -145,5 +145,5 @@ Swup 4 支持 `native: true`，用浏览器原生 View Transition 做页面交�
 2. **动态内容要进扫描范围。** 图标类名子集如果不扫主题 JS，运行时会缺图标；只看 HTML 会漏。
 3. **性能改动必须能被测量否决。** View Transition 的 37ms → 381ms 如果只凭感觉，很容易当成“更高级的体验”上线。
 
-[^og]: OG 卡由本地 Chrome 渲染，31 张图合计约 1.8MB；生成脚本在 `tools/gen-og-images.js`，改标题后重新跑一次即可。
+[^og]: OG 卡由本地 Chrome 渲染，31 张图合计约 1.8MB；生成脚本在 <code>tools/gen-og-images.js</code>，改标题后重新跑一次即可。
 

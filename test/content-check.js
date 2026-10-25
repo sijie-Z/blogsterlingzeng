@@ -92,6 +92,32 @@ for (const file of files) {
   if (emotional) warnings.push(`${file}: 情绪形容词 ${emotional.length} 处`);
 }
 
+// 构建后的可见页面不能残留 Markdown 标记。主题对中文标点、
+// 个别数字/箭头组合和脚注内联代码的解析并不总符合源码预期。
+const PUBLIC = path.join(ROOT, 'public');
+function checkRenderedHtml(dir) {
+  if (!fs.existsSync(dir)) return;
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const file = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      checkRenderedHtml(file);
+      continue;
+    }
+    if (!entry.name.endsWith('.html')) continue;
+    const html = fs.readFileSync(file, 'utf8');
+    const visible = html
+      .replace(/<!--[\s\S]*?-->/g, '')
+      .replace(/<(script|style|pre|code)\b[^>]*>[\s\S]*?<\/\1>/gi, '');
+    const rel = path.relative(PUBLIC, file).replace(/\\/g, '/');
+    if (visible.includes('**')) errors.push(`${rel}: 页面残留未渲染的 ** 标记`);
+    const footnotes = html.match(/<section class="footnotes"[\s\S]*?<\/section>/);
+    if (footnotes && footnotes[0].includes('`')) {
+      errors.push(`${rel}: 脚注残留未渲染的反引号`);
+    }
+  }
+}
+if (fs.existsSync(PUBLIC)) checkRenderedHtml(PUBLIC);
+
 errors.forEach(e => console.log('ERROR', e));
 warnings.forEach(w => console.log('WARN ', w));
 console.log(`\n${files.length} 篇文章,${errors.length} 个错误,${warnings.length} 个警告`);

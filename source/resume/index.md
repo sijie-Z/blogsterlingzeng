@@ -22,6 +22,7 @@ comments: false
   <a href="/files/resume/resume-fullstack-zh.pdf" download>后端全栈 中文版</a>
   <a href="/files/resume/resume-ai-agent-en.pdf" download>AI Agent 英文版</a>
 </div>
+<p class="resume-downloads-note">这些 PDF 是定向历史版本；项目当前状态以本页和对应仓库为准，也可以直接打印本页获取最新简历。</p>
 
 ## 求职方向
 
@@ -39,8 +40,8 @@ comments: false
 
 *Java 21 · Spring WebFlux · Vue 3 · PostgreSQL ｜ 个人项目 · 项目所有者*
 
-- 把真实上游 API Key 映射为可独立追踪、轮换、吊销的 Virtual Key；控制面/数据面分离，热路径零数据库访问（路由快照 + `pg_notify`）。
-- 安全默认值：统一 404 防探测、常量时间 HMAC、密钥零残留；7 家厂商 20 个产品适配器。
+- 把真实上游 API Key 映射为可独立追踪、轮换、吊销的 Virtual Key；控制面/数据面分离，默认鉴权与路由判定走内存快照，不查数据库（路由快照 + `pg_notify`）。
+- 安全默认值：统一 404 防探测、常量时间 HMAC、密钥零残留；8 家厂商 23 个产品适配器。
 - 449 个 Java 文件、134 个测试文件（测试文件数，非覆盖率）；前端 vitest 21/21、Playwright 15/15。
 - 角色：写规格、架构与审查、合并发布；实现主要由 Claude Code 按规格完成。真实凭证联调尚未验证，适配器按“已实现 / 已验证”分级，不伪造 PASS。
 
@@ -76,8 +77,8 @@ comments: false
 
 ## 写作与开源
 
-- 个人博客 [sterlingzeng.cn](https://sterlingzeng.cn)：22 篇技术文章，含[系列阅读](/series/)与构建期生成的 Atom / JSON Feed。
-- 站点工程化：Swup SPA、构建期系列系统、无障碍（axe WCAG A/AA 0 违规）、CLS 0.0001、357 项浏览器回归测试。
+- 个人博客 [sterlingzeng.cn](https://sterlingzeng.cn)：23 篇技术文章，含[系列阅读](/series/)与构建期生成的 Atom / JSON Feed。
+- 站点工程化：Swup SPA、构建期系列系统、无障碍（axe WCAG A/AA 0 违规）、CLS 0.0001、538 项浏览器回归测试。
 - GitHub：[github.com/sijie-Z](https://github.com/sijie-Z)
 
 ## 联系

@@ -110,6 +110,11 @@ Grid 改变了一切。
     "sidebar content";
   height: 100vh;
 }
+
+/* 还要把直接子元素放进命名区域 */
+.dashboard > .sidebar { grid-area: sidebar; }
+.dashboard > .header { grid-area: header; }
+.dashboard > .content { grid-area: content; }
 ```
 
 这和我脑子里的布局图是一一对应的。我不再需要思考"怎么用 flex 嵌套实现这个结构"，而是直接定义结构本身。

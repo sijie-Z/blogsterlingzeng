@@ -150,7 +150,7 @@ useEffect(() => {
 }, [userId]);
 ```
 
-这个 cleanup 函数不是"组件卸载时执行"，而是"下一次 effect 执行前执行"。理解了这个，很多 useEffect 的困惑就解开了。
+这个 cleanup 函数不只在组件卸载时执行，也会在下一次 effect 执行前运行：组件卸载时清理一次；依赖变化时，先清理上一次 effect，再执行新的 effect。理解了这个，很多 useEffect 的困惑就解开了。
 
 ## useCallback 和 useMemo：不要过度优化
 

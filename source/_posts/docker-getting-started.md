@@ -18,7 +18,7 @@ cover: /images/cover-devops.webp
 
 当时我的解决办法是：装一个 nvm，切换到 16，跑完再切回来。问题解决了，但我觉得这个办法很蠢。
 
-后来接触了 Docker，才意识到：**"环境"本身应该是可以版本控制的。**
+后来接触了 Docker，才意识到：<strong>“环境”本身应该是可以版本控制的。</strong>
 
 <!-- more -->
 
@@ -69,9 +69,13 @@ services:
       - POSTGRES_PASSWORD=dev
     volumes:
       - pgdata:/var/lib/postgresql/data
+
+# 声明服务里引用的命名卷，否则不能直接启动
+volumes:
+  pgdata:
 ```
 
-新人入职，`docker-compose up` 一条命令就能跑起来，不用花半天装环境。
+新人入职，`docker compose up` 一条命令就能跑起来，不用花半天装环境。
 
 ### 2. 部署一致性
 
@@ -81,7 +85,7 @@ services:
 
 ### 3. 快速尝试新技术
 
-想试试 Redis？不用装，直接 `docker run redis`。想试试 PostgreSQL？`docker run postgres`。用完就删，不留垃圾。
+想试试 Redis？不用装，直接 `docker run --rm redis`。想试试 PostgreSQL？`docker run --rm -e POSTGRES_PASSWORD=dev postgres`（官方镜像要求显式设置密码）。停止容器后 `--rm` 会自动清理，不留垃圾。
 
 这改变了我尝试新技术的方式——以前"试试新东西"意味着"装一堆东西"，现在只是"多跑一个容器"。
 
@@ -114,6 +118,8 @@ volumes:
 services:
   db:
     image: postgres:15
+    environment:
+      - POSTGRES_PASSWORD=dev
     volumes:
       - pgdata:/var/lib/postgresql/data  # 挂载到容器内
 ```

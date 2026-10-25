@@ -24,7 +24,7 @@ cover: /images/cover-git.webp
 
 ## 项目是怎么来的
 
-NFT Launchpad Kit,一个一站式 NFT 发行平台:6 种铸造模式、Factory Clone、管理后台。主合约约 950 行，33 个自定义错误，37 个事件，Feistel 密码做链上 tokenURI 洗牌。合约设计我在另一篇文章里写过——[从零搭建 NFT 发行平台](/2026/05/10/nft-launchpad-kit-web3/)。
+NFT Launchpad Kit,一个一站式 NFT 发行平台:6 种铸造模式、Factory Clone、管理后台。主合约约 950 行，33 个自定义错误，37 个事件，Feistel 密码做链上 tokenURI 洗牌。合约设计我在另一篇文章里写过——[改造 NFT 发行平台](/2026/05/10/nft-launchpad-kit-web3/)。
 
 它 fork 自 scaffold-alchemy,功能是完整的，测试是齐全的。功能完整、测试齐全，听起来是件好事。直到你发现:那些测试从来没被验证过。
 

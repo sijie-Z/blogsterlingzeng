@@ -165,7 +165,7 @@ def search(nums, target):
 这是我学到的最有价值的变体。不是在数组中查找，而是在**答案空间**中二分。
 
 ```python
-# 问题：把 n 个物品按顺序分成 k 组，使最大组的和最小
+# 问题：把非空、非负整数数组按顺序分成 k 组（k >= 1），使最大组的和最小
 def minimize_max(nums, k):
     def can_divide(max_val):
         # 判断能否按顺序连续分成不超过 k 组,每组的和不超过 max_val
@@ -181,7 +181,7 @@ def minimize_max(nums, k):
                 current += num
         return groups <= k
 
-    left, right = 1, max(nums)
+    left, right = max(nums), sum(nums)
     while left < right:
         mid = left + (right - left) // 2
         if can_divide(mid):
@@ -191,7 +191,7 @@ def minimize_max(nums, k):
     return left
 ```
 
-答案的范围是 `[1, max(nums)]`，在这个范围内二分。每次猜测一个答案，判断它是否可行。如果可行，尝试更小的；如果不可行，尝试更大的。
+答案的范围是 `[max(nums), sum(nums)]`：至少要能放下最大的单个元素，最多就是所有元素合成一组。在这个范围内二分。每次猜测一个答案，判断它是否可行。如果可行，尝试更小的；如果不可行，尝试更大的。
 
 **这种思维方式超越了"在数组中查找"，变成了"在可能的解空间中搜索"。**
 

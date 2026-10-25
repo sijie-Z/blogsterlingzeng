@@ -20,6 +20,8 @@ date: 2026-08-28 10:00:00
 
 **Java 21 · Spring WebFlux · Vue 3 · PostgreSQL** ｜ 个人项目 ｜ 持续维护
 
+**本人角色：** 项目所有者，负责规格、架构、审查与发布；实现主要由 Claude Code 按规格完成。
+
 ### 问题
 
 团队共用一个真实上游 API Key 时，三件事同时失控：**不知道谁在用、没法按人计量、出事不能只吊销一个人。** 企业采购往往横跨多家模型厂商，每家的鉴权方式和用量口径都不一样。
@@ -29,7 +31,7 @@ date: 2026-08-28 10:00:00
 - 不能改上游协议，业务代码接入成本要接近零
 - 不保存提示词、代码、回答正文
 - 预算不足时告警，但**不阻断**请求
-- 热路径不能查数据库
+- 默认鉴权与路由判定走内存快照，不查数据库
 
 <figure class="project-arch" tabindex="0" role="region" aria-label="MiQroGate 架构图，可横向滚动">
 <svg viewBox="0 0 900 270" role="img" aria-labelledby="arch-miqro-title">
@@ -46,11 +48,11 @@ date: 2026-08-28 10:00:00
   <rect class="arch-node arch-node-accent" x="270" y="45" width="250" height="108" rx="12"/>
   <text class="arch-text" x="395" y="76" text-anchor="middle">MiQroGate 数据面</text>
   <text class="arch-sub" x="395" y="98" text-anchor="middle">鉴权 · 路由快照 · 计量审计 · 响应缓存</text>
-  <text class="arch-sub" x="395" y="118" text-anchor="middle">热路径零数据库访问</text>
+  <text class="arch-sub" x="395" y="118" text-anchor="middle">默认路由零数据库访问</text>
 
   <rect class="arch-node" x="640" y="62" width="240" height="74" rx="10"/>
   <text class="arch-text" x="760" y="94" text-anchor="middle">上游模型厂商</text>
-  <text class="arch-sub" x="760" y="114" text-anchor="middle">7 家厂商 · 20 个产品</text>
+  <text class="arch-sub" x="760" y="114" text-anchor="middle">8 家厂商 · 23 个产品</text>
 
   <rect class="arch-node" x="270" y="200" width="160" height="52" rx="9"/>
   <text class="arch-text" x="350" y="231" text-anchor="middle">管理门户</text>
@@ -64,25 +66,24 @@ date: 2026-08-28 10:00:00
   <path class="arch-line arch-dash" d="M630 226 H700 V160" marker-end="url(#arrow-miqro)"/>
   <path class="arch-line" d="M470 226 H438" marker-end="url(#arrow-miqro)"/>
 </svg>
-<figcaption>控制面负责 Virtual Key 的签发、轮换与吊销；数据面只读路由快照，热路径不查数据库。</figcaption>
+<figcaption>控制面负责 Virtual Key 的签发、轮换与吊销；数据面默认只读路由快照，鉴权与路由判定不查数据库。</figcaption>
 </figure>
 
 ### 关键决策
 
-1. **控制面 / 数据面分离。** 控制面负责 Virtual Key 的创建、轮换、吊销；网关只认路由快照。快照通过 `pg_notify` 失效，热路径零数据库访问。
+1. **控制面 / 数据面分离。** 控制面负责 Virtual Key 的创建、轮换、吊销；网关默认只认内存路由快照。快照通过 `pg_notify` 失效，鉴权与路由判定不查数据库。
 2. **安全默认值写进架构。** 统一 404 防探测、常量时间 HMAC 比较、密钥零残留；网关端口只暴露 `health` 和 `info`，`metrics` 不对外开放，并用冒烟测试守住这条边界。
 3. **响应缓存对齐供应商语义。** 只缓存可安全复用的响应，避免“缓存把计量算错”。
 
 ### 证据
 
 - 449 个 Java 文件、134 个测试文件（测试文件数，不是覆盖率）；ArchUnit 管模块边界，契约测试 + 协议夹具 + 端到端分层
-- 7 家厂商、20 个产品适配器
+- 8 家厂商、23 个产品适配器
 - 前端 vitest 21/21、Playwright 15/15，lint / typecheck / 构建全绿
 
 ### 边界
 
-- 20 个适配器**都还没有经过真实凭证联调**。文档把“官方资料确认 / 已实现 / 真实凭证已验证”分成三级，不伪造 PASS。
-- 我的角色是项目所有者：写规格、做架构与审查、合并发布；实现主要由 Claude Code 按规格完成。这条写在这里，是因为它会在面试里被问到。
+- 23 个适配器**都还没有经过真实凭证联调**。文档把“官方资料确认 / 已实现 / 真实凭证已验证”分成三级，不伪造 PASS。
 
 [GitHub](https://github.com/sijie-Z/miqro-gate) · [设计文章](/2026/08/28/miqro-gate-virtual-key-design/)
 
@@ -92,6 +93,8 @@ date: 2026-08-28 10:00:00
 ## quant_platform：信号存在 ≠ 策略可投资
 
 **Python · Pandas · cvxpy · FastAPI · Vue 3** ｜ 个人项目 ｜ 研究已封档
+
+**本人角色：** 独立负责研究设计、因子与回测实现、前端和复盘；未用真实资金运行，实盘接口仅到 QMT / Paper 层。
 
 ### 问题
 
@@ -165,7 +168,6 @@ date: 2026-08-28 10:00:00
 
 - 只测试了固定频率和简单相位代理；状态空间模型、小波域相位估计、非线性控制**都没有测试**，不能排除。
 - 研究结论已封档，不再继续调参；这是一次“负结果”的完整记录。
-- **我的角色：** 独立完成研究设计、因子与回测实现、前端与结论复盘；没有用真实资金运行，实盘接口只到 QMT / Paper 层。
 
 [GitHub](https://github.com/sijie-Z/quant_platform) · [执行之痛](/2026/08/28/quant-reversal-execution-gap/) · [平台架构](/2026/05/10/quant-platform-a-share-research/)
 
@@ -175,6 +177,8 @@ date: 2026-08-28 10:00:00
 ## DocMind：RAG 的核心是检索，不是生成
 
 **Python · FastAPI · Vue 3 · Elasticsearch · Redis · MinIO · Kafka** ｜ 个人项目 ｜ 生产实现持续演进
+
+**本人角色：** 独立负责系统与实验设计、检索管线、评测和复盘。
 
 ### 问题
 
@@ -245,15 +249,15 @@ date: 2026-08-28 10:00:00
 
 ### 证据
 
-- Agent 消融：L1 评测点覆盖率 **69% → 93.1%**（20 题评测集），L1 题目失败数 5–6 → 0；L2 另测 10 题，通过率 50%——如实记录，没有藏
-- 同一评测的 L2 系统层（10 题，歧义/边界查询）只有 **50%**——如实记录，没有藏
+- Agent 消融：L1 评测点覆盖率 <strong>69% → 93.1%</strong>（20 题评测集），L1 题目失败数 5–6 → 0
+- 同一实验的 L2 系统层另测 10 题，通过率 <strong>50%</strong>；低分结果同样保留
 - 生产实现迁移到 DocMind-RAG 仓库后，测试规模到 422 个
 
 ### 边界
 
 - 30 题评测集偏小，结论是“在这个评测集上”的结论，不外推到所有 RAG 场景。
 - 扫描件 OCR、复杂表格解析仍有失败样例；引用溯源降低幻觉，但不能消灭幻觉。
-- **我的角色：** 独立完成系统与实验设计、检索管线、评测和复盘；评测集只有 30 题，L2 仍有 5 个失败。
+- 评测集只有 30 题，L2 仍有 5 个失败。
 
 [GitHub](https://github.com/sijie-Z/DocMind-RAG) · [项目记录](/2026/05/10/docmind-rag-knowledge-base/) · [消融实验](/2026/08/28/docmind-agent-causal-study/)
 
@@ -261,13 +265,13 @@ date: 2026-08-28 10:00:00
 
 ## 其他项目
 
-| 项目 | 做什么 | 一个可验证的点 | 链接 |
+| 项目 | 做什么 | 关键实现 | 链接 |
 |---|---|---|---|
 | **MindPilot** | 多 Agent RAG 平台，从 DocMind 演进 | LangGraph 状态机 + Judge Agent；多端接入（Web / QQ / 飞书） | [GitHub](https://github.com/sijie-Z/mindpilot) · [文章](/2026/05/10/mindpilot-multi-agent-rag/) |
 | **GeoData Security** | 空间数据安全分发与溯源 | 3 种栅格水印 + QR 码水印 + HMAC 签名；双级审批与民主召回 | [GitHub](https://github.com/sijie-Z/GeoData-Security-System) · [文章](/2026/05/10/geodata-security-traceability/) |
 | **NFT Launchpad Kit** | Agent-Native 链上发行基础设施 | trusted-signer 离线签名铸造；204 个测试，v1.0.0 已发布 | [GitHub](https://github.com/sijie-Z/nft-launchpad-kit) · [架构文章](/2026/05/10/nft-launchpad-kit-web3/) · [发布复盘](/2026/08/28/nft-launchpad-release-sprint/) |
 | **NLP Training Lab** | 从 BERT 到 LoRA 微调的渐进式实验 | 4GB 显存跑通全流程，LoRA 只训练 0.42% 参数；保留 Accuracy 44% / F1 30% 的失败记录 | [GitHub](https://github.com/sijie-Z/nlp-training-lab) · [实验记录](/2026/08/28/nlp-training-lab/) |
-| **这个博客** | Hexo + Swup + 构建期生成器 | 22 篇文章、构建期系列/OG/Feed、357 项回归、axe 0 违规 | [GitHub](https://github.com/sijie-Z/blogsterlingzeng) · [工程说明](https://github.com/sijie-Z/blogsterlingzeng/blob/main/docs/ENGINEERING.md) |
+| **这个博客** | Hexo + Swup + 构建期生成器 | 23 篇文章、构建期系列/OG/Feed、538 项回归、axe 0 违规 | [GitHub](https://github.com/sijie-Z/blogsterlingzeng) · [工程说明](https://github.com/sijie-Z/blogsterlingzeng/blob/main/docs/ENGINEERING.md) |
 
 > 以上均为个人项目；角色与边界以各项目文章为准。测试数字来自仓库，未做第三方审计。
 

@@ -319,18 +319,18 @@ footer:
 inject:
   enable: true
   head:
-    - <link rel="stylesheet" href="/css/custom.css?v=20261026v">
+    - <link rel="stylesheet" href="/css/custom.css?v=20261026x">
     - <link rel="stylesheet" href="/css/series.css?v=20261025g">
     - <script>try{var s=localStorage.getItem('cj-read-size');if(s==='s'||s==='l')document.documentElement.setAttribute('data-read-size',s);if(localStorage.getItem('cj-focus')==='on'&&document.documentElement.hasAttribute('data-cj-post'))document.documentElement.classList.add('cj-focus');}catch(e){}</script>
   footer:
-    - <nav class="footer-utility" aria-label="更多入口"><a href="/resume/">简历</a><a href="/archives/">归档</a><a href="/tags/">标签</a><a href="/bookmarks/">工具箱</a><a href="/shuoshuo/">说说</a><a href="/photos/">站点视觉</a></nav>
+    - <nav class="footer-utility" aria-label="更多入口"><a href="/resume/">简历</a><a href="/archives/">归档</a><a href="/tags/">标签</a><a href="/bookmarks/">工具箱</a><a href="/shuoshuo/">说说</a><a href="/photos/">站点视觉</a><a class="footer-back-top" href="#main-content">回到顶部 ↑</a></nav>
     - <noscript><p class="noscript-hint">站内搜索和主题切换需要 JavaScript；你仍可以直接浏览 <a href="/archives/">文章归档</a> 或 <a href="/tags/">标签</a>。</p></noscript>
     - <div class="footer-extra-icons">
         <a href="/atom.xml" title="RSS 订阅" aria-label="RSS 订阅" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-rss" aria-hidden="true"></i></a>
         <a href="https://github.com/sijie-Z" title="GitHub" aria-label="GitHub" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-github" aria-hidden="true"></i></a>
         <a href="mailto:1683039482@qq.com" title="邮件联系" aria-label="邮件联系"><i class="fa-regular fa-envelope" aria-hidden="true"></i></a>
       </div>
-    - <script src="/js/custom.js?v=20261026x" data-swup-reload-script></script>
+    - <script src="/js/custom.js?v=20261026aa" data-swup-reload-script></script>
 # INJECT <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
 
 

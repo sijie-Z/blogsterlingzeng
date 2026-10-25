@@ -1244,7 +1244,7 @@ patchText('source/js/build/layouts/navbarShrink.js', [
 
 // 主题 JS 没有版本号,Cloudflare / GitHub Pages 会缓存 4 小时。
 // 给入口 main.js 和两个被改过的模块加查询串,确保滚动补丁能立即生效。
-const CJ_THEME_JS_VERSION = '20261026e';
+const CJ_THEME_JS_VERSION = '20261026f';
 patchText('source/js/build/main.js', [
   ['from"./layouts/navbarShrink.js"', `from"./layouts/navbarShrink.js?v=${CJ_THEME_JS_VERSION}"`, 'main navbarShrink version'],
   ['from"./utils.js"', `from"./utils.js?v=${CJ_THEME_JS_VERSION}"`, 'main utils version'],
@@ -1451,4 +1451,169 @@ patchText('source/js/build/main.js', [
 ]);
 patchText('source/js/build/utils.js', [
   ['?v=20261026d', '?v=20261026e', 'utils bump theme js version e'],
+]);
+
+// 搜索:英文按词边界匹配,避免 RAG 命中 localStorage 内部。
+patchText('source/js/tools/localSearch.js', [
+  [
+    `  while ((position = text.indexOf(word, startPosition)) > -1) {
+    index.push({ position, word });
+    startPosition = position + wordLen;
+  }`,
+    `  const asciiWord = /^[a-z0-9_]+$/i.test(word);
+  const isWordChar = ch => !!ch && /[a-z0-9_]/i.test(ch);
+  while ((position = text.indexOf(word, startPosition)) > -1) {
+    const before = text.charAt(position - 1);
+    const after = text.charAt(position + wordLen);
+    if (!asciiWord || (!isWordChar(before) && !isWordChar(after))) {
+      index.push({ position, word });
+    }
+    startPosition = position + wordLen;
+  }`,
+    'search ASCII word boundaries source',
+  ],
+]);
+patchText('source/js/build/tools/localSearch.js', [
+  [
+    'for(n||(e=e.toLowerCase(),t=t.toLowerCase());(r=e.indexOf(t,s))>-1;)l.push({position:r,word:t}),s=r+o;return l',
+    'const a=/^[a-z0-9_]+$/i.test(t),c=t=>!!t&&/[a-z0-9_]/i.test(t);for(n||(e=e.toLowerCase(),t=t.toLowerCase());(r=e.indexOf(t,s))>-1;){const i=e[r-1],h=e[r+o];(!a||!c(i)&&!c(h))&&l.push({position:r,word:t}),s=r+o}return l',
+    'search ASCII word boundaries build',
+  ],
+]);
+
+// 搜索排序:完整标题 > 标题命中 > 正文命中次数。
+patchText('source/js/tools/localSearch.js', [
+  [
+    `      if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+        const hitCount = indexOfTitle.length + indexOfContent.length;`,
+    `      if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+        const titleHitCount = indexOfTitle.length;
+        const exactTitle = titleInLowerCase === searchText;
+        const hitCount = indexOfTitle.length + indexOfContent.length;`,
+    'search title scoring source',
+  ],
+  [
+    '          id: resultItems.length,\n          hitCount,\n          searchTextCount,',
+    '          id: resultItems.length,\n          hitCount,\n          titleHitCount,\n          exactTitle,\n          searchTextCount,',
+    'search title fields source',
+  ],
+  [
+    `    resultItems.sort((resultLeft, resultRight) => {
+      if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+        return resultRight.searchTextCount - resultLeft.searchTextCount;
+      } else if (resultLeft.hitCount !== resultRight.hitCount) {
+        return resultRight.hitCount - resultLeft.hitCount;
+      }
+      return resultRight.id - resultLeft.id;
+    });`,
+    `    resultItems.sort((resultLeft, resultRight) => {
+      if (resultLeft.exactTitle !== resultRight.exactTitle) {
+        return resultLeft.exactTitle ? -1 : 1;
+      }
+      if (resultLeft.titleHitCount !== resultRight.titleHitCount) {
+        return resultRight.titleHitCount - resultLeft.titleHitCount;
+      }
+      if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+        return resultRight.searchTextCount - resultLeft.searchTextCount;
+      }
+      if (resultLeft.hitCount !== resultRight.hitCount) {
+        return resultRight.hitCount - resultLeft.hitCount;
+      }
+      return resultRight.id - resultLeft.id;
+    });`,
+    'search title ranking source',
+  ],
+]);
+patchText('source/js/build/tools/localSearch.js', [
+  [
+    ',i.length>0||c.length>0){const o=i.length+c.length;',
+    ',i.length>0||c.length>0){const __cjExactTitle=o===s,__cjTitleHits=i.length,__cjHitCount=i.length+c.length;',
+    'search title scoring build',
+  ],
+  [
+    'l.push({item:d,id:l.length,hitCount:o,searchTextCount:h})',
+    'l.push({item:d,id:l.length,hitCount:__cjHitCount,searchTextCount:h,titleHitCount:__cjTitleHits,exactTitle:__cjExactTitle})',
+    'search title fields build',
+  ],
+  [
+    ',i.length>0||c.length>0){const __cjExactTitle=o===s,__cjTitleHits=i.length;const o=i.length+c.length;',
+    ',i.length>0||c.length>0){const __cjExactTitle=o===s,__cjTitleHits=i.length,__cjHitCount=i.length+c.length;',
+    'search title scoring TDZ repair',
+  ],
+  [
+    'l.push({item:d,id:l.length,hitCount:o,searchTextCount:h,titleHitCount:__cjTitleHits,exactTitle:__cjExactTitle})',
+    'l.push({item:d,id:l.length,hitCount:__cjHitCount,searchTextCount:h,titleHitCount:__cjTitleHits,exactTitle:__cjExactTitle})',
+    'search title fields TDZ repair',
+  ],
+  [
+    'l.sort(((t,e)=>t.searchTextCount!==e.searchTextCount?e.searchTextCount-t.searchTextCount:t.hitCount!==e.hitCount?e.hitCount-t.hitCount:e.id-t.id))',
+    'l.sort(((t,e)=>t.exactTitle!==e.exactTitle?t.exactTitle?-1:1:t.titleHitCount!==e.titleHitCount?e.titleHitCount-t.titleHitCount:t.searchTextCount!==e.searchTextCount?e.searchTextCount-t.searchTextCount:t.hitCount!==e.hitCount?e.hitCount-t.hitCount:e.id-t.id))',
+    'search title ranking build',
+  ],
+]);
+
+// 索引返回时用户可能已经输入完:立即按当前输入渲染,不再等下一次 input。
+patchText('source/js/tools/localSearch.js', [
+  [
+    `      if (noResultDom) {
+        noResultDom.innerHTML =
+          '<i class="fa-solid fa-magnifying-glass fa-5x"></i>';
+      }
+    })
+    .catch((error) => {`,
+    `      if (noResultDom) {
+        noResultDom.innerHTML =
+          '<i class="fa-solid fa-magnifying-glass fa-5x"></i>';
+      }
+      const currentInput = document.querySelector(".search-input");
+      if (currentInput && currentInput.value.trim()) {
+        renderSearchResult(currentInput);
+      }
+    })
+    .catch((error) => {`,
+    'search rerender after fetch source',
+  ],
+]);
+patchText('source/js/build/tools/localSearch.js', [
+  [
+    `s&&(s.innerHTML='<i class="fa-solid fa-magnifying-glass fa-5x"></i>')}`,
+    `s&&(s.innerHTML='<i class="fa-solid fa-magnifying-glass fa-5x"></i>');const r=document.querySelector(".search-input");r&&r.value.trim()&&renderSearchResult(r)}`,
+    'search rerender after fetch build',
+  ],
+]);
+
+// 摘要截断要标出前后省略,避免看起来像正文被损坏。
+patchText('source/js/tools/localSearch.js', [
+  [
+    `  result += text.substring(prevEnd, slice.end);
+  return result;`,
+    `  result += text.substring(prevEnd, slice.end);
+  return (slice.start > 0 ? "…" : "") + result + (slice.end < text.length ? "…" : "");`,
+    'search snippet ellipsis source',
+  ],
+  [
+    '<p class="search-result">${highlightKeyword(\n            content,\n            slice,\n          )}...</p>',
+    '<p class="search-result">${highlightKeyword(\n            content,\n            slice,\n          )}</p>',
+    'search snippet suffix source',
+  ],
+]);
+patchText('source/js/build/tools/localSearch.js', [
+  [
+    'n+=t.substring(o,e.end),n}',
+    'n+=t.substring(o,e.end),(e.start>0?"…":"")+n+(e.end<t.length?"…":"")}',
+    'search snippet ellipsis build',
+  ],
+  [
+    '<p class="search-result">${highlightKeyword(e,t)}...</p>',
+    '<p class="search-result">${highlightKeyword(e,t)}</p>',
+    'search snippet suffix build',
+  ],
+]);
+
+// 搜索匹配与排序变更后,所有主题模块统一推进到 f。
+patchText('source/js/build/main.js', [
+  ['?v=20261026e', '?v=20261026f', 'main bump theme js version f'],
+]);
+patchText('source/js/build/utils.js', [
+  ['?v=20261026e', '?v=20261026f', 'utils bump theme js version f'],
 ]);

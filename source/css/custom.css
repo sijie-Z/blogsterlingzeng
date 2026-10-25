@@ -398,6 +398,15 @@ html.dark .navbar-container.scrolled .navbar-content {
   color: rgba(255, 255, 255, 0.9);
 }
 
+.home-hero-identity {
+  margin: 1rem 0 0;
+  color: rgba(255, 255, 255, 0.94);
+  font-size: 0.96rem;
+  line-height: 1.5;
+  text-align: center;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.55);
+}
+
 .home-hero-cta {
   display: flex;
   align-items: center;
@@ -986,8 +995,8 @@ footer.footer .info-container {
     background-color 0.3s ease;
 }
 
-/* 向下阅读时收起常驻页脚,避免遮住正文;触底展开时始终可见 */
-footer.footer.footer-hidden:not(.at-bottom) .info-container {
+/* 长页只在触底展开静态页脚;初始 HTML 就隐藏,避免初始化前闪一下 */
+footer.footer:not(.at-bottom) .info-container {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -6481,8 +6490,16 @@ footer.footer.at-bottom .footer-utility {
   border-color: color-mix(in srgb, var(--primary-color) 34%, var(--border-color));
 }
 
+.resume-downloads-note {
+  margin: -0.65rem 0 1.35rem;
+  color: var(--text-tertiary);
+  font-size: 0.76rem;
+  line-height: 1.6;
+}
+
 @media print {
-  .resume-downloads {
+  .resume-downloads,
+  .resume-downloads-note {
     display: none !important;
   }
 }
@@ -6688,4 +6705,75 @@ body:has(footer.footer.at-bottom) .pet-toggle {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
+}
+
+/* 抽屉自己的关闭按钮必须留在非 inert 的抽屉子树里 */
+.navbar-drawer-close {
+  display: none;
+}
+
+@media (max-width: 880px) {
+  .navbar-drawer-close {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    background: var(--bg-card-solid);
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    cursor: pointer;
+  }
+
+  body.navbar-drawer-show .navbar-content .navbar-bar {
+    visibility: hidden;
+  }
+
+  /* 社交行下移,不再盖住项目/简历 CTA */
+  .home-banner-container .absolute.bottom-0\.5 {
+    bottom: 1rem !important;
+  }
+}
+
+@media (max-width: 360px) {
+  /* 320px 优先保留 logo、搜索、季节和菜单;计时器是次要入口 */
+  .nb-timer-btn,
+  .nb-timer-panel {
+    display: none !important;
+  }
+
+  .nb-controls {
+    gap: 4px;
+  }
+
+  .navbar-content .left {
+    margin-right: 8px;
+  }
+}
+
+/* 代码与正文使用同一套阅读档位,保留横向滚动 */
+@media screen {
+  html[data-read-size="s"] .article-content pre {
+    font-size: 13px !important;
+  }
+
+  html[data-read-size="l"] .article-content pre {
+    font-size: 16px !important;
+  }
+}
+
+@media screen and (max-width: 640px) {
+  html[data-read-size="s"] .article-content pre {
+    font-size: 12px !important;
+  }
+
+  html[data-read-size="l"] .article-content pre {
+    font-size: 15px !important;
+  }
 }

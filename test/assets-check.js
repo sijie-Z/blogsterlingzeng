@@ -232,6 +232,7 @@ function check(name, cond, extra) {
   check('Atom feed updated 不早于条目', atomUpdated.length > 1 && atomUpdated[0] >= atomUpdated.slice(1).sort().pop(), atomUpdated.slice(0, 2).join(' vs '));
 
   console.log('=== 8. Feed / robots / sitemap / 图标子集 ===');
+  await page.evaluate(() => localStorage.setItem('blog-season', 'auto'));
   await page.goto(BASE, { waitUntil: 'networkidle2', timeout: 30000 });
   await sleep(400);
   const feeds = await page.evaluate(async () => {
@@ -261,18 +262,35 @@ function check(name, cond, extra) {
     iconCss: [...document.querySelectorAll('link[rel="stylesheet"]')].some(link => link.href.includes('fontawesome-icons-subset.css')),
     fullFaCss: [...document.querySelectorAll('link[rel="stylesheet"]')].some(link => /fontawesome\/(fontawesome|brands|solid|regular)\.min\.css/.test(link.href)),
     darkBanner: (() => {
-      const img = document.querySelector('img[data-src*="banner-dark"]');
-      return img ? { src: img.getAttribute('src') || '', data: img.dataset.src || '', loading: img.getAttribute('loading') || '' } : null;
+      const img = [...document.querySelectorAll('.home-banner-background img')]
+        .find(el => el.classList.contains('dark:block'));
+      return img ? { src: img.getAttribute('src') || '', loading: img.getAttribute('loading') || '' } : null;
     })(),
   }));
   check('robots 声明 max-image-preview:large', seoMeta.robots.includes('max-image-preview:large'), seoMeta.robots);
   check('只加载图标类名子集 CSS', seoMeta.iconCss && !seoMeta.fullFaCss, JSON.stringify(seoMeta));
-  check('暗色横幅按需加载', !!seoMeta.darkBanner && seoMeta.darkBanner.loading !== 'eager' && /banner-dark\.webp/.test(seoMeta.darkBanner.data), JSON.stringify(seoMeta.darkBanner));
+  check('暗色横幅使用真实地址按需加载', !!seoMeta.darkBanner && seoMeta.darkBanner.loading === 'lazy' && /banner-dark\.webp/.test(seoMeta.darkBanner.src), JSON.stringify(seoMeta.darkBanner));
 
   const sitemapXml = await page.evaluate(async () => (await (await fetch('/sitemap.xml')).text()));
   check('sitemap 不再包含 index.html', !sitemapXml.includes('/index.html</loc>'), 'index.html found');
   check('sitemap 收录归档入口', sitemapXml.includes('/archives/</loc>'), 'archives missing');
   check('sitemap 收录归档年/月页', /<loc>[^<]*\/archives\/2026\/<\/loc>/.test(sitemapXml) && /<loc>[^<]*\/archives\/2026\/10\/<\/loc>/.test(sitemapXml), 'archive year/month missing');
+
+  const darkPage = await browser.newPage();
+  await darkPage.evaluateOnNewDocument(() => {
+    localStorage.setItem('REDEFINE-THEME-STATUS', JSON.stringify({ isDark: true }));
+    localStorage.setItem('blog-season', 'auto');
+  });
+  const darkBannerRequests = [];
+  darkPage.on('request', req => {
+    if (/banner-(?:light|dark)(?:-\d+)?\.webp/.test(req.url())) darkBannerRequests.push(req.url());
+  });
+  await darkPage.goto(BASE, { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(1000);
+  const darkRequested = darkBannerRequests.some(url => url.includes('banner-dark'));
+  const lightRequested = darkBannerRequests.some(url => url.includes('banner-light'));
+  check('暗色首屏只下载可见横幅', darkRequested && !lightRequested, JSON.stringify(darkBannerRequests));
+  await darkPage.close();
 
   await browser.close();
   server.close();

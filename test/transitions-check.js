@@ -360,6 +360,34 @@ async function waitIdle(page, timeout = 8000) {
   await page.evaluate(() => window.scrollTo(0, 0));
   await sleep(500);
 
+  console.log('=== 8.6 相关阅读与后退滚动恢复 ===');
+  const historyPage = await browser.newPage();
+  historyPage.on('pageerror', e => errors.push('history ' + String(e.message || e).slice(0, 120)));
+  await historyPage.setViewport({ width: 1440, height: 900 });
+  await historyPage.setRequestInterception(true);
+  historyPage.on('request', async req => {
+    if (req.url().includes('/related-data.json')) {
+      await sleep(500);
+      await req.continue();
+    } else {
+      await req.continue();
+    }
+  });
+  await historyPage.goto(BASE + '/2026/10/23/static-assets-cleanup/', { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(1200);
+  await historyPage.evaluate(() => window.scrollTo(0, 6200));
+  await sleep(400);
+  const relatedBefore = await historyPage.evaluate(() => window.scrollY);
+  await historyPage.evaluate(() => document.querySelector('.related-post-item')?.click());
+  await historyPage.waitForFunction(() => location.pathname !== '/2026/10/23/static-assets-cleanup/', { timeout: 10000 }).catch(() => {});
+  await sleep(700);
+  await historyPage.goBack();
+  await historyPage.waitForFunction(() => location.pathname === '/2026/10/23/static-assets-cleanup/', { timeout: 10000 }).catch(() => {});
+  await sleep(1800);
+  const relatedAfter = await historyPage.evaluate(() => window.scrollY);
+  check('相关阅读加载后仍回到原阅读位置', Math.abs(relatedAfter - relatedBefore) < 60, JSON.stringify({ relatedBefore, relatedAfter }));
+  await historyPage.close();
+
   console.log('=== 9. 移动端抽屉 ===');
   const mobile = await browser.newPage();
   await mobile.setViewport({ width: 390, height: 844 });
@@ -393,6 +421,16 @@ async function waitIdle(page, timeout = 8000) {
     focusInDrawer: !!document.activeElement?.closest('.navbar-drawer'),
   }));
   check('抽屉焦点与按钮标签正确', drawerA11y.expanded === 'true' && drawerA11y.label === '关闭菜单' && drawerA11y.focusInDrawer, JSON.stringify(drawerA11y));
+  await mobile.click('.navbar-drawer-close');
+  await sleep(250);
+  const drawerButtonClosed = await mobile.evaluate(() => ({
+    open: document.body.classList.contains('navbar-drawer-show'),
+    focusBar: document.activeElement?.classList.contains('navbar-bar') || false,
+    inert: document.querySelector('.navbar-drawer')?.inert || false,
+  }));
+  check('抽屉内关闭按钮可点击并归还焦点', !drawerButtonClosed.open && drawerButtonClosed.focusBar && drawerButtonClosed.inert, JSON.stringify(drawerButtonClosed));
+  await mobile.click('.navbar-bar');
+  await sleep(250);
   await mobile.keyboard.press('Escape');
   await sleep(300);
   const drawerClosed = await mobile.evaluate(() => ({
@@ -411,6 +449,26 @@ async function waitIdle(page, timeout = 8000) {
     check('抽屉导航可用', aboutState.path === '/about' && aboutState.text > 200, JSON.stringify(aboutState));
   }
   check('移动端零页面错误', mobileErrors.length === 0, mobileErrors.slice(0, 2).join(' | '));
+
+  const readDrawerCleanup = () => mobile.evaluate(() => ({
+    path: location.pathname,
+    open: document.body.classList.contains('navbar-drawer-show'),
+    overflow: getComputedStyle(document.body).overflow,
+    leakedInert: [...document.querySelectorAll('[inert]')]
+      .filter(el => !el.classList.contains('navbar-drawer')).length,
+  }));
+  await mobile.click('.navbar-bar');
+  await sleep(250);
+  await mobile.evaluate(() => window.swup?.navigate('/projects/'));
+  await mobile.waitForFunction(() => location.pathname === '/projects/', { timeout: 10000 }).catch(() => {});
+  await sleep(700);
+  const drawerDirectNav = await readDrawerCleanup();
+  check('抽屉打开时 SPA 跳转会解除锁定', drawerDirectNav.path === '/projects/' && !drawerDirectNav.open && drawerDirectNav.overflow !== 'hidden' && drawerDirectNav.leakedInert === 0, JSON.stringify(drawerDirectNav));
+  await mobile.goBack();
+  await mobile.waitForFunction(() => location.pathname === '/about', { timeout: 10000 }).catch(() => {});
+  await sleep(700);
+  const drawerBackNav = await readDrawerCleanup();
+  check('抽屉打开后浏览器后退不留遮罩', drawerBackNav.path === '/about' && !drawerBackNav.open && drawerBackNav.overflow !== 'hidden' && drawerBackNav.leakedInert === 0, JSON.stringify(drawerBackNav));
   await mobile.close();
 
   console.log('=== 9.5 800px 平板导航 ===');

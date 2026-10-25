@@ -30,7 +30,7 @@ series_order: 2
 |---|---|---|
 | 编排 | 单 Agent | LangGraph 多 Agent 状态机 |
 | 意图识别 | 单一入口 | Intent Agent 分流 |
-| 检索 | 混合检索 | 混合检索 + BGE Reranker 精排 |
+| 检索 | 混合检索 + Reranker | 沿用混合检索与 BGE Reranker，接入多 Agent 工作流 |
 | 自检 | 无 | Judge Agent + RAGAS |
 | 多模态 | 文本 | GLM-4V 图片理解 |
 | 接入端 | Web | Web / QQ / 飞书 |
@@ -100,7 +100,7 @@ BM25 关键词检索 ──┐
 向量语义检索 ──────┘
 ```
 
-新增了 **BGE Reranker** 做精排。粗排（RRF 融合）返回 Top 20，精排（Reranker）从中选出 Top 5。Reranker 是交叉编码器，比双塔模型精度更高，但速度更慢，所以只用在精排阶段。
+MindPilot 沿用 DocMind 已有的 **BGE Reranker** 做精排，并把它接入多 Agent 工作流。粗排（RRF 融合）返回 Top 20，精排（Reranker）从中选出 Top 5。Reranker 是交叉编码器，比双塔模型精度更高，但速度更慢，所以只用在精排阶段。
 
 ## 多模态理解
 

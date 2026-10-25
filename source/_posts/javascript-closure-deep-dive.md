@@ -159,7 +159,15 @@ function processData() {
 }
 ```
 
-解决办法：如果不再需要大对象，在闭包外部把它设为 `null`。
+只要返回的闭包仍被引用，它捕获的词法环境就可能无法回收。不要在闭包外部给 `hugeArray` 赋 `null`——外部根本访问不到这个局部变量，而且它是 `const`。
+
+如果只需要长度，应该只捕获这个数值；如果确实要保留整个闭包，不再需要时释放闭包本身的引用：
+
+```javascript
+let getLength = processData();
+getLength();
+getLength = null; // 闭包及其词法环境才有机会被回收
+```
 
 ### 意外的共享
 

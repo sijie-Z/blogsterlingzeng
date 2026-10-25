@@ -1,5 +1,5 @@
 ---
-title: 从零搭建 NFT 发行平台——智能合约到前端的全链路实践
+title: 改造 NFT 发行平台——智能合约到前端的全链路实践
 date: 2026-05-10 12:00:00
 updated: 2026-10-24 00:30:00
 categories:
@@ -8,7 +8,7 @@ tags:
   - Web3
   - Solidity
   - Next.js
-description: NFT Launchpad Kit 是一个一站式 NFT 发行平台，支持 6 种铸造模式。这篇文章记录了智能合约设计、Gas 优化和安全防护的完整过程。
+description: NFT Launchpad Kit 基于 scaffold-alchemy 改造，提供 6 种铸造模式。这篇文章记录我对智能合约、Gas 优化和安全防护的梳理与改造过程。
 cover: /images/cover-devops.webp
 ---
 
@@ -18,11 +18,13 @@ NFT 市场经历了从狂热到理性的过程。但抛开炒作，NFT 作为一
 
 我想做一个 NFT 发行平台，不是 OpenSea 那种交易市场，而是**发行侧**——让项目方能够以低成本、安全地发行自己的 NFT 集合。
 
+先说明贡献边界：这个项目 fork 自 [scaffold-alchemy](https://github.com/alchemyplatform/scaffold-alchemy)，上游已经提供合约、前端和测试骨架。我在此基础上做功能梳理、修复和发布工程；本文记录我理解和改造完整链路的过程，不把上游已有能力写成从零原创。
+
 <!-- more -->
 
 ## 6 种铸造模式
 
-不同的 NFT 项目有不同的发行需求。我设计了 6 种铸造模式：
+不同的 NFT 项目有不同的发行需求。这个项目提供 6 种铸造模式，我在改造过程中逐一梳理了它们的适用场景和实现：
 
 | 模式 | 场景 | 特点 |
 |------|------|------|
@@ -59,6 +61,9 @@ function whitelistMint(
 
 ```solidity
 function getCurrentPrice() public view returns (uint256) {
+    if (block.timestamp <= auctionStartTime) {
+        return startPrice;
+    }
     if (block.timestamp >= auctionEndTime) {
         return endPrice;
     }
@@ -76,9 +81,9 @@ function getCurrentPrice() public view returns (uint256) {
 
 ### ERC721A
 
-标准 ERC721 每铸造一个 NFT 需要约 60,000 gas。用 ERC721A（Azuki 团队开源的实现），批量铸造时每个 NFT 只需约 6,000 gas，**节省 70-90%**。
+标准 ERC721 每次铸造都要写入新的所有权记录。ERC721A（Azuki 团队开源的实现）优化的是**批量铸造时的所有权存储**：同一地址连续铸造多个 token 时，只写入首个 token 的所有权槽位，后续 token 在读取时向前查找最近的有效记录。
 
-原理：ERC721A 把多个连续 token ID 的元数据合并存储，只在读取时展开。
+它不会合并 token 的元数据或 tokenURI，也不保证单笔铸造更便宜；实际节省比例取决于批量大小和具体实现，不能把一个固定百分比当成通用结论。
 
 ### ERC-1167 Minimal Proxy Clone
 

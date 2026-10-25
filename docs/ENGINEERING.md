@@ -39,8 +39,8 @@ scripts/                 构建期脚本（Hexo 启动时加载）
 ├── image-metadata.js    懒加载图片尺寸补全
 └── theme-patch.js       对主题做可审计、可重复执行的最小补丁
 
-source/js/custom.js      运行时交互：导航、搜索、目录、边注、预览、阅读设置、代码全屏、阅读记忆、无障碍（约 4000 行）
-source/css/custom.css    设计系统与页面覆盖（约 6700 行）
+source/js/custom.js      运行时交互：导航、搜索、目录、边注、预览、阅读设置、代码全屏、阅读记忆、无障碍（约 4200 行）
+source/css/custom.css    设计系统与页面覆盖（约 6800 行）
 source/css/series.css    系列阅读样式
 test/                    14 套 Puppeteer / Node 检查
 ```
@@ -100,7 +100,7 @@ test/                    14 套 Puppeteer / Node 检查
 - **PNG 纹理仍部署**：WebP 已切换，但旧 `index.json` 可能被缓存 10 分钟；PNG 作为回退保留。设置 `CJ_SKIP_OLD_TEXTURES=1` 可移除。
 - **移除滚动面上的模糊**：主题会在首页滚过半屏后给横幅加 `filter: blur(15px)`，侧栏、回到顶部、页脚还用 `backdrop-filter`。软件渲染实测首页滚动 p50 25ms / p95 50ms；改为清晰横幅 + 实色面板后 p50 8ms / p95 25ms。搜索弹层也去掉模糊。
 - **主题滚动回调去抖动**：`navbar-shrink` 与工具条 `hide` 只在状态变化时改 class；工具条状态未变直接返回。首屏 init 不再同步读 `scrollHeight`，首页约 207ms 的整页布局从 DOMContentLoaded 任务里移走；SPA 换页后的高度读取、焦点和侧栏更新都延后到 idle。
-- **主题 JS 版本**：`main.js` 与被打补丁的 `navbarShrink.js` / `utils.js` / `sideTools.js` / `toc.js` 带 `?v=20261026e`，`custom.js` 带 `?v=20261026x`，`custom.css` 带 `?v=20261026v`；Cloudflare 的 4 小时 JS 缓存不会继续提供旧滚动逻辑。
+- **主题 JS 版本**：`main.js` 与被打补丁的 `navbarShrink.js` / `utils.js` / `sideTools.js` / `toc.js` 带 `?v=20261026f`，`custom.js` 带 `?v=20261026aa`，`custom.css` 带 `?v=20261026x`；Cloudflare 的 4 小时 JS 缓存不会继续提供旧滚动逻辑。
 
 ## 5. 阅读体验与内容增强
 
@@ -153,22 +153,22 @@ test/                    14 套 Puppeteer / Node 检查
 
 | 套件 | 项数 | 覆盖 |
 |---|---:|---|
-| `test:transitions` | 52 | SPA 跳转、连点、前进后退、搜索焦点、路由播报、页脚自动收起、导航自动隐藏与键盘聚焦、800px 导航 |
+| `test:transitions` | 56 | SPA 跳转、连点、前进后退、搜索焦点、路由播报、页脚、导航聚焦、相关阅读滚动恢复、移动抽屉、800px 导航 |
 | `test:sidebar` | 39 | 侧栏卡片、进度环、锚点、表格、Markdown、代码全屏、面包屑、移动目录 |
 | `test:series` | 55 | 系列页、徽章/系列卡、Atom、归档入口、SPA、移动端 |
-| `test:assets` | 50 | 响应式横幅、WebP 纹理、sitemap/llms、JSON-LD、JSON Feed、图标子集、OG 元数据、APlayer |
-| `test:a11y` | 72 | 名称、alt、列表语义、标题、地标、图片查看器键盘/双指缩放/禁用态、引用菜单焦点、存储被禁、脚注、项目/简历页 |
-| `test:search` | 20 | combobox/listbox、方向键、Enter、空态、IME、SPA |
+| `test:assets` | 51 | 响应式横幅、WebP 纹理、sitemap/llms、JSON-LD、JSON Feed、图标子集、OG 元数据、APlayer |
+| `test:a11y` | 73 | 名称、alt、列表语义、标题、地标、图片查看器键盘/双指缩放/禁用态、引用菜单焦点、存储被禁、脚注、项目/简历页 |
+| `test:search` | 27 | combobox/listbox、方向键、Enter、空态、IME、英文词边界、标题排序、后退恢复、首次加载竞态、SPA |
 | `test:smooth` | 28 | 滚动、Live2D 暂停、reduced-motion、移动端溢出、滚动面模糊回归 |
 | `test` | 34 | 端到端页面、主题切换、Live2D 显式召唤、次级页面 |
 | `test:features` | 100 | 边注、内链预览、公式复制、脚注预览、阅读设置、引用菜单、反向链接、键盘快捷键、图片双指平移、文章导航、404、简历 PDF |
 | `test:resume` | 7 | 阅读位置记忆与继续阅读 |
 | `test:archive` | 19 | 归档页头、单页列表、旧分页跳转、热力图与移动端 |
-| `test:pages` | 44 | 标签/分类排序、说说日期、站点视觉兜底、归档元数据、页脚、内联阅读/引用按钮、静态 HTML 卫生、打印样式 |
-| `test:content` | 23 篇 | front matter、站内链接、图片、OG 卡、文风硬规则 |
+| `test:pages` | 49 | 标签/分类排序、说说日期、站点视觉兜底、归档元数据、页脚、内联阅读/引用按钮、静态 HTML 卫生、打印样式 |
+| `test:content` | 23 篇 | front matter、站内链接、图片、OG 卡、文风硬规则、构建后 Markdown 残留检查 |
 | `test:links` | 99 HTML | 构建产物站内 href 断链检查 |
 
-合计 520 项浏览器检查、23 篇文章的内容检查和 99 个 HTML 的内链检查。所有套件在本机通过；CI 跑 `test:content`、构建和 `test:links`，浏览器套件留在本地或 self-hosted runner。
+合计 538 项浏览器检查、23 篇文章的内容检查和 99 个 HTML 的内链检查。所有套件在本机通过；CI 跑 `test:content`、构建和 `test:links`，浏览器套件留在本地或 self-hosted runner。
 
 ## 8. 已知边界
 

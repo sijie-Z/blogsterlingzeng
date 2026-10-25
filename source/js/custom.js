@@ -27,26 +27,33 @@
     fn();
   }
 
-  // 隐私模式/被策略禁用时 localStorage 会直接抛错,不能让它打断初始化
+  // 隐私模式/被策略禁用时 localStorage 会直接抛错,不能让它打断初始化。
+  // 写入失败时保留一份会话内存副本,主题/阅读设置换页后也不会悄悄重置。
+  const memoryStorage = window.__cjStorageFallback = window.__cjStorageFallback || Object.create(null);
+  const hasMemoryValue = key => Object.prototype.hasOwnProperty.call(memoryStorage, key);
+
   function storageGet(key, fallback = null) {
     try {
       const value = localStorage.getItem(key);
-      return value == null ? fallback : value;
-    } catch (e) {
-      return fallback;
-    }
+      if (value != null) return value;
+    } catch (e) {}
+    return hasMemoryValue(key) ? memoryStorage[key] : fallback;
   }
 
   function storageSet(key, value) {
+    const text = String(value);
     try {
-      localStorage.setItem(key, String(value));
+      localStorage.setItem(key, text);
+      delete memoryStorage[key];
       return true;
     } catch (e) {
+      memoryStorage[key] = text;
       return false;
     }
   }
 
   function storageRemove(key) {
+    delete memoryStorage[key];
     try { localStorage.removeItem(key); } catch (e) {}
   }
 
@@ -1118,11 +1125,11 @@
   const READING_POS_TTL = 30 * 24 * 60 * 60 * 1000;
 
   function readReadingPositions() {
-    try { return JSON.parse(localStorage.getItem(READING_POS_KEY) || '{}') || {}; } catch (e) { return {}; }
+    try { return JSON.parse(storageGet(READING_POS_KEY, '{}')) || {}; } catch (e) { return {}; }
   }
 
   function writeReadingPositions(map) {
-    try { localStorage.setItem(READING_POS_KEY, JSON.stringify(map)); } catch (e) {}
+    storageSet(READING_POS_KEY, JSON.stringify(map));
   }
 
   function hideResumePill() {
@@ -1285,7 +1292,48 @@
     target.focus({ preventScroll: true });
   }
 
+  // SwupScrollPlugin 会先按缓存恢复位置,相关阅读随后插入又会把内容顶走。
+  // 后退时记住插件自己的目标位置,等相关内容稳定后再校正一次。
+  function initPopScrollRestore() {
+    if (window.__cjPopRestoreBound) return;
+    window.__cjPopRestoreBound = true;
+    const markUserMoved = () => {
+      if (window.__cjPendingPopScroll) window.__cjPendingPopScroll.userMoved = true;
+    };
+    window.addEventListener('wheel', markUserMoved, { passive: true });
+    window.addEventListener('touchstart', markUserMoved, { passive: true });
+    document.addEventListener('keydown', e => {
+      if (['PageDown', 'PageUp', 'ArrowDown', 'ArrowUp', 'Home', 'End', ' '].includes(e.key)) markUserMoved();
+    });
+    window.addEventListener('popstate', () => {
+      const plugin = window.swup && window.swup.plugins
+        ? window.swup.plugins.find(p => p.name === 'SwupScrollPlugin') : null;
+      const top = plugin && plugin.cachedScrollPositions &&
+        plugin.cachedScrollPositions[location.pathname] &&
+        plugin.cachedScrollPositions[location.pathname].window.top;
+      if (Number.isFinite(top) && top > 80) {
+        window.__cjPendingPopScroll = {
+          path: location.pathname,
+          top,
+          at: performance.now(),
+          userMoved: false,
+        };
+      }
+    });
+  }
+
+  function restorePendingPopScroll() {
+    const pending = window.__cjPendingPopScroll;
+    if (!pending || pending.path !== location.pathname) return;
+    window.__cjPendingPopScroll = null;
+    if (pending.userMoved || performance.now() - pending.at > 4000) return;
+    const max = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+    window.scrollTo({ top: Math.min(pending.top, max), behavior: 'auto' });
+    window.__cjScrollHeight = document.documentElement.scrollHeight;
+  }
+
   function initSwupNavPause() {
+    initPopScrollRestore();
     if (!window.__cjNavInputBound) {
       window.__cjNavInputBound = true;
       document.addEventListener('pointerdown', () => { window.__cjPointerNav = true; }, true);
@@ -1296,6 +1344,7 @@
       swup.__cjNavPause = true;
       swup.hooks.on('visit:start', () => {
         resetImageViewerState();
+        closeDrawerForNav();
         swup.__cjAnnounceNext = true;
         swup.__cjFocusNext = !window.__cjPointerNav;
         closeCodeFullscreen();
@@ -1352,7 +1401,7 @@
 
     // 持久化上次拖到的位置
     try {
-      const saved = JSON.parse(localStorage.getItem('live2d-position') || 'null');
+      const saved = JSON.parse(storageGet('live2d-position', 'null'));
       if (saved && Number.isFinite(saved.left) && Number.isFinite(saved.top)) {
         const w = waifu.offsetWidth || 200;
         const h = waifu.offsetHeight || 200;
@@ -1386,7 +1435,7 @@
       dragStart = null;
       if (waifu.style.top) {
         try {
-          localStorage.setItem('live2d-position', JSON.stringify({
+          storageSet('live2d-position', JSON.stringify({
             left: parseFloat(waifu.style.left) || 0,
             top: parseFloat(waifu.style.top) || 0,
           }));
@@ -1404,7 +1453,7 @@
 
     // 双击复位到左下角
     waifu.addEventListener('dblclick', () => {
-      try { localStorage.removeItem('live2d-position'); } catch (e) {}
+      storageRemove('live2d-position');
       waifu.style.top = '';
       waifu.style.left = '';
       waifu.style.bottom = '';
@@ -1459,11 +1508,11 @@
   const PET_SCRIPT = '/live2d/autoload.js?v=20261024e';
 
   function petPref() {
-    try { return localStorage.getItem(PET_PREF); } catch (e) { return null; }
+    return storageGet(PET_PREF);
   }
 
   function setPetPref(on) {
-    try { localStorage.setItem(PET_PREF, on ? 'on' : 'off'); } catch (e) {}
+    storageSet(PET_PREF, on ? 'on' : 'off');
   }
 
   function petSupported() {
@@ -1683,11 +1732,62 @@
     revealSearchOption(result, options[index]);
   }
 
+  function saveSearchHistory(overlay) {
+    const input = overlay && overlay.querySelector('.search-input');
+    const result = overlay && overlay.querySelector('#search-result');
+    const query = input ? input.value.trim() : '';
+    if (!query) return;
+    const cjSearch = {
+      path: location.pathname,
+      query,
+      scrollTop: result ? result.scrollTop : 0,
+    };
+    try {
+      history.replaceState(Object.assign({}, history.state, { cjSearch }), '', location.href);
+    } catch (_) {}
+  }
+
+  function restoreSearchFromHistory(saved) {
+    if (!saved || !saved.query || saved.path !== location.pathname) return;
+    const started = performance.now();
+    let filled = false;
+    const tick = () => {
+      if (saved.path !== location.pathname || performance.now() - started > 4500) return;
+      const overlay = document.querySelector('.search-pop-overlay');
+      if (!overlay) { setTimeout(tick, 100); return; }
+      if (!overlay.classList.contains('active')) {
+        const trigger = [...document.querySelectorAll('.search-popup-trigger')]
+          .find(el => el.getClientRects().length > 0);
+        if (!trigger) { setTimeout(tick, 100); return; }
+        trigger.click();
+      }
+      const input = overlay.querySelector('.search-input');
+      const result = overlay.querySelector('#search-result');
+      if (!input || !result) { setTimeout(tick, 100); return; }
+      if (!filled) {
+        filled = true;
+        input.value = saved.query;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      if (result.querySelector('li[data-cj-href]')) {
+        const top = Number(saved.scrollTop) || 0;
+        const applyScroll = () => { result.scrollTop = top; };
+        applyScroll();
+        requestAnimationFrame(applyScroll);
+        setTimeout(applyScroll, 80);
+        return;
+      }
+      setTimeout(tick, 100);
+    };
+    setTimeout(tick, 60);
+  }
+
   function activateSearchResult(option, newTab) {
     const href = option && option.dataset.cjHref;
     if (!href) return;
     const overlay = option.closest('.search-pop-overlay');
     if (overlay) {
+      if (!newTab) saveSearchHistory(overlay);
       overlay.classList.remove('active');
       document.body.style.overflow = '';
     }
@@ -1742,8 +1842,41 @@
       if (!e.target.matches('.search-input')) return;
       delete e.target.dataset.cjActive;
       const overlay = e.target.closest('.search-pop-overlay');
-      if (overlay) setActiveSearchOption(overlay, -1);
+      if (overlay) {
+        setActiveSearchOption(overlay, -1);
+        const result = overlay.querySelector('#search-result');
+        // 新查询从第一条开始,不要停留在上一次结果的底部
+        if (result) result.scrollTop = 0;
+      }
     }, true);
+
+    window.addEventListener('popstate', () => {
+      window.__cjSearchBack = history.state && history.state.cjSearch
+        ? history.state.cjSearch : null;
+      clearTimeout(window.__cjSearchBackTimer);
+      // 某些后退直接恢复历史文档,不触发 Swup page:view;留出兜底路径。
+      window.__cjSearchBackTimer = setTimeout(() => {
+        const saved = window.__cjSearchBack;
+        window.__cjSearchBack = null;
+        if (saved) restoreSearchFromHistory(saved);
+      }, 350);
+    });
+    const attachHistoryRestore = swup => {
+      if (!swup || !swup.hooks || swup.__cjSearchHistoryHook) return;
+      swup.__cjSearchHistoryHook = true;
+      swup.hooks.on('page:view', () => {
+        clearTimeout(window.__cjSearchBackTimer);
+        const saved = window.__cjSearchBack;
+        window.__cjSearchBack = null;
+        if (saved) restoreSearchFromHistory(saved);
+      });
+    };
+    if (window.swup) attachHistoryRestore(window.swup);
+    else {
+      window.addEventListener('redefine:swup:ready', e => {
+        attachHistoryRestore(e.detail && e.detail.swup);
+      }, { once: true });
+    }
 
     // 点击结果先收起弹层、解除滚动锁,再交给 Swup 导航。
     // 结果项已经改成非链接块,这里统一从 data-cj-href 取目标。
@@ -1866,6 +1999,44 @@
     }
   }
 
+  function ensureDrawerCloseButton() {
+    const drawer = document.querySelector('.navbar-drawer');
+    if (!drawer) return;
+    let close = drawer.querySelector('.navbar-drawer-close');
+    if (!close) {
+      close = document.createElement('button');
+      close.type = 'button';
+      close.className = 'navbar-drawer-close';
+      close.setAttribute('aria-label', '关闭菜单');
+      close.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i>';
+      drawer.appendChild(close);
+    }
+    if (close.__cjBound) return;
+    close.__cjBound = true;
+    close.addEventListener('click', () => {
+      closeDrawerForNav();
+      const bar = document.querySelector('.navbar-bar');
+      if (bar) bar.focus({ preventScroll: true });
+    });
+  }
+
+  function closeDrawerForNav() {
+    document.body.classList.remove('navbar-drawer-show');
+    (window.__cjDrawerInert || []).forEach(node => { node.inert = false; });
+    window.__cjDrawerInert = [];
+    window.__cjDrawerOpen = false;
+    const drawer = document.querySelector('.navbar-drawer');
+    if (drawer) {
+      drawer.setAttribute('inert', '');
+      drawer.removeAttribute('aria-modal');
+    }
+    const bar = document.querySelector('.navbar-bar');
+    if (bar) {
+      bar.setAttribute('aria-expanded', 'false');
+      bar.setAttribute('aria-label', '打开菜单');
+    }
+  }
+
   function syncDrawerA11y() {
     const bar = document.querySelector('.navbar-bar');
     const drawer = document.querySelector('.navbar-drawer');
@@ -1946,6 +2117,7 @@
     document.querySelectorAll('.navbar-list a.active, .drawer-navbar-list a.active').forEach(a => {
       a.setAttribute('aria-current', 'page');
     });
+    ensureDrawerCloseButton();
     syncDrawerA11y();
     if (!window.__cjDrawerEsc) {
       window.__cjDrawerEsc = true;
@@ -3610,7 +3782,10 @@
     const content = document.querySelector('.article-content');
     if (!content) return;
     // swup 页面切换后可能重复执行,已渲染则跳过
-    if (content.parentElement.querySelector('.related-posts')) return;
+    if (content.parentElement.querySelector('.related-posts')) {
+      restorePendingPopScroll();
+      return;
+    }
 
     const currentPath = window.location.pathname.replace(/\/+$/, '') + '/';
 
@@ -3685,12 +3860,13 @@
       .then(res => res.json())
       .then(all => {
         const current = all.find(p => currentPath.includes(p.path));
-        if (!current) { wrapper.remove(); return; }
+        if (!current) { wrapper.remove(); restorePendingPopScroll(); return; }
         const picks = relatedFor(all, current);
         if (picks.length > 0) render(picks);
         else wrapper.remove();
+        restorePendingPopScroll();
       })
-      .catch(() => { wrapper.remove(); });
+      .catch(() => { wrapper.remove(); restorePendingPopScroll(); });
   }
 
   // ============================

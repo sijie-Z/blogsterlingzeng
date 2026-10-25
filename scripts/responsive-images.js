@@ -34,13 +34,12 @@ hexo.extend.filter.register('after_render:html', function (str) {
     return `<img${before} src="${src}" srcset="${srcset}" sizes="100vw"${after}>`;
   });
 
-  // 亮/暗两张横幅只有一张会显示。暗色图不再 eager + high:
-  // 亮色模式直接不下载,暗色模式由 custom.js 把 data-src 换成真实地址。
-  str = str.replace(/<img\b(?=[^>]*banner-dark\.webp)(?=[^>]*\bdark:block\b)[^>]*>/g, tag => {
+  // 明暗两张横幅都保留真实地址并交给原生懒加载。浏览器会在布局后
+  // 只请求实际显示的那张；不要等 custom.js 才给暗色图写 src，
+  // 否则暗色首屏会先空白几秒，隐藏亮图却提前下载。
+  str = str.replace(/<img\b(?=[^>]*banner-(?:light|dark)\.webp)[^>]*>/g, tag => {
     let out = tag.replace(/\sloading="eager"/i, ' loading="lazy"');
     out = out.replace(/\sfetchpriority="high"/i, '');
-    out = out.replace(/\bsrc="([^"]+)"/i, (m, src) => `src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'/%3E" data-src="${src}"`);
-    out = out.replace(/\bsrcset="([^"]+)"/i, (m, srcset) => `data-srcset="${srcset}"`);
     if (!/\bloading=/i.test(out)) out = out.replace(/\s*\/?>$/, end => ' loading="lazy"' + end);
     return out;
   });

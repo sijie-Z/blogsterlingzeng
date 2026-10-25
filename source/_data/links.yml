@@ -3,11 +3,11 @@
   list:
     - name: 阮一峰的网络日志
       link: https://www.ruanyifeng.com/blog/
-      avatar: https://www.ruanyifeng.com/blog/images/person2_sml.jpg
+      avatar: /images/friends/ruanyifeng.jpg
       description: 每周科技周刊是我必读的内容，帮我了解行业动态
     - name: 张鑫旭的博客
       link: https://www.zhangxinxu.com/
-      avatar: https://www.zhangxinxu.com/zb_users/theme/stargazer/include/stargazer/images/about/zxx.jpg
+      avatar: /images/friends/zhangxinxu.jpg
       description: CSS 领域最深入的中文博客，每篇都值得反复读
     - name: Eric Terminal
       link: https://blog.ericterminal.com/

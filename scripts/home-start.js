@@ -17,6 +17,14 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
   const marker = '<ul class="home-article-list">';
   if (!str.includes(marker)) return str;
 
+  // 首屏先回答“作者是谁、适合什么方向”，再让访客选择项目或简历。
+  if (!str.includes('home-hero-identity')) {
+    str = str.replace('<div class="home-hero-cta">',
+      '<p class="home-hero-identity">Sterling Zeng · GIS 大四 · 前端 / 全栈 / AI 应用工程</p>' +
+      '<div class="home-hero-cta">');
+  }
+  str = str.replace('<div class="label">Lv3</div>', '<div class="label">GIS · 大四</div>');
+
   const seriesTotal = typeof hexo.__cjBuildSeries === 'function'
     ? hexo.__cjBuildSeries().list.reduce((n, group) => n + group.posts.length, 0)
     : 9;

@@ -21,6 +21,7 @@ function redirectPage(target, label) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${label}</title>
   <link rel="canonical" href="${site}${target}">
+  <link rel="icon" href="/images/favicon.png">
   <meta name="robots" content="noindex,follow">
   <meta http-equiv="refresh" content="0; url=${target}">
 </head>

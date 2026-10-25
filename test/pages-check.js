@@ -202,6 +202,8 @@ function check(name, cond, extra) {
   const projectsRaw = await fetch(`${BASE}/projects/`).then(r => r.text());
   const redirectRaw = await fetch(`${BASE}/archives/page/2/`).then(r => r.text());
   check('搜索框有静态 aria-label', /aria-label="站内搜索"/.test(homeRaw));
+  check('首屏展示真实身份与求职方向', homeRaw.includes('home-hero-identity') && homeRaw.includes('GIS 大四') && homeRaw.includes('前端 / 全栈 / AI 应用工程') && !homeRaw.includes('>Lv3<'));
+  check('页脚提供可见返回顶部入口', /class="footer-back-top" href="#main-content"/.test(homeRaw));
   const blankLinks = [...homeRaw.matchAll(/<a[^>]*target="_blank"[^>]*>/g)]
     .filter(m => !/rel="[^"]*noopener/.test(m[0]));
   check('新窗口外链都带 noopener', blankLinks.length === 0, String(blankLinks.length));
@@ -221,13 +223,19 @@ function check(name, cond, extra) {
   const sheetSize = await mobile.evaluate(() => {
     const btn = document.querySelector('#read-sheet .read-size-btn[data-read-size="l"]');
     if (!btn) return { missing: true };
+    const pre = document.querySelector('.article-content td.code pre, .article-content pre');
+    const codeBefore = pre ? parseFloat(getComputedStyle(pre).fontSize) : null;
     btn.click();
+    const codeAfter = pre ? parseFloat(getComputedStyle(pre).fontSize) : null;
     return {
       open: document.getElementById('read-sheet')?.classList.contains('is-open') || false,
       size: document.documentElement.getAttribute('data-read-size'),
+      codeBefore,
+      codeAfter,
     };
   });
   check('设置卡内调字号不关闭卡片', sheetSize.open && sheetSize.size === 'l', JSON.stringify(sheetSize));
+  check('阅读字号同时放大代码', sheetSize.codeBefore > 0 && sheetSize.codeAfter > sheetSize.codeBefore, JSON.stringify(sheetSize));
   await mobile.keyboard.press('Escape');
   await sleep(250);
   await mobile.click('#mobile-cite');
@@ -236,6 +244,32 @@ function check(name, cond, extra) {
   check('内联引用按钮打开菜单', inlineCite);
   await mobile.keyboard.press('Escape');
   await sleep(250);
+
+  await mobile.goto(`${BASE}/`, { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(1000);
+  const socialOverlap = await mobile.evaluate(() => {
+    const cta = document.querySelector('.home-hero-cta-secondary')?.getBoundingClientRect();
+    const social = document.querySelector('.social-contacts')?.getBoundingClientRect();
+    if (!cta || !social) return { missing: true };
+    const width = Math.max(0, Math.min(cta.right, social.right) - Math.max(cta.left, social.left));
+    const height = Math.max(0, Math.min(cta.bottom, social.bottom) - Math.max(cta.top, social.top));
+    return { missing: false, area: width * height };
+  });
+  check('移动端社交区不遮挡简历按钮', !socialOverlap.missing && socialOverlap.area === 0, JSON.stringify(socialOverlap));
+  await mobile.setViewport({ width: 320, height: 568 });
+  await sleep(500);
+  const narrowNav = await mobile.evaluate(() => ['.nb-theme-btn', '.nb-timer-btn', '.navbar-bar', '.mobile .search-popup-trigger'].map(selector => {
+    const el = document.querySelector(selector);
+    if (!el) return { selector, missing: true };
+    const rect = el.getBoundingClientRect();
+    return {
+      selector,
+      display: getComputedStyle(el).display,
+      left: Math.round(rect.left),
+      right: Math.round(rect.right),
+    };
+  }));
+  check('320px 导航控件不被裁切', narrowNav.every(item => !item.missing && (item.display === 'none' || (item.left >= -1 && item.right <= 321))), JSON.stringify(narrowNav));
   await mobile.close();
 
   console.log('=== 9. 打印样式 ===');
