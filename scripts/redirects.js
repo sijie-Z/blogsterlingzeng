@@ -12,6 +12,35 @@ const REDIRECTS = {
   '/2026/10/22/hexo-series-reading-path/': '/2026/10/23/hexo-series-reading-path/',
 };
 
+function redirectPage(target, label) {
+  const site = String(hexo.config.url || '').replace(/\/+$/, '');
+  return `<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${label}</title>
+  <link rel="canonical" href="${site}${target}">
+  <meta name="robots" content="noindex,follow">
+  <meta http-equiv="refresh" content="0; url=${target}">
+</head>
+<body>
+  <p>${label}：<a href="${target}">${target}</a></p>
+</body>
+</html>
+`;
+}
+
+// 归档改成单页后，旧的 /archives/page/2/、/page/3/ 仍要能打开
+hexo.extend.generator.register('archive-pagination-redirects', function () {
+  const archiveCfg = hexo.config.archive_generator || {};
+  if (archiveCfg.per_page !== 0) return [];
+  return [2, 3].map(n => ({
+    path: `archives/page/${n}/index.html`,
+    data: redirectPage('/archives/', '归档已合并为一页'),
+  }));
+});
+
 function streamToString(stream) {
   if (typeof stream === 'string') return Promise.resolve(stream);
   if (!stream || typeof stream.on !== 'function') return Promise.resolve('');

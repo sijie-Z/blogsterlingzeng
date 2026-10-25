@@ -26,7 +26,10 @@ scripts/                 构建期脚本（Hexo 启动时加载）
 ├── math.js              $...$ / $$...$$ 构建期 KaTeX MathML + 复制按钮
 ├── footnotes.js         [^id] 脚注：doc-noteref / doc-endnotes
 ├── markdown-route.js    /<path>/index.md 与 llms.txt
-├── archive-heatmap.js   归档页内联 SVG 写作热力图
+├── archive-heatmap.js   归档页页头、内联 SVG 热力图、条目分类/阅读时间
+├── taxonomy-pages.js    标签/分类页引导语与按使用次数排序
+├── essays-page.js       说说页去重 id、构建期写入日期
+├── photos-page.js       站点视觉页导语与 <noscript> 静态图集
 ├── related-posts.js     相关阅读数据
 ├── seo-jsonld.js        BlogPosting / BreadcrumbList / WebSite / ProfilePage / CollectionPage
 ├── responsive-images.js 横幅 960/1280/1920 srcset
@@ -36,10 +39,10 @@ scripts/                 构建期脚本（Hexo 启动时加载）
 ├── image-metadata.js    懒加载图片尺寸补全
 └── theme-patch.js       对主题做可审计、可重复执行的最小补丁
 
-source/js/custom.js      运行时交互：导航、搜索、目录、边注、预览、阅读设置、代码全屏、阅读记忆、无障碍（约 3200 行）
-source/css/custom.css    设计系统与页面覆盖（约 4800 行）
+source/js/custom.js      运行时交互：导航、搜索、目录、边注、预览、阅读设置、代码全屏、阅读记忆、无障碍（约 3600 行）
+source/css/custom.css    设计系统与页面覆盖（约 6300 行）
 source/css/series.css    系列阅读样式
-test/                    13 套 Puppeteer / Node 检查
+test/                    14 套 Puppeteer / Node 检查
 ```
 
 主题来自 npm 包 `hexo-theme-redefine@2.9.0`，没有复制进 `themes/`。`theme-patch.js` 在 postinstall 和 Hexo 启动时对 `node_modules` 打补丁；所有补丁都有标记检查，重复执行不会叠加。
@@ -118,6 +121,8 @@ test/                    13 套 Puppeteer / Node 检查
 
 内链预览只在 `(hover: hover) and (pointer: fine)` 且宽度 ≥1024px 时启用；移动端点击直接跳转。脚注和预览卡都支持 `focusin`，键盘 Tab 到引用时同样显示。
 
+归档页也走构建期：页头统计（篇数/字数/写作日/系列数）、写作热力图、系列入口和每条文章的分类/阅读时间都由同一份 posts 数据生成；2026-10-25 起归档合并为一页，旧的 `/archives/page/2/`、`/page/3/` 保留为跳转页。标签与分类页在构建期按使用次数降序排列，引导语移到列表上方。站点视觉页（`/photos/`）的图集仍由前端 masonry 渲染，但构建期补了导语、加载提示和 `<noscript>` 静态图集。
+
 引用元数据放在静态 HTML 的 head 里，服务爬虫和首屏；引用菜单实际读的是正文里的 JSON，因为 Swup 只替换 `#swup`，head 不会随换页更新。反向链接只扫描每篇文章的渲染正文（`post.content`），不把导航、相关阅读、系列卡算进去；当前 23 篇里有 18 篇至少被引用一次，没有来源的文章不渲染空区块。
 
 ## 6. 无障碍
@@ -134,7 +139,10 @@ test/                    13 套 Puppeteer / Node 检查
 - **引用菜单**：`role="menu"` / `menuitem`，打开后焦点进入第一项，↑/↓/Home/End 移动，Esc 关闭并把焦点还给分享按钮，Tab 离开时自动收起。
 - **快捷键帮助**：原生 `<dialog>` + `showModal()` 提供焦点陷阱和 Esc 关闭，背景由浏览器置为 inert；输入框聚焦时所有单键快捷键关闭。
 - **次级导航**：简历 / 归档 / 标签 / 书签只在页脚滚动到底展开时出现，保持原生链接；移动端触控高度 44px，不在首屏和导航里抢位置。
-- **对比度**：浅色/深色/四季主题的次要文字统一到 WCAG AA 以上。
+- **对比度**：浅色/深色/四季主题的次要文字统一到 WCAG AA 以上；白字按钮使用更深的 `--primary-color-strong`，首页和关于页主按钮在两种主题下都达到 4.5:1。
+- **浮动控件**：移动端向下阅读时，Aa、引用和右侧工具栏淡出，向上滚或回到顶部再出现；边注 ※ 与标题锚点用伪元素扩大点击区域。
+- **回到顶部**：主题的 `<li>` 补 `role="button"`、`tabindex="0"`、`aria-label` 和 Enter/Space 处理。
+- **分类卡片**：整个卡片区域通过链接伪元素可点击，不再只有分类名是热区。
 
 验证：axe-core 4.10 在桌面和移动端扫描首页、文章页、归档、系列总览、系列页、关于、项目、简历、404，WCAG A/AA 标签下 **0 条违规**。回归测试另覆盖标题唯一性、图片 alt、链接/按钮名称、列表语义、地标和 skip link。
 
@@ -142,7 +150,7 @@ test/                    13 套 Puppeteer / Node 检查
 
 | 套件 | 项数 | 覆盖 |
 |---|---:|---|
-| `test:transitions` | 46 | SPA 跳转、连点、前进后退、搜索焦点、路由播报、800px 导航 |
+| `test:transitions` | 49 | SPA 跳转、连点、前进后退、搜索焦点、路由播报、页脚自动收起、800px 导航 |
 | `test:sidebar` | 39 | 侧栏卡片、进度环、锚点、表格、Markdown、代码全屏、面包屑、移动目录 |
 | `test:series` | 55 | 系列页、徽章/系列卡、Atom、归档入口、SPA、移动端 |
 | `test:assets` | 49 | 响应式横幅、WebP 纹理、sitemap/llms、JSON-LD、JSON Feed、图标子集、OG 元数据、APlayer |
@@ -152,11 +160,12 @@ test/                    13 套 Puppeteer / Node 检查
 | `test` | 34 | 端到端页面、主题切换、Live2D 显式召唤、次级页面 |
 | `test:features` | 100 | 边注、内链预览、公式复制、脚注预览、阅读设置、引用菜单、反向链接、键盘快捷键、图片双指平移、文章导航、404、简历 PDF |
 | `test:resume` | 7 | 阅读位置记忆与继续阅读 |
-| `test:archive` | 16 | 归档热力图与移动端 |
+| `test:archive` | 19 | 归档页头、单页列表、旧分页跳转、热力图与移动端 |
+| `test:pages` | 29 | 标签/分类排序、说说日期、站点视觉兜底、归档元数据、页脚与浮动控件 |
 | `test:content` | 23 篇 | front matter、站内链接、图片、OG 卡、文风硬规则 |
-| `test:links` | 101 HTML | 构建产物站内 href 断链检查 |
+| `test:links` | 99 HTML | 构建产物站内 href 断链检查 |
 
-合计 460 项浏览器检查、23 篇文章的内容检查和 101 个 HTML 的内链检查。所有套件在本机通过；CI 跑 `test:content`、构建和 `test:links`，浏览器套件留在本地或 self-hosted runner。
+合计 495 项浏览器检查、23 篇文章的内容检查和 99 个 HTML 的内链检查。所有套件在本机通过；CI 跑 `test:content`、构建和 `test:links`，浏览器套件留在本地或 self-hosted runner。
 
 ## 8. 已知边界
 
@@ -177,6 +186,10 @@ test/                    13 套 Puppeteer / Node 检查
 - **文章导航的 head 链接只在首屏 HTML 生效**：Swup 不替换 `<head>`，SPA 换页后 `rel=prev/next` 仍是进入站点时的页面；文末卡片每次换页都会重建，键盘 `[` `]` 也用当前页的卡片，不受影响。
 - **Giscus 主题同步**：主题在 iframe 被 Swup 移除后仍可能对 null `contentWindow` 调 `postMessage`；`theme-patch.js` 已在源码和构建产物里补 `isConnected/contentWindow` 守卫。
 - **打印**：打印样式强制浅色背景和深色文字，深色模式下打印简历/文章不会反色；固定浮层（宠物、播放器、工具栏、鼠标跟随）全部隐藏。
+- **归档分页**：2026-10-25 起归档合并为一页；旧 `/archives/page/2/`、`/page/3/` 由 generator 输出 meta refresh 跳转页，并带 `noindex`。
+- **页脚自动收起**：长页面顶部和向下阅读时隐藏常驻页脚，向上滚或触底展开；短页面保持可见。
+- **移动端浮动控件**：向下阅读时 Aa、引用和右侧工具栏淡出，向上滚恢复；桌面端不受影响。
+- **数据标记**：`data-cj-post` 只写在真正的文章页（`page.__post`），归档/标签/关于等页面不会误用专注模式。
 - **系列样式**：`series.css` 改为全站加载。之前按页注入 `<head>`，SPA 换页或缓存命中旧版本时卡片会失去布局，退化成一段连续文字。
 - **宠物**：画布缩到 170px，向下阅读时淡出、向上滚或回顶部恢复，避免遮挡正文。
 - **主题升级**：补丁目标是 2.9.0 的模板文本；版本已锁定，升级时需要重新核对 `theme-patch.js` 的标记。

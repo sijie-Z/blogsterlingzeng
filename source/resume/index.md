@@ -1,5 +1,6 @@
 ---
 title: 简历
+description: Sterling Zeng 的一页式简历：AI Agent 开发 / 后端全栈方向，可打印并下载 PDF。
 date: 2026-10-23 18:00:00
 comment: false
 comments: false

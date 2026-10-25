@@ -121,9 +121,12 @@ function check(name, cond, extra) {
   const monthSeries = await page.evaluate(() => document.querySelectorAll('.archive-series').length);
   check('月归档不重复系列块', monthSeries === 0, String(monthSeries));
   await page.goto(BASE + '/archives/page/2/', { waitUntil: 'networkidle2', timeout: 30000 });
-  await sleep(400);
-  const pageSeries = await page.evaluate(() => document.querySelectorAll('.archive-series').length);
-  check('分页归档不重复系列块', pageSeries === 0, String(pageSeries));
+  await sleep(700);
+  const pagerSeries = await page.evaluate(() => ({
+    path: location.pathname,
+    sections: document.querySelectorAll('.archive-series').length,
+  }));
+  check('旧分页地址跳到归档首页', pagerSeries.path === '/archives/' && pagerSeries.sections === 1, JSON.stringify(pagerSeries));
 
   console.log('=== 3. 文章内徽章与系列卡 ===');
   await page.goto(BASE + ARTICLE, { waitUntil: 'networkidle2', timeout: 30000 });

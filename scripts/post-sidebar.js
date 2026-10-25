@@ -31,8 +31,10 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
   const page = locals && locals.page;
   if (!str || !page) return str;
 
-  // 标记文章页,head 里的内联脚本据此在首屏前应用“专注阅读”
-  if (!/<html\b[^>]*\bdata-cj-post\b/i.test(str)) {
+  // 标记文章页,head 里的内联脚本据此在首屏前应用“专注阅读”。
+  // 只标记真正的文章:首页/归档/关于等页面不能带这个属性,否则
+  // 上次留下的 cj-focus 会在非文章页生效。
+  if (page.__post && !/<html\b[^>]*\bdata-cj-post\b/i.test(str)) {
     str = str.replace(/<html\b([^>]*)>/i, '<html$1 data-cj-post="1">');
   }
 

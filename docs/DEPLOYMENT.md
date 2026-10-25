@@ -126,7 +126,7 @@ curl -sI "https://sterlingzeng.cn/" | grep -i cache-control
 |------|------|------|
 | HTTPS 证书 80+ 小时不签发 | GitHub Pages 自定义域名证书排队卡死(免费账户) | **切换 Cloudflare 后几分钟签发**——以后遇到证书问题直接考虑 Cloudflare |
 | GitHub 直连失败 | 国内网络访问 GitHub 不稳定 | 用 VPN 代理 `127.0.0.1:7897`(端口以系统代理为准) |
-| 页面卡顿 | 大量 backdrop-filter 模糊 | 卡片改为 6-8px,导航栏保留 16px |
+| 页面卡顿 | 大量 backdrop-filter 模糊 | 卡片改为 6-8px；导航栏已改为实色，不再模糊 |
 | 主题类名失效 | redefine 2.9.0 改类名 | 已审计,选择器全量对齐 |
 
 ## 技术备忘

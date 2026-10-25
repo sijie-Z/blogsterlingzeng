@@ -273,7 +273,7 @@ function renderSeriesIndex(list) {
   const cards = list.map(group => {
     return `<a class="series-index-card" href="${escapeHtml(seriesUrl(group.slug))}">
   <span class="series-index-kicker">系列</span>
-  <span class="series-index-name">${escapeHtml(group.name)}</span>
+  <h2 class="series-index-name">${escapeHtml(group.name)}</h2>
   <span class="series-index-desc">${escapeHtml(group.description)}</span>
   <span class="series-index-meta">${seriesMeta(group, true)}</span>
   <span class="series-index-foot">开始阅读</span>
@@ -292,8 +292,11 @@ function renderSeriesIndex(list) {
 function renderArchiveSeries(list) {
   const cards = list.map(group =>
     `<a class="archive-series-card" href="${escapeHtml(seriesUrl(group.slug))}">
-      <span class="archive-series-name">${escapeHtml(group.name)}</span>
-      <span class="archive-series-meta">${seriesMeta(group)}</span>
+      <span class="archive-series-text">
+        <span class="archive-series-name">${escapeHtml(group.name)}</span>
+        <span class="archive-series-meta">${seriesMeta(group)}</span>
+      </span>
+      <span class="archive-series-arrow" aria-hidden="true">→</span>
     </a>`
   ).join('');
   return `<section class="archive-series" aria-label="系列文章">
@@ -368,7 +371,7 @@ hexo.extend.generator.register('series-pages', function () {
     layout: 'page',
     data: {
       title: '系列文章',
-      description: '按主题成组阅读站内文章。',
+      description: '按主题成组阅读站内文章：把相近主题串成阅读路径，按顺序读比按时间读更连贯。',
       content: renderSeriesIndex(list),
       series_page: true,
       comment: false,

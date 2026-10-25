@@ -40,6 +40,11 @@ function check(name, cond, extra) {
     paginator: !!document.querySelector('.paginator'),
     likeButtons: document.querySelectorAll('.like-btn').length,
     overflow: document.documentElement.scrollWidth - innerWidth,
+    hero: !!document.querySelector('.archive-hero'),
+    heroTitle: document.querySelector('.archive-hero-title')?.textContent.trim() || '',
+    heroStats: document.querySelector('.archive-hero-stats')?.textContent.replace(/\s+/g, ' ').trim() || '',
+    rowMeta: document.querySelectorAll('.archive-row-meta').length,
+    yearHeading: document.querySelector('h2.archive-year')?.textContent.trim() || '',
   }));
   check('写作足迹卡片存在', state.card);
   check('热力图格子已生成', state.cells >= 100, String(state.cells));
@@ -47,20 +52,23 @@ function check(name, cond, extra) {
   check('月份标签已生成', state.months >= 5, String(state.months));
   check('累计输出统计存在', /万字|字/.test(state.stats), state.stats);
   check('原归档列表仍在', state.archiveList);
-  check('归档首页有分页', state.posts > 0 && state.posts <= 10 && state.paginator, JSON.stringify({ posts: state.posts, paginator: state.paginator }));
+  check('归档一页展示全部文章', state.posts === 23 && !state.paginator, JSON.stringify({ posts: state.posts, paginator: state.paginator }));
+  check('归档页头与统计存在', state.hero && state.heroTitle === '归档' && /23/.test(state.heroStats), JSON.stringify(state.heroStats));
+  check('归档条目带分类与阅读时间', state.rowMeta === state.posts, String(state.rowMeta));
+  check('年份标题使用 h2', state.yearHeading === '2026', state.yearHeading);
   check('归档条目没有错误插入点赞按钮', state.likeButtons === 0, String(state.likeButtons));
   check('桌面无横向溢出', state.overflow <= 2, String(state.overflow));
 
   const pagerPage = await browser.newPage();
   await pagerPage.setViewport({ width: 1440, height: 1000 });
   await pagerPage.goto(`${BASE}/archives/page/2/`, { waitUntil: 'networkidle2', timeout: 30000 });
-  await sleep(600);
+  await sleep(700);
   const pagerState = await pagerPage.evaluate(() => ({
+    path: location.pathname,
+    hero: !!document.querySelector('.archive-hero'),
     posts: document.querySelectorAll('.article-title').length,
-    firstTitle: document.querySelector('.article-title')?.textContent.trim() || '',
-    paginator: !!document.querySelector('.paginator'),
   }));
-  check('归档第 2 页与首页不同', pagerState.posts > 0 && pagerState.firstTitle !== state.firstTitle && pagerState.paginator, JSON.stringify(pagerState));
+  check('旧分页地址跳到归档首页', pagerState.path === '/archives/' && pagerState.hero && pagerState.posts === state.posts, JSON.stringify(pagerState));
   await pagerPage.close();
 
   const monthPage = await browser.newPage();

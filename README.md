@@ -30,8 +30,8 @@
 这是一个完整的技术博客项目，不是简单的 Hexo 模板。包含：
 
 - **23 篇原创技术文章** — 每篇从个人经历出发，不是教科书式教程
-- **自定义 UI 设计** — 蓝色主题、磨砂导航栏、卡片浮动效果、阅读进度条
-- **多个自定义页面** — 关于、友链、书签、说说、照片墙、项目
+- **自定义 UI 设计** — 蓝色主题、实色导航栏、卡片浮动效果、阅读进度条
+- **多个自定义页面** — 关于、友链、书签、说说、站点视觉、项目
 - **完整的部署方案** — 宝塔面板 scp 上传 / GitHub Actions
 
 ---
@@ -81,7 +81,10 @@
 | 404 页面 | 自定义 404 + 快捷搜索入口（Ctrl K / 斜杠）+ 最近 5 篇文章 | `source/404.md` |
 | 阅读体验 | 阅读位置记忆 + “继续阅读”胶囊、标题锚点复制、宽表格横向滚动 | `source/js/custom.js` |
 | 开放内容 | 每篇文章生成 `index.md` 原文，站点级 `llms.txt` 索引 | `scripts/markdown-route.js` |
-| 归档页 | 构建期写作足迹热力图（内联 SVG，零运行时） | `scripts/archive-heatmap.js` |
+| 归档页 | 构建期生成页头统计、写作热力图、系列入口与每条文章的分类/阅读时间；单页展示全部文章 | `scripts/archive-heatmap.js` |
+| 标签 / 分类 | 引导语在列表上方，按文章数降序排列；标签去掉按权重模糊，分类整卡可点 | `scripts/taxonomy-pages.js` |
+| 站点视觉 | `/photos/` 展示站点横幅与主题视觉；补导语、加载提示与 `<noscript>` 静态图集 | `scripts/photos-page.js` |
+| 阅读时不挡正文 | 长页面自动收起常驻页脚；移动端向下阅读时 Aa、引用和右侧工具栏淡出 | `source/js/custom.js` |
 | SEO | 每篇文章 BlogPosting + BreadcrumbList JSON-LD、canonical 保留大小写、每篇独立描述 | `scripts/seo-jsonld.js` |
 | 代码块 | 全屏专注查看（Esc / 点背景退出），保留复制与折叠；行号可复制 `#cb1-L3` 永久链接 | `source/js/custom.js` |
 
@@ -94,7 +97,7 @@
 | 友链 | `/friends/` | `source/_data/links.yml` | 博客友链，分"技术博客"和"工具社区" |
 | 书签 | `/bookmarks/` | `source/_data/bookmarks.yml` | 常用工具和资源收藏 |
 | 说说 | `/shuoshuo/` | `source/_data/essays.yml` | 碎片化想法和日常感悟 |
-| 照片墙 | `/photos/` | `source/_data/masonry.yml` | Masonry 瀑布流图片 |
+| 站点视觉 | `/photos/` | `source/_data/masonry.yml` | 站内横幅与主题视觉，Masonry 瀑布流 |
 | 分类 | `/categories/` | 自动生成 | 按文章分类浏览 |
 | 标签 | `/tags/` | 自动生成 | 按标签浏览 |
 
@@ -103,7 +106,7 @@
 | 特性 | 说明 |
 |------|------|
 | 蓝色主题 | 主色调 `#2563eb`，全套 CSS 变量 |
-| 磨砂导航栏 | `backdrop-filter: blur(16px)` |
+| 实色导航栏 | 滚动前后都是实色，滚动后收缩为和卡片同材质的胶囊，不使用 `backdrop-filter` |
 | 文章卡片 | 圆角、悬浮上移、边框高亮 |
 | 标题装饰 | 左侧渐变色条 |
 | 链接动画 | 悬浮时下划线展开 |
@@ -126,7 +129,7 @@
 | SPA 整次导航 | **~134ms** | Swup 只替换 `#swup`，滚动即时归零 |
 | Live2D 主纹理 | **1.7MB → 308KB** | 2048 PNG 重采样为 1024 WebP |
 | 手机首屏横幅 | **63KB → 35KB**（亮色） | 960/1280/1920 srcset + DPR 选图 |
-| 自动化浏览器检查 | **460 项** | 跳转、侧栏、系列、阅读记忆、归档、平滑度、资源、内容、边注/预览/阅读设置/引用/反向链接/快捷键/图片平移/文章导航/简历 PDF |
+| 自动化浏览器检查 | **495 项** | 跳转、侧栏、系列、阅读记忆、归档、标签分类、站点视觉、页脚收起、平滑度、资源、内容、边注/预览/阅读设置/引用/反向链接/快捷键/图片平移/文章导航/简历 PDF |
 
 **构建期优先**：系列页、写作热力图、文章侧栏、JSON-LD、Markdown 原文、llms.txt 全部在 `hexo generate` 阶段生成，运行时不发额外请求、不引入布局抖动。主题通过 `scripts/theme-patch.js` 做可审计的最小补丁（Swup、TOC、搜索防抖、Giscus 守卫等），补丁可重复执行。
 
@@ -140,8 +143,8 @@
 |------|------|------|
 | 框架 | Hexo | 7.3.0 |
 | 主题 | hexo-theme-redefine | 2.9.0 |
-| 样式 | 自定义 CSS | ~4800 行 |
-| 脚本 | 自定义 JS | ~3200 行 |
+| 样式 | 自定义 CSS | ~6300 行 |
+| 脚本 | 自定义 JS | ~3600 行 |
 | 静态资源 | 本地自托管 | - |
 | 搜索 | hexo-generator-searchdb | - |
 | 字数 | hexo-wordcount | - |
@@ -191,15 +194,16 @@ npm run test:features       # 100 项边注 / 内链预览 / 公式复制 / 脚�
 npm run test:l2d            # Live2D 加载诊断(模型 / Core / 404)
 npm run test:smooth         # 26 项滚动与动效平滑度回归
 npm run test:content        # 文章 front matter / 站内链接 / 图片 / OG 卡 / 文风检查
-npm run test:links          # 构建产物内链检查（101 个 HTML）
-npm run test:transitions    # 46 项 SPA 跳转 / 连点 / 前后退 / 搜索焦点 / 路由播报
+npm run test:links          # 构建产物内链检查（99 个 HTML）
+npm run test:transitions    # 49 项 SPA 跳转 / 连点 / 前后退 / 搜索焦点 / 路由播报 / 页脚收起
 npm run test:sidebar        # 39 项文章侧栏 / 进度 / 锚点 / 表格 / 面包屑 / 代码全屏
-npm run test:series         # 53 项系列页 / 徽章 / 系列卡 / SPA / 移动端
+npm run test:series         # 55 项系列页 / 徽章 / 系列卡 / SPA / 移动端
 npm run test:assets         # 49 项响应式横幅 / WebP 纹理 / JSON Feed / 图标子集 / JSON-LD
 npm run test:search         # 20 项搜索 combobox / 方向键 / Enter / 空态 / IME
 npm run test:a11y           # 68 项无障碍:名称 / alt / 列表语义 / 标题 / 地标 / 脚注
 npm run test:resume         # 7 项阅读位置记忆与“继续阅读”
-npm run test:archive        # 16 项归档写作热力图与移动端
+npm run test:archive        # 19 项归档页头/单页列表/旧分页跳转/热力图
+npm run test:pages          # 29 项标签分类排序/说说日期/站点视觉/页脚与浮动控件
 npm run profile:nav         # 第一次跳转的 CPU 采样诊断
 npm run perf                # 滚动性能探针(帧间隔 / 长任务 / 布局)
 npm run test:vitals         # CLS / LCP 与最大位移来源
@@ -231,7 +235,7 @@ blogsterlingzeng/
 │   │   ├── links.yml                # 友链数据
 │   │   ├── essays.yml               # 说说数据
 │   │   ├── bookmarks.yml            # 书签数据
-│   │   ├── masonry.yml              # 照片墙数据
+│   │   ├── masonry.yml              # 站点视觉数据
 │   │   └── series.yml               # 系列文章元数据
 │   │
 │   ├── about/index.md               # 关于页面
@@ -239,16 +243,16 @@ blogsterlingzeng/
 │   ├── friends/index.md             # 友链页面
 │   ├── bookmarks/index.md           # 书签页面
 │   ├── shuoshuo/index.md            # 说说页面
-│   ├── photos/index.md              # 照片墙页面
+│   ├── photos/index.md              # 站点视觉页面
 │   ├── resume/index.md              # 一页式简历（可打印）
 │   ├── categories/index.md          # 分类页面
 │   ├── tags/index.md                # 标签页面
 │   ├── robots.txt                   # 爬虫规则
 │   ├── 404.md                       # 自定义 404
 │   │
-│   ├── css/custom.css               # 自定义样式 (~3900 行)
+│   ├── css/custom.css               # 自定义样式 (~6300 行)
 │   ├── css/series.css               # 系列阅读样式
-│   ├── js/custom.js                 # 自定义脚本 (~2400 行)
+│   ├── js/custom.js                 # 自定义脚本 (~3600 行)
 │   ├── live2d/                      # Live2D 组件 + DeepSeek 大肥鱼模型
 │   ├── fontawesome/webfonts/        # FontAwesome 子集字体
 │   └── images/                      # 图片资源

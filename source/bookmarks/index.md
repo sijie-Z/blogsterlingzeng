@@ -1,5 +1,6 @@
 ---
 title: 工具箱
+description: 日常开发和学习常用的工具与资源：AI 工具、开发工具、学习资源、AI 与数据。
 date: 2026-05-08 12:00:00
 type: bookmarks
 ---

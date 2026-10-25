@@ -1864,7 +1864,7 @@
       // ResizeObserver 也会兜住图片撑高;不再每次滚动同步读 scrollHeight。
       // 只在接近底部(<150px)时读一次真实值,保证页脚触底判定准确。
       let maxScroll = (window.__cjScrollHeight || document.documentElement.scrollHeight) - window.innerHeight;
-      if (maxScroll - scrollTop <= 150) {
+      if (maxScroll - scrollTop <= 150 || scrollTop <= 0) {
         const realMax = document.documentElement.scrollHeight - window.innerHeight;
         if (realMax !== maxScroll) {
           window.__cjScrollHeight = realMax + window.innerHeight;
@@ -1887,6 +1887,18 @@
         const atBottom = footer.classList.contains('at-bottom');
         if (!atBottom && remaining <= 8) footer.classList.add('at-bottom');
         else if (atBottom && remaining > 80) footer.classList.remove('at-bottom');
+
+        // 阅读时把常驻页脚让开:长页面默认收起,向上滚或触底展开。
+        // 短页面没有可滚动的正文,保持展开。
+        const lastY = Number.isFinite(window.__cjFooterLastY) ? window.__cjFooterLastY : scrollTop;
+        const nextAtBottom = footer.classList.contains('at-bottom');
+        const goingUp = scrollTop < lastY - 4;
+        if (!nextAtBottom && maxScroll > 160 && !goingUp) {
+          footer.classList.add('footer-hidden');
+        } else {
+          footer.classList.remove('footer-hidden');
+        }
+        window.__cjFooterLastY = scrollTop;
       }
 
       // 滚动期间暂停 Cubism 渲染,scrollend 或 700ms 空闲后恢复
@@ -1899,10 +1911,12 @@
       // 同步暂停,不等 rAF:scrollend 恢复后新的 scroll 会再次暂停
       const l2d = window.__l2dApp;
       const waifu = document.querySelector('#waifu');
+      const y = window.scrollY;
+      const prevY = Number.isFinite(window.__cjLastScrollY) ? window.__cjLastScrollY : 0;
+      window.__cjLastScrollY = y;
+      // 移动端浮动按钮/右侧工具在向下阅读时收起,避免盖住正文
+      document.documentElement.classList.toggle('cj-scroll-down', y > 220 && y > prevY + 8);
       if (waifu) {
-        const y = window.scrollY;
-        const prevY = Number.isFinite(window.__cjLastScrollY) ? window.__cjLastScrollY : 0;
-        window.__cjLastScrollY = y;
         if (waifu.matches(':hover')) {
           waifu.classList.remove('waifu-reading');
         } else if (y < 120 || y < prevY - 8) {
@@ -1933,7 +1947,38 @@
     document.addEventListener('scrollend', () => {
       if (performance.now() - lastScrollAt > 180) resumeLive2D();
     }, { passive: true });
+    // 首屏先读一次真实高度,避免把上一页的缓存高度当成本页
+    window.__cjScrollHeight = document.documentElement.scrollHeight;
     update();
+
+    // 图片/画廊加载后文档高度会变;重新算一次,避免短页面的页脚被误收起
+    if ('ResizeObserver' in window && !window.__cjFooterObserver) {
+      window.__cjFooterObserver = new ResizeObserver(() => {
+        window.__cjScrollHeight = document.documentElement.scrollHeight;
+        requestAnimationFrame(() => update());
+      });
+      window.__cjFooterObserver.observe(document.body);
+      window.__cjFooterObserver.observe(document.documentElement);
+    }
+    window.addEventListener('load', () => setTimeout(update, 0), { once: true });
+    setTimeout(update, 600);
+    setTimeout(update, 1800);
+
+    // SPA 换页后重算页脚状态:长页收起,短页展开
+    const attachFooterNav = swup => {
+      if (!swup || !swup.hooks || swup.__cjFooterHook) return;
+      swup.__cjFooterHook = true;
+      swup.hooks.on('page:view', () => {
+        window.__cjFooterLastY = 0;
+        window.__cjScrollHeight = document.documentElement.scrollHeight;
+        requestAnimationFrame(() => {
+          update();
+          setTimeout(update, 300);
+        });
+      });
+    };
+    if (window.swup && window.swup.hooks) attachFooterNav(window.swup);
+    else window.addEventListener('redefine:swup:ready', e => attachFooterNav(e.detail && e.detail.swup), { once: true });
   }
 
   // ============================
@@ -3379,11 +3424,27 @@
   // ============================
   // Initialize all features
   // ============================
+  function initSideToolA11y() {
+    const top = document.querySelector('.tool-scroll-to-top');
+    if (!top || top.dataset.cjA11y) return;
+    top.dataset.cjA11y = '1';
+    top.setAttribute('role', 'button');
+    top.setAttribute('tabindex', '0');
+    top.setAttribute('aria-label', '回到顶部');
+    top.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        top.click();
+      }
+    });
+  }
+
   function init() {
     if (window.Odometer && window.Odometer.options) {
       window.Odometer.options.auto = false;
     }
     closeCodeFullscreen();
+    document.documentElement.classList.remove('cj-scroll-down');
     // 全局监听在整个会话只注册一次(脚本每次换页都会重新执行)
     onceGlobal('smoothScroll', initSmoothScroll);
     onceGlobal('keyboard', initKeyboardShortcuts);
@@ -3431,6 +3492,7 @@
     initMobileToc();
     initImageA11y();
     initNavA11y();
+    initSideToolA11y();
     decorateSearchTriggers();
     observeSearchClose();
     onceGlobal('searchNav', initSearchNavGlobals);

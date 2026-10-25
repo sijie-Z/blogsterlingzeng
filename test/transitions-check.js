@@ -302,6 +302,22 @@ async function waitIdle(page, timeout = 8000) {
   check('前进完成', afterForward === beforeBack, `${afterBack} -> ${afterForward}`);
 
   console.log('=== 8. 页脚展开 ===');
+  await page.goto(BASE + '/2026/10/24/reading-experience-as-features/', { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(1500);
+  const footerHidden = () => page.evaluate(() =>
+    document.querySelector('footer.footer')?.classList.contains('footer-hidden') ?? false
+  );
+  const topHidden = await footerHidden();
+  check('长页顶部页脚自动收起', topHidden);
+  await page.evaluate(() => window.scrollTo(0, 900));
+  await sleep(700);
+  const downHidden = await footerHidden();
+  check('向下阅读页脚保持收起', downHidden);
+  await page.evaluate(() => window.scrollTo(0, 500));
+  await sleep(700);
+  const upShown = !(await footerHidden());
+  check('向上滚动页脚重新出现', upShown);
+
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   await sleep(900);
   const atBottom = await page.evaluate(() => document.querySelector('footer.footer')?.classList.contains('at-bottom'));

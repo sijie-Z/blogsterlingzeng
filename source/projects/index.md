@@ -1,5 +1,6 @@
 ---
 title: 项目
+description: MiQroGate、quant_platform、DocMind 三个项目的完整案例：问题、约束、关键决策、证据与边界。
 date: 2026-08-28 10:00:00
 ---
 
