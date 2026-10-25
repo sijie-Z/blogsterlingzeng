@@ -144,24 +144,15 @@ navbar:
     项目:
       path: /projects
       icon: fa-brands fa-github
-    简历:
-      path: /resume
-      icon: fa-regular fa-file-lines
-    系列:
-      path: /series
-      icon: fa-solid fa-layer-group
     关于:
       path: /about
       icon: fa-regular fa-user
-    归档:
-      path: /archives
-      icon: fa-regular fa-archive
+    系列:
+      path: /series
+      icon: fa-solid fa-layer-group
     友链:
       path: /friends
       icon: fa-regular fa-users
-    书签:
-      path: /bookmarks
-      icon: fa-regular fa-bookmark
   search:
     enable: true
     preload: false
@@ -180,18 +171,12 @@ home:
       项目:
         path: /projects
         icon: fa-brands fa-github
-      简历:
-        path: /resume
-        icon: fa-regular fa-file-lines
-      归档:
-        path: /archives
-        icon: fa-regular fa-archive
+      关于:
+        path: /about
+        icon: fa-regular fa-user
       系列:
         path: /series
         icon: fa-solid fa-layer-group
-      标签:
-        path: /tags
-        icon: fa-regular fa-tags
       友链:
         path: /friends
         icon: fa-regular fa-users
@@ -334,9 +319,10 @@ footer:
 inject:
   enable: true
   head:
-    - <link rel="stylesheet" href="/css/custom.css?v=20261025a">
+    - <link rel="stylesheet" href="/css/custom.css?v=20261025d">
     - <script>try{var s=localStorage.getItem('cj-read-size');if(s==='s'||s==='l')document.documentElement.setAttribute('data-read-size',s);if(localStorage.getItem('cj-focus')==='on'&&document.documentElement.hasAttribute('data-cj-post'))document.documentElement.classList.add('cj-focus');}catch(e){}</script>
   footer:
+    - <nav class="footer-utility" aria-label="更多入口"><a href="/resume/">简历</a><a href="/archives/">归档</a><a href="/tags/">标签</a><a href="/bookmarks/">书签</a></nav>
     - <div class="footer-extra-icons">
         <a href="/atom.xml" title="RSS 订阅" aria-label="RSS 订阅" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-rss" aria-hidden="true"></i></a>
         <a href="https://github.com/sijie-Z" title="GitHub" aria-label="GitHub" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-github" aria-hidden="true"></i></a>

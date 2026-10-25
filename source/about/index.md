@@ -11,7 +11,12 @@ date: 2026-05-10 12:00:00
 
 这个博客记录这些过程：技术选型、踩坑、性能测量，以及一些还没想清楚的问题。
 
-**快速入口：** [项目案例](/projects/) · [简历](/resume/) · [系列文章](/series/) · [归档](/archives/) · [GitHub](https://github.com/sijie-Z) · [Email](mailto:1683039482@qq.com)
+<div class="about-actions">
+  <a class="about-action-primary" href="/resume/" aria-label="查看简历，可打印或存为 PDF"><span>查看简历</span><span class="about-action-note">可打印 / PDF</span></a>
+  <a class="about-action-link" href="/projects/">项目案例</a>
+  <a class="about-action-link" href="/series/">系列文章</a>
+  <a class="about-action-link" href="/archives/">文章归档</a>
+</div>
 
 ## 为什么要写博客
 

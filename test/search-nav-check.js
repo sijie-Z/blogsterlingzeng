@@ -172,7 +172,8 @@ async function typeQuery(page, text) {
   await sleep(300);
 
   console.log('=== 6. SPA 换页后与 Tab 陷阱 ===');
-  await page.click('a[href="/archives"]');
+  // 归档已从主导航移到页脚(滚到底才显示),测试用 Swup 直接换页
+  await page.evaluate(() => window.swup.navigate('/archives/'));
   await page.waitForFunction(() => location.pathname === '/archives/', { timeout: 10000 }).catch(() => {});
   await sleep(700);
   await page.keyboard.down('Control');

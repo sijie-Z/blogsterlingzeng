@@ -18,6 +18,7 @@
 - **OG 卡防过期**：生成器同时写 `og-manifest.json`，`test:content` 比对文章标题；改了标题但忘记重跑 `npm run og:images` 时 CI 直接失败，不需要在 CI 里装 Chrome。
 - **图片查看器双指平移**：缩放后两指同向移动复用主题的拖拽逻辑，把中点位移翻译成 mousedown/mousemove/mouseup，不另写 transform 状态；测试用 CDP 真实多点触摸验证。
 - **文章导航与 404**：文末按发布日期生成“更早/更新一篇”，head 输出 `rel=prev/next`，`[` `]` 快捷键复用链接点击；404 页补最近 5 篇文章。顺手修掉主题 Giscus 主题同步在 iframe 被换页移除后对 null `contentWindow` 调 `postMessage` 的报错。
+- **信息架构**：主导航 7 → 5（项目 / 关于 / 系列 / 友链），简历从关于页、首页 hero 和项目页进入，归档 / 标签 / 书签收进页脚展开态；关于页顶部改成“查看简历”主按钮 + 三个文字入口，系列页底部补归档入口（归档页本来就有系列入口）。
 - **CI 时区修复**：Content Check 从加入起就没绿过，根因是 GitHub Actions 用 UTC 构建，`hexo-series-reading-path` 的 `00:00` 日期被排到前一天，站内链接指向 `/10/23/` 而产物在 `/10/22/`，线上那篇确实 404。两个 workflow 现在固定 `TZ: Asia/Shanghai`，文章时间改到 10:00，旧 URL 加了跳转页并用 `scripts/redirects.js` 从 sitemap/搜索索引移除，`test:content` 会拦住 08:00 之前的日期。
 - **测试**：新增 `test:features`，目前 98 项；浏览器检查合计 456 项，23 篇内容检查，101 个 HTML 内链检查。
 

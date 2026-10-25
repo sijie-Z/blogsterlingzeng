@@ -279,6 +279,7 @@ function renderSeriesIndex(list) {
 <div class="series-index" data-series-index>
   <p class="series-index-desc">把主题相近的文章串成一条阅读路径，按顺序读比按时间读更连贯。</p>
   <div class="series-index-grid">${cards}</div>
+  <p class="series-archive-link">也可以按时间浏览：<a href="/archives/">全部文章归档</a></p>
 </div>`;
 }
 

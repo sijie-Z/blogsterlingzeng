@@ -351,16 +351,21 @@ navbar:
     项目:
       path: /projects
       icon: fa-brands fa-github
-    归档:
-      path: /archives
-      icon: fa-regular fa-archive
+    关于:
+      path: /about
+      icon: fa-regular fa-user
     系列:
       path: /series
       icon: fa-solid fa-layer-group
+    友链:
+      path: /friends
+      icon: fa-regular fa-users
   search:
     enable: true           # 启用搜索
-    preload: true          # 预加载搜索数据
+    preload: false         # 首次搜索时再取索引
 ```
+
+简历、归档、标签、书签不在主导航里：简历从关于页、首页 hero 和项目页进入，其余三项在页脚展开时显示。
 
 **文章设置**
 ```yaml
