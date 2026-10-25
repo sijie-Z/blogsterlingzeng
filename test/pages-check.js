@@ -92,12 +92,13 @@ function check(name, cond, extra) {
     title: document.querySelector('h1')?.textContent.trim() || '',
     intro: !!document.querySelector('.photos-intro'),
     masonry: document.querySelectorAll('.masonry-item').length,
-    staticFallback: (document.querySelector('noscript')?.textContent || '').match(/photos-static-item/g)?.length || 0,
+    staticFallback: document.querySelectorAll('.photos-static-fallback .photos-static-item').length,
+    noscript: !!document.querySelector('noscript'),
   }));
   check('站点视觉标题正确', photos.title === '站点视觉', photos.title);
   check('站点视觉有导语', photos.intro);
   check('站点视觉画廊正常加载', photos.masonry === 6, String(photos.masonry));
-  check('站点视觉有无脚本静态兜底', photos.staticFallback === 6, String(photos.staticFallback));
+  check('站点视觉有无脚本静态兜底', photos.staticFallback === 6 && photos.noscript, JSON.stringify(photos));
   const photosFooter = await page.evaluate(() => {
     const footer = document.querySelector('footer.footer');
     const info = footer?.querySelector('.info-container');
@@ -136,6 +137,27 @@ function check(name, cond, extra) {
   const seriesHeadings = await page.evaluate(() => [...document.querySelectorAll('.series-index-name')].map(el => el.tagName));
   check('系列名称使用 h2', seriesHeadings.length > 0 && seriesHeadings.every(tag => tag === 'H2'), JSON.stringify(seriesHeadings));
 
+  console.log('=== 6.5 高视口页脚遮挡 ===');
+  const tall = await browser.newPage();
+  await tall.setViewport({ width: 1680, height: 1050 });
+  await tall.goto(`${BASE}/series/`, { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(1100);
+  const footerOverlap = await tall.evaluate(() => {
+    const link = document.querySelector('.series-archive-link');
+    const footer = document.querySelector('footer.footer .info-container');
+    if (!link || !footer) return { missing: true };
+    const a = link.getBoundingClientRect();
+    const b = footer.getBoundingClientRect();
+    return {
+      missing: false,
+      overlap: Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)),
+      linkBottom: Math.round(a.bottom),
+      footerTop: Math.round(b.top),
+    };
+  });
+  check('系列页页脚不遮挡归档入口', !footerOverlap.missing && footerOverlap.overlap <= 2, JSON.stringify(footerOverlap));
+  await tall.close();
+
   const sideTool = await page.evaluate(() => {
     const el = document.querySelector('.tool-scroll-to-top');
     return { role: el?.getAttribute('role'), tab: el?.getAttribute('tabindex'), label: el?.getAttribute('aria-label') };
@@ -157,11 +179,14 @@ function check(name, cond, extra) {
         cite && cite.classList.contains('cite-action-btn')),
       fixed: !!document.querySelector('.read-toggle, .mobile-cite'),
       toggle: toggle ? getComputedStyle(toggle).opacity : null,
+      toggleSize: toggle ? [Math.round(toggle.getBoundingClientRect().width), Math.round(toggle.getBoundingClientRect().height)] : null,
+      citeSize: cite ? [Math.round(cite.getBoundingClientRect().width), Math.round(cite.getBoundingClientRect().height)] : null,
       rail: rail ? getComputedStyle(rail).display : null,
     };
   });
   const f1 = await floating();
   check('移动端阅读/引用按钮已内联', f1.inline && !f1.fixed, JSON.stringify(f1));
+  check('移动端内联按钮触控目标 >=44px', f1.toggleSize?.every(v => v >= 44) && f1.citeSize?.every(v => v >= 44), JSON.stringify({ toggle: f1.toggleSize, cite: f1.citeSize }));
   check('移动端右侧工具条隐藏', f1.rail === 'none', JSON.stringify(f1));
   await mobile.evaluate(() => window.scrollTo(0, 900));
   await sleep(800);
@@ -172,12 +197,37 @@ function check(name, cond, extra) {
   const f3 = await floating();
   check('向上滚动清除收起状态', !f3.down, JSON.stringify(f3));
 
+  console.log('=== 8. 静态 HTML 卫生 ===');
+  const homeRaw = await fetch(`${BASE}/`).then(r => r.text());
+  const projectsRaw = await fetch(`${BASE}/projects/`).then(r => r.text());
+  const redirectRaw = await fetch(`${BASE}/archives/page/2/`).then(r => r.text());
+  check('搜索框有静态 aria-label', /aria-label="站内搜索"/.test(homeRaw));
+  const blankLinks = [...homeRaw.matchAll(/<a[^>]*target="_blank"[^>]*>/g)]
+    .filter(m => !/rel="[^"]*noopener/.test(m[0]));
+  check('新窗口外链都带 noopener', blankLinks.length === 0, String(blankLinks.length));
+  check('项目页没有空锚点', !/<a id="[^"]*"><\/a>/.test(projectsRaw));
+  check('归档跳转页有 h1', /<h1>/.test(redirectRaw));
+  const thumbs = [...homeRaw.matchAll(/<div class="home-article-thumbnail[^"]*">\s*<a\b[^>]*>/g)].map(m => m[0]);
+  check('首页缩略图不重复进入 Tab 顺序', thumbs.length > 0 && thumbs.every(tag => /tabindex="-1"/.test(tag) && /aria-hidden="true"/.test(tag)), JSON.stringify({ count: thumbs.length }));
+  const readMore = [...homeRaw.matchAll(/<a\b[^>]*>\s*阅读全文[\s\S]*?<\/a>/g)].map(m => m[0]);
+  check('首页阅读全文不重复进入 Tab 顺序', readMore.length > 0 && readMore.every(tag => /tabindex="-1"/.test(tag) && /aria-hidden="true"/.test(tag)), JSON.stringify({ count: readMore.length }));
+
   await mobile.evaluate(() => window.scrollTo(0, 0));
   await sleep(400);
   await mobile.click('#read-toggle');
   await sleep(350);
   const inlineRead = await mobile.evaluate(() => document.getElementById('read-sheet')?.classList.contains('is-open') || false);
   check('内联 Aa 打开阅读设置卡', inlineRead);
+  const sheetSize = await mobile.evaluate(() => {
+    const btn = document.querySelector('#read-sheet .read-size-btn[data-read-size="l"]');
+    if (!btn) return { missing: true };
+    btn.click();
+    return {
+      open: document.getElementById('read-sheet')?.classList.contains('is-open') || false,
+      size: document.documentElement.getAttribute('data-read-size'),
+    };
+  });
+  check('设置卡内调字号不关闭卡片', sheetSize.open && sheetSize.size === 'l', JSON.stringify(sheetSize));
   await mobile.keyboard.press('Escape');
   await sleep(250);
   await mobile.click('#mobile-cite');
@@ -187,6 +237,34 @@ function check(name, cond, extra) {
   await mobile.keyboard.press('Escape');
   await sleep(250);
   await mobile.close();
+
+  console.log('=== 9. 打印样式 ===');
+  await page.emulateMediaType('print');
+  await page.goto(`${BASE}/`, { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(700);
+  const printHome = await page.evaluate(() => ({
+    banner: getComputedStyle(document.querySelector('.home-banner-container')).display,
+    sidebar: getComputedStyle(document.querySelector('.home-sidebar-container')).display,
+    list: getComputedStyle(document.querySelector('.home-article-list')).display,
+  }));
+  check('打印首页隐藏横幅和侧栏', printHome.banner === 'none' && printHome.sidebar === 'none' && printHome.list === 'block', JSON.stringify(printHome));
+  await page.goto(`${BASE}/2026/10/23/hexo-series-reading-path/`, { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(700);
+  const printArticle = await page.evaluate(() => {
+    const scroller = document.querySelector('.article-content .table-scroll');
+    const table = document.querySelector('.article-content table');
+    const content = document.querySelector('.article-content');
+    const pre = document.querySelector('.article-content pre');
+    return {
+      overflow: getComputedStyle(scroller).overflow,
+      tableWidth: Math.round(table.getBoundingClientRect().width),
+      contentWidth: Math.round(content.getBoundingClientRect().width),
+      preWrap: getComputedStyle(pre).whiteSpace,
+    };
+  });
+  check('打印表格展开不横向裁切', printArticle.overflow === 'visible' && printArticle.tableWidth <= printArticle.contentWidth, JSON.stringify(printArticle));
+  check('打印代码自动换行', printArticle.preWrap === 'pre-wrap', JSON.stringify(printArticle));
+  await page.emulateMediaType('screen');
 
   check('零页面错误', errors.length === 0, errors.slice(0, 2).join(' | '));
 

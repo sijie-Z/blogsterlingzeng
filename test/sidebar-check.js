@@ -171,18 +171,23 @@ function check(name, cond, extra) {
   const mid = await page.evaluate(() => {
     const card = document.querySelector('.post-side-author-card');
     const toc = document.querySelector('.toc-content-container');
+    const tagsCard = document.querySelector('.post-side-tags-card');
+    const readCard = document.querySelector('.post-side-read-card');
     return {
       num: Number(document.querySelector('.post-side-progress-num')?.textContent || 0),
       offset: parseFloat(document.querySelector('.post-side-ring-fill')?.style.strokeDashoffset || '0'),
       cardTop: card ? card.getBoundingClientRect().top : null,
-      tocTop: toc ? toc.getBoundingClientRect().top : null,
+      cardBottom: card ? card.getBoundingClientRect().bottom : null,
+      tagsTop: tagsCard ? tagsCard.getBoundingClientRect().top : null,
+      readBottom: readCard ? readCard.getBoundingClientRect().bottom : null,
+      catTop: document.querySelector('.post-side-cat-card')?.getBoundingClientRect().top ?? null,
       tocCount: document.querySelector('.post-toc-count')?.textContent || '',
       tocCurrent: document.querySelector('.post-toc a.nav-link.active-current')?.getAttribute('aria-current') || '',
     };
   });
   check('进度数字更新', mid.num >= 35 && mid.num <= 65, String(mid.num));
   check('进度环更新', mid.offset < before - 10, `${before} -> ${mid.offset}`);
-  check('作者卡滚动时吸顶', mid.cardTop !== null && Math.abs(mid.cardTop - mid.tocTop) < 24, JSON.stringify(mid));
+  check('侧栏卡片不互相覆盖', mid.cardTop !== null && mid.cardBottom <= mid.tagsTop + 1 && mid.readBottom <= mid.catTop + 1, JSON.stringify(mid));
   const tocCurrent = parseInt(String(mid.tocCount).split('/')[0], 10) || 0;
   check('目录章节计数随滚动更新', tocCurrent > 1, mid.tocCount);
   check('目录当前项有 aria-current', mid.tocCurrent === 'location', mid.tocCurrent);

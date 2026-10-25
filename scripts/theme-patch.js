@@ -1244,13 +1244,23 @@ patchText('source/js/build/layouts/navbarShrink.js', [
 
 // 主题 JS 没有版本号,Cloudflare / GitHub Pages 会缓存 4 小时。
 // 给入口 main.js 和两个被改过的模块加查询串,确保滚动补丁能立即生效。
-const CJ_THEME_JS_VERSION = '20261026a';
+const CJ_THEME_JS_VERSION = '20261026e';
 patchText('source/js/build/main.js', [
   ['from"./layouts/navbarShrink.js"', `from"./layouts/navbarShrink.js?v=${CJ_THEME_JS_VERSION}"`, 'main navbarShrink version'],
   ['from"./utils.js"', `from"./utils.js?v=${CJ_THEME_JS_VERSION}"`, 'main utils version'],
 ]);
 patchText('source/js/build/utils.js', [
   ['from"./utils/sideTools.js"', `from"./utils/sideTools.js?v=${CJ_THEME_JS_VERSION}"`, 'utils sideTools version'],
+]);
+
+// toc.js 也打过补丁(首屏不自动滚侧栏),把已加过的 a 版本统一推进到 b,
+// 并给 toc 的 import 加版本号。
+patchText('source/js/build/main.js', [
+  ['?v=20261026a', '?v=20261026b', 'main bump theme js version'],
+  ['from"./layouts/toc.js"', 'from"./layouts/toc.js?v=20261026b"', 'main toc version'],
+]);
+patchText('source/js/build/utils.js', [
+  ['?v=20261026a', '?v=20261026b', 'utils bump theme js version'],
 ]);
 
 // 工具条状态只在真正跨过阈值时更新;状态没变就直接返回。
@@ -1313,4 +1323,132 @@ patchText('source/js/build/utils.js', [
     '',
     'utils build remove home banner blur listener',
   ],
+]);
+
+// 文章页 TOC 在首屏会把侧栏容器滚到中间,导致作者/设置卡被顶出可视区。
+// 页面还在顶部时不自动滚 TOC,用户开始阅读后再跟随当前章节。
+patchText('source/js/layouts/toc.js', [
+  [
+    `      target.classList.add("active", "active-current");
+
+      const tocTop = tocContainer.getBoundingClientRect().top;`,
+    `      target.classList.add("active", "active-current");
+      if (window.scrollY < 120) {
+        return;
+      }
+
+      const tocTop = tocContainer.getBoundingClientRect().top;`,
+    'toc skip initial autoscroll source',
+  ],
+]);
+patchText('source/js/build/layouts/toc.js', [
+  [
+    'classList.add("active","active-current");const n=',
+    'classList.add("active","active-current");if(window.scrollY<120)return;const n=',
+    'toc skip initial autoscroll build',
+  ],
+]);
+
+// 搜索索引 / 画廊数据加载失败时不要永远转圈。
+patchText('source/js/tools/localSearch.js', [
+  [
+    `    .catch((error) => {
+      console.error("Failed to load search data:", error);
+    });`,
+    `    .catch((error) => {
+      console.error("Failed to load search data:", error);
+      const noResultDom = document.querySelector("#no-result");
+      if (noResultDom) {
+        noResultDom.innerHTML =
+          '<i class="fa-solid fa-triangle-exclamation fa-3x"></i>' +
+          '<p class="search-error-text">搜索索引加载失败，请刷新页面重试。</p>';
+      }
+    });`,
+    'search fetch error UI source',
+  ],
+]);
+patchText('source/js/build/tools/localSearch.js', [
+  [
+    'catch((t=>{console.error("Failed to load search data:",t)}))',
+    'catch((t=>{console.error("Failed to load search data:",t);const e=document.querySelector("#no-result");e&&(e.innerHTML=\'<i class="fa-solid fa-triangle-exclamation fa-3x"></i><p class="search-error-text">搜索索引加载失败，请刷新页面重试。</p>\')}))',
+    'search fetch error UI build',
+  ],
+]);
+
+patchText('source/js/plugins/masonry.js', [
+  [
+    `      console.error("Failed to load masonry data:", error);
+      if (sentinelDom) {
+        sentinelDom.remove();
+      }
+      return;`,
+    `      console.error("Failed to load masonry data:", error);
+      if (sentinelDom) {
+        sentinelDom.remove();
+      }
+      masonryContainer.classList.remove("min-h-screen!");
+      masonryContainer.classList.add("masonry-failed");
+      masonryContainer.innerHTML =
+        '<div class="photos-error">照片加载失败。' +
+        '<button type="button" onclick="location.reload()">刷新重试</button></div>';
+      return;`,
+    'masonry fetch error UI source',
+  ],
+]);
+patchText('source/js/build/plugins/masonry.js', [
+  [
+    'return console.error("Failed to load masonry data:",e),void(i&&i.remove())',
+    'console.error("Failed to load masonry data:",e),i&&i.remove(),n.classList.remove("min-h-screen!"),n.classList.add("masonry-failed"),n.innerHTML=\'<div class="photos-error">照片加载失败。<button type="button" onclick="location.reload()">刷新重试</button></div>\';return',
+    'masonry fetch error UI build',
+  ],
+]);
+
+// 新打补丁的搜索/画廊模块也要带版本号,避免 Cloudflare 继续用旧文件。
+patchText('source/js/build/main.js', [
+  ['?v=20261026b', '?v=20261026c', 'main bump theme js version c'],
+  ['from"./plugins/masonry.js"', 'from"./plugins/masonry.js?v=20261026c"', 'main masonry version'],
+  ['from"./tools/localSearch.js"', 'from"./tools/localSearch.js?v=20261026c"', 'main localSearch version'],
+]);
+patchText('source/js/build/utils.js', [
+  ['?v=20261026b', '?v=20261026c', 'utils bump theme js version c'],
+]);
+
+// reduced-motion 下停止打字机循环,直接显示第一句
+patchText('source/js/plugins/typed.js', [
+  [
+    'export default function initTyped(id) {',
+    `export default function initTyped(id) {
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    const element = document.getElementById(id);
+    const text = theme?.home_banner?.subtitle?.text;
+    const first = Array.isArray(text) ? text.find(Boolean) : text;
+    if (element && first) element.textContent = first;
+    return;
+  }`,
+    'typed reduced motion source',
+  ],
+]);
+patchText('source/js/build/plugins/typed.js', [
+  [
+    'export default function initTyped(e){',
+    'export default function initTyped(e){if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches){const t=document.getElementById(e),o=theme?.home_banner?.subtitle?.text,s=Array.isArray(o)?o.find(Boolean):o;t&&s&&(t.textContent=s);return}',
+    'typed reduced motion build',
+  ],
+]);
+
+// 继续推进主题模块版本号
+patchText('source/js/build/main.js', [
+  ['?v=20261026c', '?v=20261026d', 'main bump theme js version d'],
+  ['from"./plugins/typed.js"', 'from"./plugins/typed.js?v=20261026d"', 'main typed version'],
+]);
+patchText('source/js/build/utils.js', [
+  ['?v=20261026c', '?v=20261026d', 'utils bump theme js version d'],
+]);
+
+// 最后一轮主题模块版本推进
+patchText('source/js/build/main.js', [
+  ['?v=20261026d', '?v=20261026e', 'main bump theme js version e'],
+]);
+patchText('source/js/build/utils.js', [
+  ['?v=20261026d', '?v=20261026e', 'utils bump theme js version e'],
 ]);

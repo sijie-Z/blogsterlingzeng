@@ -12,7 +12,7 @@
 hexo.extend.generator.register('related-data', function (locals) {
   const data = locals.posts.sort('-date').map(post => ({
     title: post.title,
-    path: post.path,
+    path: '/' + String(post.path || '').replace(/^\/+/, ''),
     tags: (post.tags && post.tags.data || []).map(t => t.name),
     categories: (post.categories && post.categories.data || []).map(c => c.name),
     cover: post.cover || '',

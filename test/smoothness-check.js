@@ -101,6 +101,9 @@ function check(name, cond, extra) {
   check('上滚 240px 收回', !(await atBottom()));
 
   console.log('=== 5. Live2D 滚动暂停 ===');
+  // 宠物入口只在首页顶部显示,先回到顶部再召唤
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await sleep(900);
   const petBtn = await page.$('#pet-toggle');
   if (petBtn) await petBtn.click();
   const hasL2d = await page.waitForFunction(() => !!window.__l2dApp, { timeout: 15000 }).then(() => true).catch(() => false);

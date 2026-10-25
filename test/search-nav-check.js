@@ -65,14 +65,15 @@ async function typeQuery(page, text) {
       optionRoles: opts.every(li => li.getAttribute('role') === 'option'),
       uniqueIds: new Set(opts.map(li => li.id)).size === opts.length,
       labels: opts.every(li => (li.getAttribute('aria-label') || '').length > 0),
-      anchorsOut: opts.every(li => [...li.querySelectorAll('a')].every(a => a.tabIndex === -1)),
+      linksInside: opts.reduce((sum, li) => sum + li.querySelectorAll('a').length, 0),
+      hrefs: opts.every(li => !!li.dataset.cjHref),
       status: document.querySelector('#cj-search-status')?.textContent || '',
     };
   });
   check('输入框是 combobox', a11y.inputRole === 'combobox' && a11y.autocomplete === 'list', JSON.stringify(a11y));
   check('结果容器是 listbox', a11y.boxRole === 'listbox' && !!a11y.boxLabel, JSON.stringify(a11y));
   check('结果项 role=option 且有名称', a11y.count > 0 && a11y.optionRoles && a11y.labels, JSON.stringify(a11y));
-  check('结果项 id 唯一且移出 Tab 序列', a11y.uniqueIds && a11y.anchorsOut, JSON.stringify(a11y));
+  check('结果项 id 唯一、无嵌套链接且可跳转', a11y.uniqueIds && a11y.linksInside === 0 && a11y.hrefs, JSON.stringify(a11y));
   check('结果数量有播报', /找到 \d+ 个结果/.test(a11y.status), a11y.status);
 
   await page.evaluate(() => {
@@ -83,7 +84,7 @@ async function typeQuery(page, text) {
   await typeQuery(page, '简历');
   await sleep(700);
   const pageHrefs = await page.evaluate(() =>
-    [...document.querySelectorAll('#search-result li a[href]')].map(a => a.getAttribute('href'))
+    [...document.querySelectorAll('#search-result li')].map(li => li.dataset.cjHref || li.querySelector('a[href]')?.getAttribute('href') || '')
   );
   check('页面结果使用目录 URL', pageHrefs.includes('/resume/') && !pageHrefs.some(h => h.includes('index.html')), JSON.stringify(pageHrefs.slice(0, 5)));
   const searchXml = await page.evaluate(async () => (await fetch('/search.xml')).text());
@@ -106,7 +107,7 @@ async function typeQuery(page, text) {
       activeDesc: input.getAttribute('aria-activedescendant'),
       id: selected.id,
       inView: r.top >= c.top - 2 && r.bottom <= c.bottom + 2,
-      href: selected.querySelector('a[href]')?.getAttribute('href') || '',
+      href: selected.dataset.cjHref || selected.querySelector('a[href]')?.getAttribute('href') || '',
     };
   });
   check('ArrowDown 选中唯一结果', down.selected && down.count === 1, JSON.stringify(down));
@@ -126,8 +127,8 @@ async function typeQuery(page, text) {
   await sleep(100);
   // 回到第一条,保证目标确定
   const firstHref = await page.evaluate(() => {
-    const first = document.querySelector('#search-result ul.search-result-list > li:first-child a[href]');
-    return first ? first.getAttribute('href') : '';
+    const first = document.querySelector('#search-result ul.search-result-list > li:first-child');
+    return first ? (first.dataset.cjHref || first.querySelector('a[href]')?.getAttribute('href') || '') : '';
   });
   await page.keyboard.press('Enter');
   await page.waitForFunction(h => location.pathname === h, { timeout: 8000 }, firstHref).catch(() => {});

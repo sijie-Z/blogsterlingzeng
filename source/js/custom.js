@@ -27,12 +27,92 @@
     fn();
   }
 
+  // 隐私模式/被策略禁用时 localStorage 会直接抛错,不能让它打断初始化
+  function storageGet(key, fallback = null) {
+    try {
+      const value = localStorage.getItem(key);
+      return value == null ? fallback : value;
+    } catch (e) {
+      return fallback;
+    }
+  }
+
+  function storageSet(key, value) {
+    try {
+      localStorage.setItem(key, String(value));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function storageRemove(key) {
+    try { localStorage.removeItem(key); } catch (e) {}
+  }
+
+  // 底部卡片/设置卡的焦点陷阱;打开时把 #swup 设为 inert
+  function trapModalFocus(container, onEscape) {
+    const selector = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    const handler = e => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onEscape();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      const items = [...container.querySelectorAll(selector)].filter(el => el.getClientRects().length > 0);
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (e.shiftKey && (document.activeElement === first || !container.contains(document.activeElement))) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && (document.activeElement === last || !container.contains(document.activeElement))) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    container.addEventListener('keydown', handler);
+    return () => container.removeEventListener('keydown', handler);
+  }
+
+  function setPageInert(on) {
+    const swup = document.getElementById('swup');
+    if (swup) swup.inert = on;
+  }
+
+  function setSearchBackgroundInert(overlay, on) {
+    if (!overlay) return;
+    const parent = overlay.parentElement;
+    if (!parent) return;
+    // 搜索层是 #swup 的直接子节点,不能把 #swup 整个 inert;
+    // 让搜索层以外的兄弟节点(页头/正文/页脚)退出可访问树。
+    [...parent.children].forEach(el => {
+      if (el !== overlay) el.inert = on;
+    });
+    // 右侧工具条、宠物等挂在 body 上,也要一起移出可访问树。
+    [...document.body.children].forEach(el => {
+      if (el !== parent && !el.contains(overlay)) el.inert = on;
+    });
+  }
+
+  function initSearchOverlayInert() {
+    const overlay = document.querySelector('.search-pop-overlay');
+    if (!overlay || overlay.__cjInertBound) return;
+    overlay.__cjInertBound = true;
+    // Swup 换页会替换 overlay,必须按当前节点重新绑定,不能只绑第一次。
+    new MutationObserver(() => {
+      setSearchBackgroundInert(overlay, overlay.classList.contains('active'));
+    }).observe(overlay, { attributes: true, attributeFilter: ['class'] });
+  }
+
   // ============================
   // Smooth scroll for anchor links
   // ============================
   function initSmoothScroll() {
     // 事件委托 + 捕获阶段:兼容主题动态生成的目录链接,也先于主题自身处理
     document.addEventListener('click', e => {
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
       const anchor = e.target.closest('a[href^="#"]');
       if (!anchor) return;
       const href = anchor.getAttribute('href');
@@ -46,6 +126,10 @@
       if (anchor.classList.contains('skip-link')) {
         // 跳到正文时把焦点也移过去,否则键盘用户仍停在 skip link 上
         target.focus({ preventScroll: true });
+      } else if (window.location.hash !== href) {
+        // 章节目录/标题锚点应该产生历史记录:Back 回到上一个章节,
+        // 而不是直接离开文章(Swup 的滚动插件只会 replaceState)。
+        try { history.pushState(null, '', href); } catch (_) {}
       }
       target.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, true);
@@ -196,6 +280,7 @@
       sheet.className = 'mn-sheet';
       sheet.setAttribute('role', 'dialog');
       sheet.setAttribute('aria-label', '边注');
+      sheet.setAttribute('aria-modal', 'true');
       sheet.setAttribute('aria-hidden', 'true');
       sheet.innerHTML = '<div class="mn-sheet-body"></div>' +
         '<button type="button" class="mn-sheet-close" aria-label="关闭边注">×</button>';
@@ -208,6 +293,8 @@
       if (!sheet || !sheet.classList.contains('is-open')) return;
       sheet.classList.remove('is-open');
       sheet.setAttribute('aria-hidden', 'true');
+      if (sheet.__cjReleaseTrap) { sheet.__cjReleaseTrap(); sheet.__cjReleaseTrap = null; }
+      setPageInert(false);
       const ref = lastRef;
       lastRef = null;
       if (restoreFocus && ref) {
@@ -221,8 +308,11 @@
       const el = ensureSheet();
       el.querySelector('.mn-sheet-body').innerHTML = note.innerHTML;
       lastRef = ref;
+      setPageInert(true);
       el.classList.add('is-open');
       el.setAttribute('aria-hidden', 'false');
+      if (el.__cjReleaseTrap) el.__cjReleaseTrap();
+      el.__cjReleaseTrap = trapModalFocus(el, () => closeSheet(true));
       try { el.querySelector('.mn-sheet-close').focus({ preventScroll: true }); } catch (e) {}
     };
 
@@ -234,7 +324,7 @@
         return;
       }
       if (sheet && sheet.classList.contains('is-open') && !e.target.closest('.mn-sheet')) {
-        closeSheet(false);
+        closeSheet(true);
       }
     });
 
@@ -489,19 +579,26 @@
   // ============================
   const READ_SIZE_KEY = 'cj-read-size';
   const READ_FOCUS_KEY = 'cj-focus';
+  // 存储被禁用时 localStorage 每次读写都会抛错;用 window 上的内存副本
+  // 保证本次会话内字号/专注切换仍然生效(换页后脚本重跑也能读到)。
+  const memPrefs = (window.__cjPrefs = window.__cjPrefs || {});
 
   function readSizePref() {
-    try {
-      const value = localStorage.getItem(READ_SIZE_KEY);
-      return value === 's' || value === 'l' ? value : 'm';
-    } catch (e) { return 'm'; }
+    let value = null;
+    try { value = localStorage.getItem(READ_SIZE_KEY); } catch (e) {}
+    if (value !== 's' && value !== 'l') value = memPrefs[READ_SIZE_KEY] || null;
+    return value === 's' || value === 'l' ? value : 'm';
   }
 
   function focusPref() {
-    try { return localStorage.getItem(READ_FOCUS_KEY) === 'on'; } catch (e) { return false; }
+    let value = null;
+    try { value = localStorage.getItem(READ_FOCUS_KEY); } catch (e) {}
+    if (value == null) value = memPrefs[READ_FOCUS_KEY] || null;
+    return value === 'on';
   }
 
   function setReadPref(key, value) {
+    memPrefs[key] = value;
     try { localStorage.setItem(key, value); } catch (e) {}
   }
 
@@ -577,6 +674,7 @@
     sheet.className = 'read-sheet';
     sheet.setAttribute('role', 'dialog');
     sheet.setAttribute('aria-label', '阅读设置');
+    sheet.setAttribute('aria-modal', 'true');
     sheet.setAttribute('aria-hidden', 'true');
     sheet.innerHTML = '<div class="post-side-card-title">阅读设置</div>' +
       '<div class="read-sheet-body"></div>' +
@@ -590,6 +688,8 @@
     if (!sheet || !sheet.classList.contains('is-open')) return;
     sheet.classList.remove('is-open');
     sheet.setAttribute('aria-hidden', 'true');
+    if (sheet.__cjReleaseTrap) { sheet.__cjReleaseTrap(); sheet.__cjReleaseTrap = null; }
+    setPageInert(false);
     const toggle = document.getElementById('read-toggle');
     if (toggle) {
       toggle.setAttribute('aria-expanded', 'false');
@@ -609,14 +709,17 @@
     card.querySelectorAll('.read-size-row, .read-focus-btn').forEach(el => {
       body.appendChild(el.cloneNode(true));
     });
+    setPageInert(true);
     sheet.classList.add('is-open');
     sheet.setAttribute('aria-hidden', 'false');
+    if (sheet.__cjReleaseTrap) sheet.__cjReleaseTrap();
+    sheet.__cjReleaseTrap = trapModalFocus(sheet, () => closeReadSheet(true));
     const toggle = document.getElementById('read-toggle');
     if (toggle) toggle.setAttribute('aria-expanded', 'true');
     try { sheet.querySelector('.read-sheet-close').focus({ preventScroll: true }); } catch (e) {}
   }
 
-  function applyReadingPrefs() {
+  function applyReadingPrefs(keepSheet = false) {
     const html = document.documentElement;
     const isPost = !!document.querySelector('.post-page-container .article-content');
     if (isPost) html.setAttribute('data-cj-post', '1');
@@ -639,7 +742,7 @@
     ensureFocusExit(focus);
     ensureReadToggle(isPost);
     ensureMobileCite(isPost);
-    if (!focus) closeReadSheet(false);
+    if (!focus && !keepSheet) closeReadSheet(false);
   }
 
   function initReadingPrefs() {
@@ -647,7 +750,8 @@
       const sizeBtn = e.target.closest('.read-size-btn');
       if (sizeBtn) {
         setReadPref(READ_SIZE_KEY, sizeBtn.getAttribute('data-read-size'));
-        applyReadingPrefs();
+        // 设置卡里连续比较字号时不要把卡片关掉
+        applyReadingPrefs(true);
         return;
       }
       if (e.target.closest('.read-focus-btn')) {
@@ -671,7 +775,7 @@
       }
       const sheet = document.getElementById('read-sheet');
       if (sheet && sheet.classList.contains('is-open') && !e.target.closest('.read-sheet')) {
-        closeReadSheet(false);
+        closeReadSheet(true);
       }
     });
 
@@ -757,11 +861,12 @@
 
   function copyCitation(text, message) {
     const menu = document.querySelector('.cite-menu');
+    const pagePath = location.pathname;
     let settled = false;
     const finish = () => {
       if (settled) return;
-      // 菜单已经因换页/关闭而消失时,不要把提示和焦点带到新页面
-      if (menu && !menu.isConnected) return;
+      // 只有换页才丢弃提示;菜单因滚动/失焦关闭时仍要告诉用户复制结果
+      if (location.pathname !== pagePath) return;
       settled = true;
       showToast(message);
       announceAction(message);
@@ -770,8 +875,7 @@
     const fallback = () => {
       if (settled) return;
       fallbackCopy(text, finish, () => {
-        if (menu && !menu.isConnected) return;
-        // 保持菜单打开,用户可以直接再点一次
+        if (location.pathname !== pagePath) return;
         showToast('复制失败，请再试一次');
       });
     };
@@ -881,9 +985,14 @@
     document.addEventListener('keydown', e => {
       const menu = document.querySelector('.cite-menu');
       if (!menu) return;
-      // Tab 离开菜单:先收起再让焦点自然走,避免 focusin 在 headless/无后续元素时不触发
+      // Tab 关闭菜单后把焦点还给触发按钮,再从那里继续原生 Tab。
+      // 直接删掉菜单会让浏览器把焦点送回文档开头(skip link)。
       if (e.key === 'Tab') {
+        const trigger = menu.__cjTrigger;
         closeCitationMenu(false);
+        if (trigger) {
+          try { trigger.focus({ preventScroll: true }); } catch (err) {}
+        }
         return;
       }
       if (e.key === 'Escape') {
@@ -916,6 +1025,48 @@
 
     window.addEventListener('scroll', () => closeCitationMenu(false), { passive: true });
     window.addEventListener('resize', () => closeCitationMenu(false), { passive: true });
+  }
+
+  // giscus 的 iframe 由第三方脚本后插入,加载完成前是一个空白可聚焦框。
+  // 先移出 Tab 顺序,load 后再恢复,避免键盘用户进入空白评论框。
+  function initGiscusA11y() {
+    const container = document.getElementById('giscus-container');
+    if (!container || container.__cjGiscus) return;
+    container.__cjGiscus = true;
+    const showError = () => {
+      container.setAttribute('aria-busy', 'false');
+      if (container.querySelector('.giscus-error')) return;
+      const note = document.createElement('p');
+      note.className = 'giscus-error';
+      note.innerHTML = '评论加载失败。<a href="https://github.com/sijie-Z/blogsterlingzeng/issues" target="_blank" rel="noopener noreferrer">在 GitHub 讨论</a>';
+      container.appendChild(note);
+    };
+    const markLoading = frame => {
+      if (frame.dataset.cjReady) return;
+      frame.setAttribute('tabindex', '-1');
+      frame.setAttribute('aria-hidden', 'true');
+      container.setAttribute('aria-busy', 'true');
+      const ready = () => {
+        if (frame.dataset.cjReady) return;
+        frame.dataset.cjReady = '1';
+        frame.removeAttribute('tabindex');
+        frame.removeAttribute('aria-hidden');
+        container.setAttribute('aria-busy', 'false');
+        container.querySelector('.giscus-error')?.remove();
+      };
+      frame.addEventListener('load', ready, { once: true });
+      setTimeout(() => {
+        if (!frame.dataset.cjReady) showError();
+      }, 8000);
+    };
+    const scan = () => container.querySelectorAll('iframe.giscus-frame').forEach(markLoading);
+    new MutationObserver(scan).observe(container, { childList: true, subtree: true });
+    scan();
+    // giscus 的 client.js 本身被拦截时不会有 iframe,也要给失败提示
+    setTimeout(() => {
+      if (container.querySelector('iframe.giscus-frame[data-cj-ready="1"]')) return;
+      showError();
+    }, 8500);
   }
 
   // APlayer 的图标按钮默认只有 SVG,补上可访问名称
@@ -977,7 +1128,9 @@
   function hideResumePill() {
     clearTimeout(window.__cjResumeTimer);
     const pill = document.querySelector('.reading-resume');
-    if (pill) pill.classList.remove('show');
+    if (!pill) return;
+    if (pill.classList.contains('is-inline')) pill.remove();
+    else pill.classList.remove('show');
   }
 
   function saveReadingPosition() {
@@ -1020,12 +1173,19 @@
 
     const pill = document.createElement('button');
     pill.type = 'button';
-    pill.className = 'reading-resume';
+    const stats = document.querySelector('.post-page-stats');
+    const inline = !!stats;
+    pill.className = 'reading-resume' + (inline ? ' is-inline' : '');
     pill.setAttribute('aria-label', '继续上次阅读');
     pill.innerHTML = `<span class="reading-resume-dot" aria-hidden="true"></span>
       <span class="reading-resume-text">上次读到 <b>${Math.round(saved.percent * 100)}%</b> · 继续</span>
       <span class="reading-resume-close" aria-hidden="true">×</span>`;
-    document.body.appendChild(pill);
+    if (inline) {
+      stats.appendChild(pill);
+      pill.classList.add('show');
+    } else {
+      document.body.appendChild(pill);
+    }
 
     const dismiss = () => hideResumePill();
     pill.addEventListener('click', e => {
@@ -1037,7 +1197,7 @@
       window.scrollTo({ top: Math.min(Math.max(0, target), max), behavior: reduced ? 'auto' : 'smooth' });
       dismiss();
     });
-    requestAnimationFrame(() => pill.classList.add('show'));
+    if (!inline) requestAnimationFrame(() => pill.classList.add('show'));
     window.__cjResumeTimer = setTimeout(dismiss, 15000);
   }
 
@@ -1379,9 +1539,16 @@
   function restoreSearchFocus() {
     if (document.querySelector('.search-pop-overlay.active')) return;
     const trigger = window.__cjSearchTrigger;
-    if (!trigger) return;
+    if (!trigger || !trigger.isConnected) {
+      window.__cjSearchTrigger = null;
+      return;
+    }
+    // close 的 MutationObserver 可能先于 inert 清理运行;先释放背景再聚焦,
+    // 否则 trigger 仍在 inert 子树里,focus() 会静默失败。
+    setSearchBackgroundInert(document.querySelector('.search-pop-overlay'), false);
     try { trigger.focus({ preventScroll: true }); } catch (err) {}
-    window.__cjSearchTrigger = null;
+    // 焦点确实回去后才清空引用,留给 30/200ms 的重试一次机会
+    if (document.activeElement === trigger) window.__cjSearchTrigger = null;
   }
 
   // 弹层随 Swup 换页重建,每次 init 给当前 overlay 挂关闭观察
@@ -1459,7 +1626,20 @@
       li.setAttribute('aria-selected', 'false');
       const title = li.querySelector('.search-result-title');
       if (title && !li.getAttribute('aria-label')) li.setAttribute('aria-label', title.textContent.trim());
-      li.querySelectorAll('a').forEach(a => { a.tabIndex = -1; });
+      // role=option 里不能再嵌链接(ARIA nested-interactive 违规)。
+      // 把主题输出的 <a> 换成同内容块,由 li 自己承担点击/Enter 跳转。
+      if (!li.dataset.cjHref) {
+        const link = li.querySelector('a[href]');
+        if (link) {
+          li.dataset.cjHref = link.getAttribute('href');
+          li.querySelectorAll('a[href]').forEach(a => {
+            const block = document.createElement(a.querySelector('p') ? 'div' : 'span');
+            block.className = a.className;
+            block.innerHTML = a.innerHTML;
+            a.replaceWith(block);
+          });
+        }
+      }
     });
     // 结果重建时保留同一位置的选中项,避免防抖重渲染把高亮清掉
     const activeIndex = Number(input.dataset.cjActive);
@@ -1503,6 +1683,22 @@
     revealSearchOption(result, options[index]);
   }
 
+  function activateSearchResult(option, newTab) {
+    const href = option && option.dataset.cjHref;
+    if (!href) return;
+    const overlay = option.closest('.search-pop-overlay');
+    if (overlay) {
+      overlay.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+    if (newTab) {
+      window.open(href, '_blank', 'noopener');
+      return;
+    }
+    if (window.swup && typeof window.swup.navigate === 'function') window.swup.navigate(href);
+    else window.location.href = href;
+  }
+
   function initSearchNavGlobals() {
     if (window.__cjSearchNavGlobal) return;
     window.__cjSearchNavGlobal = true;
@@ -1533,11 +1729,11 @@
         e.preventDefault();
         setActiveSearchOption(overlay, len - 1);
       } else if (e.key === 'Enter' && current >= 0) {
-        const link = options[current].querySelector('a[href]');
-        if (link) {
+        const option = options[current];
+        if (option && option.dataset.cjHref) {
           e.preventDefault();
           e.stopPropagation();
-          link.click();
+          activateSearchResult(option);
         }
       }
     }, true);
@@ -1549,14 +1745,20 @@
       if (overlay) setActiveSearchOption(overlay, -1);
     }, true);
 
-    // 点击结果先收起弹层、解除滚动锁,再交给 Swup 导航
+    // 点击结果先收起弹层、解除滚动锁,再交给 Swup 导航。
+    // 结果项已经改成非链接块,这里统一从 data-cj-href 取目标。
     document.addEventListener('click', e => {
-      const link = e.target.closest('#search-result a[href]');
-      if (!link) return;
-      const overlay = link.closest('.search-pop-overlay');
-      if (!overlay) return;
-      overlay.classList.remove('active');
-      document.body.style.overflow = '';
+      const option = e.target.closest('#search-result li[data-cj-href]');
+      if (!option) return;
+      e.preventDefault();
+      activateSearchResult(option, e.metaKey || e.ctrlKey || e.shiftKey || e.altKey);
+    }, true);
+    document.addEventListener('auxclick', e => {
+      if (e.button !== 1) return;
+      const option = e.target.closest('#search-result li[data-cj-href]');
+      if (!option) return;
+      e.preventDefault();
+      activateSearchResult(option, true);
     }, true);
   }
 
@@ -1615,6 +1817,14 @@
       const run = () => { prepareOverlay(); focusInput(); };
       requestAnimationFrame(run);
       setTimeout(run, 80);
+      // 主题入口脚本被拦截时搜索按钮不会报错,只会在点击后毫无反应
+      if (!window.swup) {
+        setTimeout(() => {
+          if (!document.querySelector('.search-pop-overlay.active')) {
+            showToast('搜索暂时不可用，请刷新页面或浏览归档');
+          }
+        }, 1000);
+      }
     }, true);
     if (!window.__cjSearchA11y) {
       window.__cjSearchA11y = true;
@@ -1668,15 +1878,23 @@
       if (open) drawer.setAttribute('aria-modal', 'true');
       else drawer.removeAttribute('aria-modal');
     }
-    // 抽屉打开时让页面主体暂时 inert;窗口遮罩仍需可点击关闭
+    // 抽屉是 header 的直接子节点,只 inert body 的直接子节点会漏掉
+    // header 里的导航链接和 #swup 里的正文。沿祖先链逐层把兄弟节点 inert,
+    // 只保留抽屉和遮罩。
     if (open && !wasOpen) {
+      const mask = document.querySelector('.window-mask');
       const inerted = [];
-      for (const child of document.body.children) {
-        if (child.contains(drawer) || child === drawer || child.classList.contains('window-mask')) continue;
-        if (!child.inert) {
-          child.inert = true;
-          inerted.push(child);
+      let node = drawer;
+      while (node && node.parentElement && node !== document.body) {
+        const parent = node.parentElement;
+        for (const sibling of parent.children) {
+          if (sibling === node || sibling === mask || sibling.contains(mask)) continue;
+          if (!sibling.inert) {
+            sibling.inert = true;
+            inerted.push(sibling);
+          }
         }
+        node = parent;
       }
       window.__cjDrawerInert = inerted;
     } else if (!open && wasOpen) {
@@ -1907,6 +2125,13 @@
           window.__cjFloatsHidden = hideFloats;
           document.documentElement.classList.toggle('cj-scroll-down', hideFloats);
         }
+        // 首页过了 hero 之后不再显示召唤宠物的固定按钮,避免压住文章卡片;
+        // 回到顶部/向上滚时它还会出现。只在状态变化时改 class。
+        const pastHero = scrollTop > 320;
+        if (pastHero !== window.__cjPastHero) {
+          window.__cjPastHero = pastHero;
+          document.documentElement.classList.toggle('cj-past-hero', pastHero);
+        }
 
         const waifu = window.__cjWaifuEl;
         if (waifu) {
@@ -1950,19 +2175,23 @@
       if (footer) {
         const remaining = maxScroll - scrollTop;
         const atBottom = footer.classList.contains('at-bottom');
-        if (!atBottom && remaining <= 8) footer.classList.add('at-bottom');
-        else if (atBottom && remaining > 80) footer.classList.remove('at-bottom');
+        const shortPage = footer.dataset.cjShort === '1';
+        // 触底后页脚变回静态文档流,高度变大;用更大的回退阈值避免抖动。
+        // 内容本来就装得下一屏时标记为短页面并保持静态,否则固定胶囊会盖住页尾入口。
+        if (!atBottom && (remaining <= 8 || maxScroll <= 220)) {
+          if (maxScroll <= 220) footer.dataset.cjShort = '1';
+          footer.classList.add('at-bottom');
+        } else if (atBottom && !shortPage && remaining > 240) {
+          footer.classList.remove('at-bottom');
+        }
 
-        // 阅读时把常驻页脚让开:长页面默认收起,向上滚或触底展开。
-        // 短页面没有可滚动的正文,保持展开。
-        const lastY = Number.isFinite(window.__cjFooterLastY) ? window.__cjFooterLastY : scrollTop;
+        // 长页面的固定页脚只作为底部导航:阅读中一律收起,触底才变成静态页脚。
+        // 短页面没有可滚动的正文,保持可见。
         const nextAtBottom = footer.classList.contains('at-bottom');
-        const goingUp = scrollTop < lastY - 4;
-        const shouldHideFooter = !nextAtBottom && maxScroll > 160 && !goingUp;
+        const shouldHideFooter = !nextAtBottom && maxScroll > 160;
         if (shouldHideFooter !== footer.classList.contains('footer-hidden')) {
           footer.classList.toggle('footer-hidden', shouldHideFooter);
         }
-        window.__cjFooterLastY = scrollTop;
       }
 
       // 滚动期间暂停 Cubism 渲染,scrollend 或 700ms 空闲后恢复
@@ -2278,7 +2507,12 @@
             cap.id = 'image-viewer-caption';
             maskNow.appendChild(cap);
           }
-          if (viewerImg) viewerImg.setAttribute('aria-describedby', 'image-viewer-caption');
+          if (viewerImg) {
+            const alt = (viewerImg.alt || '').trim();
+            // alt 与说明完全相同时不要再挂 aria-describedby,否则读屏念两遍
+            if (text && text !== alt) viewerImg.setAttribute('aria-describedby', 'image-viewer-caption');
+            else viewerImg.removeAttribute('aria-describedby');
+          }
           cap.textContent = text;
           cap.hidden = !text;
         };
@@ -2305,6 +2539,30 @@
       close.setAttribute('aria-label', '关闭图片查看器');
     }
 
+    // 主题只用 .is-disabled 表示上一张/下一张不可用,按钮本身仍可聚焦、
+    // 可点击。把状态同步到原生 disabled,键盘和读屏才不会停在死按钮上。
+    if (!mask.__cjNavState) {
+      mask.__cjNavState = true;
+      const prev = mask.querySelector('.image-viewer-prev');
+      const next = mask.querySelector('.image-viewer-next');
+      const syncNav = () => {
+        const active = mask.classList.contains('active');
+        [prev, next].forEach(btn => {
+          if (!btn) return;
+          const disabled = active && btn.classList.contains('is-disabled');
+          if (btn.disabled !== disabled) btn.disabled = disabled;
+          if (disabled) btn.setAttribute('aria-disabled', 'true');
+          else btn.removeAttribute('aria-disabled');
+        });
+      };
+      new MutationObserver(syncNav).observe(mask, {
+        attributes: true,
+        subtree: true,
+        attributeFilter: ['class'],
+      });
+      syncNav();
+    }
+
     const syncViewerCaption = () => {
       const viewerImg = mask.querySelector('.image-viewer-frame img');
       if (!viewerImg) return;
@@ -2317,6 +2575,8 @@
         mask.appendChild(cap);
       }
       viewerImg.setAttribute('aria-describedby', 'image-viewer-caption');
+      // 说明文字与 alt 相同则去掉关联,避免重复播报
+      if (!text || text === (viewerImg.alt || '').trim()) viewerImg.removeAttribute('aria-describedby');
       cap.textContent = text;
       cap.hidden = !text;
     };
@@ -2761,10 +3021,11 @@
     const copy = () => {
       const url = window.location.href;
       const done = () => showToast('链接已复制');
+      const failed = () => showToast('复制失败，请手动复制');
       if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(url).then(done).catch(() => fallbackCopy(url, done));
+        navigator.clipboard.writeText(url).then(done).catch(() => fallbackCopy(url, done, failed));
       } else {
-        fallbackCopy(url, done);
+        fallbackCopy(url, done, failed);
       }
     };
 
@@ -2822,10 +3083,11 @@
               setTimeout(() => { icon.className = 'fa-regular fa-copy'; }, 1200);
             }
           };
+          const failed = () => showToast('复制失败，请打开 Markdown 原文');
           if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+            navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done, failed));
           } else {
-            fallbackCopy(text, done);
+            fallbackCopy(text, done, failed);
           }
         })
         .catch(() => showToast('复制失败，请打开 Markdown 原文'));
@@ -2867,7 +3129,7 @@
   }
 
   function effectiveSeason() {
-    const saved = localStorage.getItem('blog-season');
+    const saved = storageGet('blog-season');
     return SEASON_NAMES[saved] ? saved : 'auto';
   }
 
@@ -2988,22 +3250,22 @@
     const controls = document.createElement('div');
     controls.className = 'nb-controls';
     controls.innerHTML = `
-      <button class="nb-theme-btn" title="切换季节主题" aria-label="切换季节主题" aria-haspopup="true" aria-expanded="false">${current === 'auto' ? '🍀' : SEASON_ICONS[current]}</button>
+      <button type="button" class="nb-theme-btn" title="切换季节主题" aria-label="切换季节主题" aria-haspopup="true" aria-expanded="false">${current === 'auto' ? '🍀' : SEASON_ICONS[current]}</button>
       <div class="nb-dropdown">
-        <button class="nb-opt${current === 'auto' ? ' active' : ''}" data-season="auto"><span>🍀</span><span>自动(跟随明暗)</span></button>
+        <button type="button" class="nb-opt${current === 'auto' ? ' active' : ''}" data-season="auto"><span>🍀</span><span>自动(跟随明暗)</span></button>
         ${Object.keys(SEASON_ICONS).map(s =>
-          `<button class="nb-opt${current === s ? ' active' : ''}" data-season="${s}"><span>${SEASON_ICONS[s]}</span><span>${SEASON_NAMES[s]}</span></button>`
+          `<button type="button" class="nb-opt${current === s ? ' active' : ''}" data-season="${s}"><span>${SEASON_ICONS[s]}</span><span>${SEASON_NAMES[s]}</span></button>`
         ).join('')}
         <div class="nb-div"></div>
-        <button class="nb-opt flashlight-opt"><span>🔦</span><span>管中窥豹</span></button>
+        <button type="button" class="nb-opt flashlight-opt"><span>🔦</span><span>管中窥豹</span></button>
       </div>
-      <button class="nb-timer-btn" title="计时器" aria-label="计时器" aria-haspopup="true" aria-expanded="false">⏱</button>
+      <button type="button" class="nb-timer-btn" title="计时器" aria-label="计时器" aria-haspopup="true" aria-expanded="false">⏱</button>
       <div class="nb-timer-panel">
         <div class="nb-timer-time" id="nbTimerTime">00:00:00</div>
         <div class="nb-timer-btns">
-          <button id="nbStart">开始</button>
-          <button id="nbPause" style="display:none">暂停</button>
-          <button id="nbReset">重置</button>
+          <button type="button" id="nbStart">开始</button>
+          <button type="button" id="nbPause" style="display:none">暂停</button>
+          <button type="button" id="nbReset">重置</button>
         </div>
       </div>`;
     navbar.classList.add('has-nb-controls');
@@ -3030,7 +3292,7 @@
           setDropdown(false);
           return;
         }
-        localStorage.setItem('blog-season', opt.dataset.season);
+        storageSet('blog-season', opt.dataset.season);
         const rect = opt.getBoundingClientRect();
         switchTheme(() => applySeason(opt.dataset.season), rect.left + rect.width / 2, rect.top + rect.height / 2);
         setDropdown(false);
@@ -3087,7 +3349,7 @@
       body.classList.remove('flashlight-mode');
       const el = document.querySelector('.flashlight-overlay');
       if (el) el.remove();
-      localStorage.setItem('blog-flashlight', 'false');
+      storageSet('blog-flashlight', 'false');
     } else {
       body.classList.add('flashlight-mode');
       const el = document.createElement('div');
@@ -3098,7 +3360,7 @@
         el.style.setProperty('--fy', e.clientY + 'px');
       };
       document.addEventListener('mousemove', window.__cjFlashlightHandler);
-      localStorage.setItem('blog-flashlight', 'true');
+      storageSet('blog-flashlight', 'true');
       showToast('管中窥豹已开启 — 再点 🍀 按钮退出');
     }
     document.querySelectorAll('.flashlight-opt').forEach(el => {
@@ -3211,19 +3473,19 @@
       const href = btn.dataset.href;
       const likeKey = 'likes_' + href;
       const likedKey = 'liked_' + href;
-      let likes = parseInt(localStorage.getItem(likeKey) || '0');
-      const isLiked = localStorage.getItem(likedKey) === 'true';
+      let likes = parseInt(storageGet(likeKey, '0'), 10) || 0;
+      const isLiked = storageGet(likedKey) === 'true';
 
       if (isLiked) {
         likes = Math.max(0, likes - 1);
-        localStorage.removeItem(likedKey);
+        storageRemove(likedKey);
         btn.classList.remove('liked');
       } else {
         likes++;
-        localStorage.setItem(likedKey, 'true');
+        storageSet(likedKey, 'true');
         btn.classList.add('liked');
       }
-      localStorage.setItem(likeKey, String(likes));
+      storageSet(likeKey, likes);
       const iconClass = 'fa-' + (isLiked ? 'regular' : 'solid') + ' fa-heart';
       // 构建期输出的统计行有独立的数字节点,只改文本,不重建整块
       const countEl = btn.querySelector('.stat-likes');
@@ -3235,7 +3497,8 @@
         const suffix = btn.closest('.post-page-stats') ? ' 个赞' : '';
         btn.innerHTML = '<i class="' + iconClass + '"></i> ' + likes + suffix;
       }
-      if (btn.closest('.post-page-stats')) btn.setAttribute('aria-pressed', String(!isLiked));
+      if (!btn.getAttribute('aria-label')) btn.setAttribute('aria-label', '点赞这篇文章');
+      btn.setAttribute('aria-pressed', String(!isLiked));
     });
   }
 
@@ -3248,16 +3511,18 @@
       if (!href) return;
 
       const viewKey = 'views_' + href;
-      const views = parseInt(localStorage.getItem(viewKey) || '0');
+      const views = parseInt(storageGet(viewKey, '0'), 10) || 0;
       const likeKey = 'likes_' + href;
-      const likes = parseInt(localStorage.getItem(likeKey) || '0');
-      const isLiked = localStorage.getItem('liked_' + href) === 'true';
+      const likes = parseInt(storageGet(likeKey, '0'), 10) || 0;
+      const isLiked = storageGet('liked_' + href) === 'true';
 
       const statsDiv = document.createElement('div');
       statsDiv.className = 'article-stats';
       statsDiv.innerHTML =
         '<span class="stat-item"><i class="fa-regular fa-eye"></i> ' + views + '</span>' +
-        '<button class="like-btn ' + (isLiked ? 'liked' : '') + '" data-href="' + href + '">' +
+        '<button class="like-btn ' + (isLiked ? 'liked' : '') + '" type="button"' +
+        ' data-href="' + href + '" aria-label="点赞这篇文章"' +
+        ' aria-pressed="' + String(isLiked) + '">' +
         '<i class="fa-' + (isLiked ? 'solid' : 'regular') + ' fa-heart"></i> ' + likes + '</button>';
 
       const metaContainer = card.querySelector('.home-article-meta-info-container');
@@ -3277,16 +3542,16 @@
     const viewKey = 'views_' + path;
     // 同一次页面停留里 init 只应计数一次;SPA 重新进入该路径仍会 +1
     const alreadyCounted = window.__cjStatsPath === path;
-    let views = parseInt(localStorage.getItem(viewKey) || '0');
+    let views = parseInt(storageGet(viewKey, '0'), 10) || 0;
     if (!alreadyCounted) {
       views += 1;
-      localStorage.setItem(viewKey, views);
+      storageSet(viewKey, views);
       window.__cjStatsPath = path;
     }
 
     const likeKey = 'likes_' + path;
-    const likes = parseInt(localStorage.getItem(likeKey) || '0');
-    const isLiked = localStorage.getItem('liked_' + path) === 'true';
+    const likes = parseInt(storageGet(likeKey, '0'), 10) || 0;
+    const isLiked = storageGet('liked_' + path) === 'true';
 
     let statsDiv = document.querySelector('.post-page-stats');
     if (!statsDiv) {
@@ -3376,7 +3641,8 @@
         <div class="related-posts-list">
           ${list.map(p => {
             const cover = p.cover || RELATED_COVERS[p.categories[0]] || RELATED_PLACEHOLDER;
-            return `<a class="related-post-item" href="${esc(p.path)}" title="${esc(p.title)}">
+            const href = p.path.startsWith('/') ? p.path : '/' + p.path;
+            return `<a class="related-post-item" href="${esc(href)}" title="${esc(p.title)}">
               <div class="related-post-cover" style="background-image:url('${esc(cover)}')"></div>
               <div class="related-post-info">
                 <div class="related-post-title">${esc(p.title)}</div>
@@ -3530,6 +3796,7 @@
     applyReadingPrefs();
     initExternalLinks();
     initAplayerA11y();
+    initGiscusA11y();
     if (!window.__cjAplayerTimers) {
       window.__cjAplayerTimers = true;
       [1500, 4000, 7000, 13000].forEach(ms => setTimeout(initAplayerA11y, ms));
@@ -3570,6 +3837,7 @@
     observeSearchClose();
     onceGlobal('searchNav', initSearchNavGlobals);
     onceGlobal('searchFocus', initSearchFocus);
+    initSearchOverlayInert();
     onceGlobal('swupNavPause', initSwupNavPause);
     initMouseFollower();
     initArticleStats();
@@ -3638,6 +3906,9 @@
 
   // 暗色横幅延迟到真正需要时再下载
   function syncBannerTheme() {
+    // 手动季节模式下 applySeason 已经把亮/暗两张图都换成季节图,
+    // 不能被主题的 data-src 回退图覆盖。
+    if (effectiveSeason() !== 'auto') return;
     const img = document.querySelector('img[data-src*="banner-dark"]');
     if (!img) return;
     const darkMode = document.documentElement.classList.contains('dark');

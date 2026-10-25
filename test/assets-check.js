@@ -272,6 +272,7 @@ function check(name, cond, extra) {
   const sitemapXml = await page.evaluate(async () => (await (await fetch('/sitemap.xml')).text()));
   check('sitemap 不再包含 index.html', !sitemapXml.includes('/index.html</loc>'), 'index.html found');
   check('sitemap 收录归档入口', sitemapXml.includes('/archives/</loc>'), 'archives missing');
+  check('sitemap 收录归档年/月页', /<loc>[^<]*\/archives\/2026\/<\/loc>/.test(sitemapXml) && /<loc>[^<]*\/archives\/2026\/10\/<\/loc>/.test(sitemapXml), 'archive year/month missing');
 
   await browser.close();
   server.close();

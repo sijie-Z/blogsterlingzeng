@@ -15,7 +15,7 @@ date: 2026-08-28 10:00:00
 
 ---
 
-<a id="miqrogate"></a>
+<span id="miqrogate"></span>
 ## MiQroGate：把 API Key 关进网关
 
 **Java 21 · Spring WebFlux · Vue 3 · PostgreSQL** ｜ 个人项目 ｜ 持续维护
@@ -88,7 +88,7 @@ date: 2026-08-28 10:00:00
 
 ---
 
-<a id="quant-platform"></a>
+<span id="quant-platform"></span>
 ## quant_platform：信号存在 ≠ 策略可投资
 
 **Python · Pandas · cvxpy · FastAPI · Vue 3** ｜ 个人项目 ｜ 研究已封档
@@ -171,7 +171,7 @@ date: 2026-08-28 10:00:00
 
 ---
 
-<a id="docmind"></a>
+<span id="docmind"></span>
 ## DocMind：RAG 的核心是检索，不是生成
 
 **Python · FastAPI · Vue 3 · Elasticsearch · Redis · MinIO · Kafka** ｜ 个人项目 ｜ 生产实现持续演进

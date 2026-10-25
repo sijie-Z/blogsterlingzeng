@@ -25,7 +25,8 @@ function redirectPage(target, label) {
   <meta http-equiv="refresh" content="0; url=${target}">
 </head>
 <body>
-  <p>${label}：<a href="${target}">${target}</a></p>
+  <h1>${label}</h1>
+  <p><a href="${target}">${target}</a></p>
 </body>
 </html>
 `;
@@ -37,7 +38,7 @@ hexo.extend.generator.register('archive-pagination-redirects', function () {
   if (archiveCfg.per_page !== 0) return [];
   return [2, 3].map(n => ({
     path: `archives/page/${n}/index.html`,
-    data: redirectPage('/archives/', '归档已合并为一页'),
+    data: redirectPage('/archives/', `归档第 ${n} 页已合并为一页`),
   }));
 });
 
@@ -52,7 +53,15 @@ function streamToString(stream) {
   });
 }
 
-hexo.extend.filter.register('after_generate', function () {  const jobs = [];
+hexo.extend.filter.register('after_generate', function () {
+  // 旧的迁移页在 source 里是一份完整 HTML,主题会再包一层页面骨架;
+  // 直接用纯跳转 HTML 覆盖构建产物,避免重复的 title/robots/head。
+  hexo.route.set(
+    '2026/10/22/hexo-series-reading-path/index.html',
+    redirectPage('/2026/10/23/hexo-series-reading-path/', '文章地址已更新')
+  );
+
+  const jobs = [];
 
   const sitemap = hexo.route.get('sitemap.xml');
   if (sitemap) {

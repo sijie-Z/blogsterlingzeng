@@ -475,7 +475,20 @@ hexo.extend.filter.register('after_generate', function () {
   if (!routeStream) return;
 
   const root = String(hexo.config.url || '').replace(/\/+$/, '');
-  const latestPost = hexo.locals.get('posts').toArray().sort((a, b) => b.date - a.date)[0];
+  const posts = hexo.locals.get('posts').toArray()
+    .filter(post => post.published !== false && !post.draft);
+  const latestPost = posts.slice().sort((a, b) => b.date - a.date)[0];
+  // 归档年/月页由 hexo-generator-archive 产出,不在 posts/pages 里,
+  // sitemap 生成器不会收录;这里按月份聚合后补进去。
+  const archiveLatest = new Map();
+  for (const post of posts) {
+    const year = post.date.year();
+    const month = String(post.date.month() + 1).padStart(2, '0');
+    for (const key of [`${year}`, `${year}/${month}`]) {
+      const prev = archiveLatest.get(key);
+      if (!prev || post.date > prev.date) archiveLatest.set(key, post);
+    }
+  }
   const entries = [{
     loc: root + '/archives/',
     lastmod: latestPost ? dateText(latestPost) : '',
@@ -488,6 +501,10 @@ hexo.extend.filter.register('after_generate', function () {
     loc: root + '/series/' + group.slug + '/',
     lastmod: dateText(group.latest),
     priority: '0.6',
+  })), [...archiveLatest.entries()].map(([key, post]) => ({
+    loc: root + '/archives/' + key + '/',
+    lastmod: dateText(post),
+    priority: '0.5',
   })));
 
   const extra = entries.map(e => `  <url>

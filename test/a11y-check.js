@@ -129,16 +129,31 @@ async function audit(page) {
     focus: document.activeElement?.classList.contains('image-viewer-close') || false,
   }));
   check('Enter 打开图片查看器并聚焦关闭', viewerOpen.active && focusedClose && viewerOpen.focus, JSON.stringify(viewerOpen));
+  const viewerNav = await page.evaluate(() => {
+    const mask = document.querySelector('.image-viewer-container.active');
+    return ['prev', 'next'].map(kind => {
+      const btn = mask?.querySelector('.image-viewer-' + kind);
+      return btn ? {
+        kind,
+        disabled: btn.disabled,
+        aria: btn.getAttribute('aria-disabled'),
+        className: btn.classList.contains('is-disabled'),
+      } : { kind, missing: true };
+    });
+  });
+  check('查看器不可用方向按钮真正禁用', viewerNav.every(s => !s.missing && s.disabled === s.className && (s.disabled ? s.aria === 'true' : s.aria === null)), JSON.stringify(viewerNav));
   await sleep(400);
   const viewerCaption = await page.evaluate(() => {
     const img = document.querySelector('.image-viewer-container.active .image-viewer-frame img');
     const cap = document.querySelector('.image-viewer-container.active .image-viewer-caption');
     return {
       text: (cap && cap.textContent || '').trim(),
+      alt: (img?.alt || '').trim(),
       describedBy: img?.getAttribute('aria-describedby') || '',
     };
   });
-  check('图片查看器显示说明并关联', viewerCaption.text.length > 4 && viewerCaption.describedBy === 'image-viewer-caption', JSON.stringify(viewerCaption));
+  const expectedCaptionLink = viewerCaption.text && viewerCaption.text !== viewerCaption.alt ? 'image-viewer-caption' : '';
+  check('图片查看器说明不重复关联', viewerCaption.text.length > 4 && viewerCaption.describedBy === expectedCaptionLink, JSON.stringify(viewerCaption));
   await page.keyboard.press('Escape');
   await sleep(500);
   const viewerClosed = await page.evaluate(() => ({
@@ -157,6 +172,64 @@ async function audit(page) {
     return btn ? { tag: btn.tagName, role: btn.getAttribute('role'), tab: btn.tabIndex } : { missing: true };
   });
   check('代码按钮可键盘操作', !codeBtn.missing && (codeBtn.tag === 'BUTTON' || codeBtn.role === 'button') && codeBtn.tab === 0, JSON.stringify(codeBtn));
+
+  const citeTab = await page.evaluate(async () => {
+    const trigger = document.querySelector('.post-side-share');
+    if (!trigger) return { missing: true };
+    trigger.click();
+    await new Promise(r => setTimeout(r, 200));
+    const menu = document.querySelector('.cite-menu');
+    if (!menu) return { missing: true, reason: 'menu' };
+    const item = document.activeElement;
+    return {
+      missing: false,
+      menuOpen: true,
+      firstIsItem: menu.contains(item),
+      itemText: (item && item.textContent || '').trim(),
+    };
+  });
+  if (!citeTab.missing) {
+    await page.keyboard.press('Tab');
+    await sleep(250);
+    const citeAfterTab = await page.evaluate(() => ({
+      menu: !!document.querySelector('.cite-menu'),
+      skip: document.activeElement?.classList.contains('skip-link') || false,
+      focus: document.activeElement?.className || document.activeElement?.tagName || '',
+    }));
+    check('引用菜单 Tab 不跳回 skip link', citeTab.firstIsItem && !citeAfterTab.menu && !citeAfterTab.skip, JSON.stringify({ citeTab, citeAfterTab }));
+  } else {
+    check('引用菜单 Tab 不跳回 skip link', false, JSON.stringify(citeTab));
+  }
+
+  const blocked = await browser.newPage();
+  await blocked.evaluateOnNewDocument(() => {
+    Storage.prototype.getItem = function () { throw new Error('storage blocked'); };
+    Storage.prototype.setItem = function () { throw new Error('storage blocked'); };
+  });
+  await blocked.goto(BASE + '/2026/10/23/hexo-series-reading-path/', { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(900);
+  const blockedSize = await blocked.evaluate(() => {
+    const btn = document.querySelector('.read-size-btn[data-read-size="s"]');
+    if (!btn) return { missing: true };
+    btn.click();
+    return { attr: document.documentElement.getAttribute('data-read-size') };
+  });
+  check('禁用 localStorage 时字号按钮仍生效', blockedSize.attr === 's', JSON.stringify(blockedSize));
+  await blocked.close();
+
+  // 新开页面直接打开搜索:验证 overlay 的 inert observer 按当前节点绑定,
+  // 关闭后焦点确实回到搜索按钮(而不是被 inert 吞掉)。
+  await page.goto(BASE + '/about/', { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(900);
+  await page.click('.desktop .search-popup-trigger');
+  await page.waitForFunction(() => document.querySelector('.search-pop-overlay')?.classList.contains('active'), { timeout: 4000 }).catch(() => {});
+  await page.waitForFunction(() => document.activeElement?.classList.contains('search-input'), { timeout: 3000 }).catch(() => {});
+  await page.keyboard.press('Escape');
+  const searchFocusBack = await page.waitForFunction(
+    () => document.activeElement?.classList.contains('search-popup-trigger'),
+    { timeout: 3000 }
+  ).then(() => true).catch(() => false);
+  check('首次加载搜索关闭后焦点回到按钮', searchFocusBack);
 
   await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
   await page.goto(BASE + '/2026/10/23/hexo-series-reading-path/', { waitUntil: 'networkidle2', timeout: 30000 });

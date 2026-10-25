@@ -46,7 +46,33 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
     </figure>`).join('');
 
   const fallback = `<p class="photos-loading">正在加载照片…</p>` +
-    (figures ? `\n<noscript><div class="photos-static">${figures}</div></noscript>` : '');
+    (figures
+      ? `\n<div class="photos-static photos-static-fallback is-hidden">${figures}</div>` +
+        `\n<noscript><style>#masonry-container,.photos-loading{display:none!important}.photos-static-fallback.is-hidden{display:grid!important}</style></noscript>` +
+        // main.js / MiniMasonry 被拦截时主题不会报错,只会一直转圈。
+        // 超时后用静态图集接管;Masonry 后来加载成功时再自动让位。
+        `\n<script data-swup-reload-script>
+(function () {
+  var container = document.getElementById('masonry-container');
+  var fallback = document.querySelector('.photos-static-fallback');
+  var loading = document.querySelector('.photos-loading');
+  if (!container || !fallback) return;
+  function showFallback() {
+    if (container.querySelector('.masonry-item') || container.querySelector('.photos-error')) return;
+    fallback.classList.remove('is-hidden');
+    if (loading) loading.style.display = 'none';
+    container.classList.add('masonry-failed');
+  }
+  function sync() {
+    if (!container.querySelector('.masonry-item')) return;
+    fallback.classList.add('is-hidden');
+    container.classList.remove('masonry-failed');
+  }
+  new MutationObserver(sync).observe(container, { childList: true });
+  setTimeout(showFallback, 4000);
+})();
+</script>`
+      : '');
 
   str = str.replace(/(<div\b[^>]*\bid="masonry-container"[^>]*><\/div>)/, (match) => match + fallback);
 

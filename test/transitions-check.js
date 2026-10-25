@@ -315,8 +315,8 @@ async function waitIdle(page, timeout = 8000) {
   check('向下阅读页脚保持收起', downHidden);
   await page.evaluate(() => window.scrollTo(0, 500));
   await sleep(700);
-  const upShown = !(await footerHidden());
-  check('向上滚动页脚重新出现', upShown);
+  const upHidden = await footerHidden();
+  check('向上滚动页脚保持收起(只在触底展开)', upHidden);
 
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   await sleep(900);
@@ -332,6 +332,33 @@ async function waitIdle(page, timeout = 8000) {
       .map(id => (document.getElementById(id)?.textContent || '').trim())
   );
   check('页脚运行时间正常显示', runtimeText.every(v => v !== ''), JSON.stringify(runtimeText));
+
+  console.log('=== 8.5 导航自动隐藏与键盘 ===');
+  await page.evaluate(() => window.scrollTo(0, 1400));
+  await sleep(500);
+  // 主题按“上一帧滚动位置”判断方向,单次跳跃只记录基准;再向下滚一次才会隐藏
+  await page.evaluate(() => window.scrollTo(0, 1650));
+  await sleep(800);
+  const navHidden = await page.evaluate(() => {
+    const header = document.querySelector('.main-content-header');
+    return {
+      hide: header?.classList.contains('hide') || false,
+      top: Math.round(header?.getBoundingClientRect().top || 0),
+    };
+  });
+  check('向下滚动隐藏导航', navHidden.hide && navHidden.top < -20, JSON.stringify(navHidden));
+  await page.evaluate(() => document.querySelector('.navbar-content a[href]')?.focus());
+  await sleep(350);
+  const navFocused = await page.evaluate(() => {
+    const header = document.querySelector('.main-content-header');
+    return {
+      top: Math.round(header?.getBoundingClientRect().top || 0),
+      inNav: !!document.activeElement?.closest('.navbar-content'),
+    };
+  });
+  check('键盘聚焦时导航回到视口', navFocused.inNav && navFocused.top >= -2, JSON.stringify(navFocused));
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await sleep(500);
 
   console.log('=== 9. 移动端抽屉 ===');
   const mobile = await browser.newPage();
@@ -353,6 +380,13 @@ async function waitIdle(page, timeout = 8000) {
     inert: document.querySelector('.navbar-drawer')?.hasAttribute('inert'),
   }));
   check('抽屉可打开', drawerOpen.open && !drawerOpen.inert, JSON.stringify(drawerOpen));
+  const drawerBackground = await mobile.evaluate(() => ({
+    main: document.querySelector('.main-content-body')?.inert || false,
+    nav: document.querySelector('.navbar-content')?.inert || false,
+    drawer: document.querySelector('.navbar-drawer')?.inert || false,
+    mask: document.querySelector('.window-mask')?.inert || false,
+  }));
+  check('抽屉打开时背景 inert、遮罩可点', drawerBackground.main && drawerBackground.nav && !drawerBackground.drawer && !drawerBackground.mask, JSON.stringify(drawerBackground));
   const drawerA11y = await mobile.evaluate(() => ({
     expanded: document.querySelector('.navbar-bar')?.getAttribute('aria-expanded'),
     label: document.querySelector('.navbar-bar')?.getAttribute('aria-label'),
