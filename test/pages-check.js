@@ -149,24 +149,43 @@ function check(name, cond, extra) {
   await sleep(1600);
   const floating = () => mobile.evaluate(() => {
     const toggle = document.getElementById('read-toggle');
+    const cite = document.getElementById('mobile-cite');
     const rail = document.querySelector('.right-side-tools-container');
     return {
       down: document.documentElement.classList.contains('cj-scroll-down'),
+      inline: !!(toggle && toggle.classList.contains('read-action-btn') &&
+        cite && cite.classList.contains('cite-action-btn')),
+      fixed: !!document.querySelector('.read-toggle, .mobile-cite'),
       toggle: toggle ? getComputedStyle(toggle).opacity : null,
-      pointer: toggle ? getComputedStyle(toggle).pointerEvents : null,
-      rail: rail ? getComputedStyle(rail).opacity : null,
+      rail: rail ? getComputedStyle(rail).display : null,
     };
   });
   const f1 = await floating();
-  check('移动端浮动按钮初始可见', f1.toggle === '1', JSON.stringify(f1));
+  check('移动端阅读/引用按钮已内联', f1.inline && !f1.fixed, JSON.stringify(f1));
+  check('移动端右侧工具条隐藏', f1.rail === 'none', JSON.stringify(f1));
   await mobile.evaluate(() => window.scrollTo(0, 900));
   await sleep(800);
   const f2 = await floating();
-  check('向下阅读浮动按钮收起', f2.down && f2.toggle === '0' && f2.pointer === 'none', JSON.stringify(f2));
+  check('向下阅读标记生效且内联按钮仍可见', f2.down && f2.toggle === '1', JSON.stringify(f2));
   await mobile.evaluate(() => window.scrollTo(0, 600));
   await sleep(800);
   const f3 = await floating();
-  check('向上滚动浮动按钮恢复', !f3.down && f3.toggle === '1', JSON.stringify(f3));
+  check('向上滚动清除收起状态', !f3.down, JSON.stringify(f3));
+
+  await mobile.evaluate(() => window.scrollTo(0, 0));
+  await sleep(400);
+  await mobile.click('#read-toggle');
+  await sleep(350);
+  const inlineRead = await mobile.evaluate(() => document.getElementById('read-sheet')?.classList.contains('is-open') || false);
+  check('内联 Aa 打开阅读设置卡', inlineRead);
+  await mobile.keyboard.press('Escape');
+  await sleep(250);
+  await mobile.click('#mobile-cite');
+  await sleep(350);
+  const inlineCite = await mobile.evaluate(() => !!document.querySelector('.cite-menu'));
+  check('内联引用按钮打开菜单', inlineCite);
+  await mobile.keyboard.press('Escape');
+  await sleep(250);
   await mobile.close();
 
   check('零页面错误', errors.length === 0, errors.slice(0, 2).join(' | '));

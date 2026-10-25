@@ -1140,3 +1140,177 @@ patchText('source/js/build/tools/lightDarkSwitch.js', [
     'giscus build guard',
   ],
 ]);
+
+// 滚动回调:只在状态真正变化时改 class。旧实现每个 scroll 事件都对
+// body 切换 navbar-shrink、对工具条切 hide,滚动时持续触发样式失效。
+patchText('source/js/utils/sideTools.js', [
+  [
+    `  for (let i = 0; i < toolList.length; i++) {
+    const tools = toolList[i];
+    if (y <= 100) {
+      if (location.pathname === config.root) {
+        tools.classList.add("hide");
+        if (aplayer !== null) {
+          aplayer.classList.add("hide");
+        }
+      }
+    } else if (y + windowHeight >= height - 20) {
+      tools.classList.add("hide");
+      if (aplayer !== null) {
+        aplayer.classList.add("hide");
+      }
+    } else {
+      tools.classList.remove("hide");
+      if (aplayer !== null) {
+        aplayer.classList.remove("hide");
+      }
+    }
+  }
+};`,
+    `  let hide = null;
+  if (y <= 100) {
+    if (location.pathname === config.root) hide = true;
+  } else {
+    hide = y + windowHeight >= height - 20;
+  }
+
+  if (hide === null) {
+    return;
+  }
+
+  for (let i = 0; i < toolList.length; i++) {
+    const tools = toolList[i];
+    if (tools.classList.contains("hide") !== hide) {
+      tools.classList.toggle("hide", hide);
+    }
+    if (aplayer !== null && aplayer.classList.contains("hide") !== hide) {
+      aplayer.classList.toggle("hide", hide);
+    }
+  }
+};`,
+    'sideTools source class hysteresis',
+  ],
+]);
+
+patchText('source/js/build/utils/sideTools.js', [
+  [
+    'for(let i=0;i<n.length;i++){const l=n[i];t<=100?location.pathname===config.root&&(l.classList.add("hide"),null!==s&&s.classList.add("hide")):t+o>=e-20?(l.classList.add("hide"),null!==s&&s.classList.add("hide")):(l.classList.remove("hide"),null!==s&&s.classList.remove("hide"))}};',
+    'let h=null;if(t<=100){if(location.pathname===config.root)h=!0}else{h=t+o>=e-20}if(null===h)return;for(let i=0;i<n.length;i++){const l=n[i];l.classList.contains("hide")!==h&&l.classList.toggle("hide",h);null!==s&&s.classList.contains("hide")!==h&&s.classList.toggle("hide",h)}};',
+    'sideTools build class hysteresis',
+  ],
+]);
+
+patchText('source/js/layouts/navbarShrink.js', [
+  [
+    `const handleScroll = () => {
+  if (navbarState.isNavigating) {
+    return;
+  }
+
+  const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+  const shouldShrink = scrollTop > navbarState.navbarHeight;
+  document.body.classList.toggle("navbar-shrink", shouldShrink);
+};`,
+    `let __cjNavShrinkRaf = 0;
+let __cjNavShrunk = null;
+
+const handleScroll = () => {
+  if (navbarState.isNavigating || __cjNavShrinkRaf) {
+    return;
+  }
+
+  __cjNavShrinkRaf = requestAnimationFrame(() => {
+    __cjNavShrinkRaf = 0;
+    const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+    const shouldShrink = scrollTop > navbarState.navbarHeight;
+    if (shouldShrink === __cjNavShrunk) {
+      return;
+    }
+    __cjNavShrunk = shouldShrink;
+    document.body.classList.toggle("navbar-shrink", shouldShrink);
+  });
+};`,
+    'navbar shrink rAF and hysteresis source',
+  ],
+]);
+
+patchText('source/js/build/layouts/navbarShrink.js', [
+  [
+    'const handleScroll=()=>{if(t.isNavigating)return;const a=(document.documentElement.scrollTop||document.body.scrollTop)>t.navbarHeight;document.body.classList.toggle("navbar-shrink",a)}',
+    'let __cjNavRaf=0,__cjNavShrunk=null;const handleScroll=()=>{if(t.isNavigating||__cjNavRaf)return;__cjNavRaf=requestAnimationFrame(()=>{__cjNavRaf=0;const a=(document.documentElement.scrollTop||document.body.scrollTop)>t.navbarHeight;if(a===__cjNavShrunk)return;__cjNavShrunk=a;document.body.classList.toggle("navbar-shrink",a)})}',
+    'navbar shrink rAF and hysteresis build',
+  ],
+]);
+
+// 主题 JS 没有版本号,Cloudflare / GitHub Pages 会缓存 4 小时。
+// 给入口 main.js 和两个被改过的模块加查询串,确保滚动补丁能立即生效。
+const CJ_THEME_JS_VERSION = '20261026a';
+patchText('source/js/build/main.js', [
+  ['from"./layouts/navbarShrink.js"', `from"./layouts/navbarShrink.js?v=${CJ_THEME_JS_VERSION}"`, 'main navbarShrink version'],
+  ['from"./utils.js"', `from"./utils.js?v=${CJ_THEME_JS_VERSION}"`, 'main utils version'],
+]);
+patchText('source/js/build/utils.js', [
+  ['from"./utils/sideTools.js"', `from"./utils/sideTools.js?v=${CJ_THEME_JS_VERSION}"`, 'utils sideTools version'],
+]);
+
+// 工具条状态只在真正跨过阈值时更新;状态没变就直接返回。
+patchText('source/js/utils/sideTools.js', [
+  [
+    'export const updateAutoHideTools = () => {',
+    'let __cjToolsHideKey = null;\n\nexport const updateAutoHideTools = (force = false) => {',
+    'sideTools source force arg',
+  ],
+  [
+    `  if (hide === null) {
+    return;
+  }
+
+  for (let i = 0; i < toolList.length; i++) {`,
+    `  if (hide === null) return;
+
+  const key = hide ? "hide" : "show";
+  if (!force && key === __cjToolsHideKey) return;
+  __cjToolsHideKey = key;
+
+  for (let i = 0; i < toolList.length; i++) {`,
+    'sideTools source state key',
+  ],
+]);
+patchText('source/js/build/utils/sideTools.js', [
+  [
+    'export const updateAutoHideTools=()=>{',
+    'let __cjToolsHideKey=null;export const updateAutoHideTools=(f=!1)=>{',
+    'sideTools build force arg',
+  ],
+  [
+    'if(null===h)return;for(let i=0;i<n.length;i++){',
+    'if(h===null)return;const k=h?"hide":"show";if(!f&&k===__cjToolsHideKey)return;__cjToolsHideKey=k;for(let i=0;i<n.length;i++){',
+    'sideTools build state key',
+  ],
+]);
+patchText('source/js/utils.js', [
+  ['  updateAutoHideTools();', '  updateAutoHideTools(true);', 'utils force tools state on page init'],
+]);
+patchText('source/js/build/utils.js', [
+  ['n(),l(a,d)', 'n(!0),l(a,d)', 'utils build force tools state on page init'],
+]);
+
+// 首页横幅滚动模糊:全屏 filter 在弱 GPU / 软件渲染下会掉到 30-40fps。
+// CSS 已经强制 filter:none,这里把滚动监听也去掉,避免每 20ms 的无用样式写入。
+patchText('source/js/utils.js', [
+  [
+    `  window.addEventListener("scroll", debounce(handleHomeBannerBlur, 20), {
+    signal,
+  });
+`,
+    '',
+    'utils remove home banner blur listener',
+  ],
+]);
+patchText('source/js/build/utils.js', [
+  [
+    ',window.addEventListener("scroll",((o,e)=>{let t;return(...r)=>{clearTimeout(t),t=setTimeout((()=>o(...r)),e)}})(handleHomeBannerBlur,20),{signal:o})',
+    '',
+    'utils build remove home banner blur listener',
+  ],
+]);

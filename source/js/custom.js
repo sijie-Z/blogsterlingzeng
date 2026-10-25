@@ -527,14 +527,20 @@
       return;
     }
     if (btn) return;
+    const mobile = window.matchMedia && window.matchMedia('(max-width: 880px)').matches;
     btn = document.createElement('button');
     btn.id = 'mobile-cite';
     btn.type = 'button';
-    btn.className = 'mobile-cite';
     btn.setAttribute('aria-label', '引用与分享本文');
     btn.setAttribute('aria-haspopup', 'menu');
     btn.setAttribute('aria-expanded', 'false');
     btn.innerHTML = '<i class="fa-solid fa-share-nodes" aria-hidden="true"></i>';
+    if (mobile) {
+      btn.className = 'cite-action-btn';
+      const stats = document.querySelector('.post-page-stats');
+      if (stats) { stats.appendChild(btn); return; }
+    }
+    btn.className = 'mobile-cite';
     document.body.appendChild(btn);
   }
 
@@ -545,12 +551,20 @@
       return;
     }
     if (btn) return;
+    const mobile = window.matchMedia && window.matchMedia('(max-width: 880px)').matches;
     btn = document.createElement('button');
     btn.id = 'read-toggle';
     btn.type = 'button';
-    btn.className = 'read-toggle';
     btn.setAttribute('aria-label', '阅读设置');
     btn.setAttribute('aria-expanded', 'false');
+    if (mobile) {
+      btn.className = 'read-action-btn';
+      btn.textContent = 'Aa';
+      btn.title = '阅读设置';
+      const stats = document.querySelector('.post-page-stats');
+      if (stats) { stats.appendChild(btn); return; }
+    }
+    btn.className = 'read-toggle';
     btn.textContent = 'Aa';
     document.body.appendChild(btn);
   }
@@ -1112,12 +1126,18 @@
   }
 
   function initSwupNavPause() {
+    if (!window.__cjNavInputBound) {
+      window.__cjNavInputBound = true;
+      document.addEventListener('pointerdown', () => { window.__cjPointerNav = true; }, true);
+      document.addEventListener('keydown', () => { window.__cjPointerNav = false; }, true);
+    }
     const attach = swup => {
       if (!swup || !swup.hooks || swup.__cjNavPause) return;
       swup.__cjNavPause = true;
       swup.hooks.on('visit:start', () => {
         resetImageViewerState();
         swup.__cjAnnounceNext = true;
+        swup.__cjFocusNext = !window.__cjPointerNav;
         closeCodeFullscreen();
         if (window.__cjCloseMarginSheet) window.__cjCloseMarginSheet();
         if (window.__cjHideLinkPreview) window.__cjHideLinkPreview();
@@ -1133,7 +1153,17 @@
         if (swup.__cjAnnounceNext) {
           swup.__cjAnnounceNext = false;
           announceRoute();
-          focusRouteTarget();
+          // 鼠标/触摸点击不需要把焦点搬到 h1;键盘用户也等空闲再聚焦,
+          // 避免 focus 的样式/无障碍树工作把换页任务拖长。
+          if (swup.__cjFocusNext) {
+            if ('requestIdleCallback' in window) {
+              requestIdleCallback(() => focusRouteTarget(), { timeout: 500 });
+            } else {
+              setTimeout(focusRouteTarget, 120);
+            }
+          }
+          swup.__cjFocusNext = false;
+          window.__cjPointerNav = false;
         }
       });
     };
@@ -1236,6 +1266,9 @@
     }
     if (waifu.__cjObserved) return;
     waifu.__cjObserved = true;
+    window.__cjWaifuEl = waifu;
+    waifu.addEventListener('mouseenter', () => { waifu.__cjHovered = true; });
+    waifu.addEventListener('mouseleave', () => { waifu.__cjHovered = false; });
     if (window.scrollY > 160) waifu.classList.add('waifu-reading');
     const canvas = document.getElementById('live2d');
     if (canvas) canvas.setAttribute('aria-hidden', 'true');
@@ -1858,13 +1891,41 @@
 
   function initReadingProgress() {
     // 进度条由主题的 updateScrollStyle 维护,这里只处理导航与页脚状态
+    let navbarEl = document.querySelector('.navbar-container');
+    let footerEl = document.querySelector('footer.footer');
     const update = (fromScroll = false) => {
       const scrollTop = window.scrollY;
+
+      // 滚动方向相关的逻辑都放在 rAF 里:scroll 事件本身只做节流,
+      // 避免每个事件都做 DOM 查询 / class 切换。
+      if (fromScroll) {
+        const prevY = Number.isFinite(window.__cjLastScrollY) ? window.__cjLastScrollY : 0;
+        window.__cjLastScrollY = scrollTop;
+
+        const hideFloats = scrollTop > 220 && scrollTop > prevY + 8;
+        if (hideFloats !== window.__cjFloatsHidden) {
+          window.__cjFloatsHidden = hideFloats;
+          document.documentElement.classList.toggle('cj-scroll-down', hideFloats);
+        }
+
+        const waifu = window.__cjWaifuEl;
+        if (waifu) {
+          if (waifu.__cjHovered) {
+            waifu.classList.remove('waifu-reading');
+          } else if (scrollTop < 120 || scrollTop < prevY - 8) {
+            waifu.classList.remove('waifu-reading');
+          } else if (scrollTop > prevY + 8 && scrollTop > 160) {
+            waifu.classList.add('waifu-reading');
+          }
+        }
+
+      }
+
       // 文档高度用缓存:load / resize / 字体就绪 / 换页后都会刷新,
       // ResizeObserver 也会兜住图片撑高;不再每次滚动同步读 scrollHeight。
       // 只在接近底部(<150px)时读一次真实值,保证页脚触底判定准确。
       let maxScroll = (window.__cjScrollHeight || document.documentElement.scrollHeight) - window.innerHeight;
-      if (maxScroll - scrollTop <= 150 || scrollTop <= 0) {
+      if (maxScroll - scrollTop <= 150) {
         const realMax = document.documentElement.scrollHeight - window.innerHeight;
         if (realMax !== maxScroll) {
           window.__cjScrollHeight = realMax + window.innerHeight;
@@ -1873,15 +1934,19 @@
       }
 
       // Dynamic Island 导航栏:进入用 100px、退出用 40px,避免阈值附近反复抖动
-      const navbar = document.querySelector('.navbar-container');
+      const navbar = navbarEl && navbarEl.isConnected
+        ? navbarEl
+        : (navbarEl = document.querySelector('.navbar-container'));
       if (navbar) {
         const scrolled = navbar.classList.contains('scrolled');
         const compact = scrolled ? scrollTop > 40 : scrollTop > 100;
-        navbar.classList.toggle('scrolled', compact);
+        if (compact !== scrolled) navbar.classList.toggle('scrolled', compact);
       }
 
       // 页脚:接近底部展开;离开 80px 以上才收回,避免滚动时反复开合
-      const footer = document.querySelector('footer.footer');
+      const footer = footerEl && footerEl.isConnected
+        ? footerEl
+        : (footerEl = document.querySelector('footer.footer'));
       if (footer) {
         const remaining = maxScroll - scrollTop;
         const atBottom = footer.classList.contains('at-bottom');
@@ -1893,10 +1958,9 @@
         const lastY = Number.isFinite(window.__cjFooterLastY) ? window.__cjFooterLastY : scrollTop;
         const nextAtBottom = footer.classList.contains('at-bottom');
         const goingUp = scrollTop < lastY - 4;
-        if (!nextAtBottom && maxScroll > 160 && !goingUp) {
-          footer.classList.add('footer-hidden');
-        } else {
-          footer.classList.remove('footer-hidden');
+        const shouldHideFooter = !nextAtBottom && maxScroll > 160 && !goingUp;
+        if (shouldHideFooter !== footer.classList.contains('footer-hidden')) {
+          footer.classList.toggle('footer-hidden', shouldHideFooter);
         }
         window.__cjFooterLastY = scrollTop;
       }
@@ -1908,24 +1972,9 @@
     let lastScrollAt = 0;
     window.addEventListener('scroll', () => {
       lastScrollAt = performance.now();
-      // 同步暂停,不等 rAF:scrollend 恢复后新的 scroll 会再次暂停
+      // 暂停 Live2D 不需要等 rAF,而且必须早于 scrollend 的恢复判定
       const l2d = window.__l2dApp;
-      const waifu = document.querySelector('#waifu');
-      const y = window.scrollY;
-      const prevY = Number.isFinite(window.__cjLastScrollY) ? window.__cjLastScrollY : 0;
-      window.__cjLastScrollY = y;
-      // 移动端浮动按钮/右侧工具在向下阅读时收起,避免盖住正文
-      document.documentElement.classList.toggle('cj-scroll-down', y > 220 && y > prevY + 8);
-      if (waifu) {
-        if (waifu.matches(':hover')) {
-          waifu.classList.remove('waifu-reading');
-        } else if (y < 120 || y < prevY - 8) {
-          waifu.classList.remove('waifu-reading');
-        } else if (y > prevY + 8 && y > 160) {
-          // 向下阅读时让开正文;向上滚或回顶部再出现
-          waifu.classList.add('waifu-reading');
-        }
-      }
+      const waifu = window.__cjWaifuEl;
       if (l2d && waifu && waifu.classList.contains('waifu-active')) {
         if (!window.__l2dPaused) {
           window.__l2dPaused = true;
@@ -1936,8 +1985,8 @@
       }
       if (!ticking) {
         requestAnimationFrame(() => {
-          update(true);
           ticking = false;
+          update(true);
         });
         ticking = true;
       }
@@ -1947,9 +1996,14 @@
     document.addEventListener('scrollend', () => {
       if (performance.now() - lastScrollAt > 180) resumeLive2D();
     }, { passive: true });
-    // 首屏先读一次真实高度,避免把上一页的缓存高度当成本页
-    window.__cjScrollHeight = document.documentElement.scrollHeight;
-    update();
+    // 首屏不要在 init 里同步读 scrollHeight:这会把整页布局(首页约 200ms)
+    // 压在 DOMContentLoaded/首帧的任务里。等首屏渲染完再量。
+    const firstMeasure = () => {
+      window.__cjScrollHeight = document.documentElement.scrollHeight;
+      update();
+    };
+    if ('requestIdleCallback' in window) requestIdleCallback(firstMeasure, { timeout: 900 });
+    else setTimeout(firstMeasure, 300);
 
     // 图片/画廊加载后文档高度会变;重新算一次,避免短页面的页脚被误收起
     if ('ResizeObserver' in window && !window.__cjFooterObserver) {
@@ -1970,11 +2024,14 @@
       swup.__cjFooterHook = true;
       swup.hooks.on('page:view', () => {
         window.__cjFooterLastY = 0;
-        window.__cjScrollHeight = document.documentElement.scrollHeight;
-        requestAnimationFrame(() => {
+        // 换页后立刻读 scrollHeight 会强制布局,把 Swup 的替换任务拖长。
+        // 等页面空闲后再量高度并更新页脚;这期间页脚保持上一页的状态。
+        const refreshFooter = () => {
+          window.__cjScrollHeight = document.documentElement.scrollHeight;
           update();
-          setTimeout(update, 300);
-        });
+        };
+        if ('requestIdleCallback' in window) requestIdleCallback(refreshFooter, { timeout: 900 });
+        else setTimeout(refreshFooter, 350);
       });
     };
     if (window.swup && window.swup.hooks) attachFooterNav(window.swup);
@@ -2017,7 +2074,8 @@
     };
     if (window.swup && window.swup.hooks) attach(window.swup);
     else window.addEventListener('redefine:swup:ready', e => attach(e.detail && e.detail.swup), { once: true });
-    schedule();
+    if ('requestIdleCallback' in window) requestIdleCallback(updateScrollHeightCache, { timeout: 900 });
+    else setTimeout(updateScrollHeightCache, 300);
   }
 
   // ============================
@@ -2030,34 +2088,44 @@
     window.__cjPostSidebar = true;
     const RING = 2 * Math.PI * 20;
     let raf = 0;
+    let fillEl = null;
+    let numEl = null;
+    let countEl = null;
+    let barEl = null;
+    let links = [];
+
+    const refresh = () => {
+      fillEl = document.querySelector('.post-side-ring-fill');
+      numEl = document.querySelector('.post-side-progress-num');
+      countEl = document.querySelector('.post-toc-count');
+      barEl = document.querySelector('.post-toc-progress span');
+      links = [...document.querySelectorAll('.post-toc a.nav-link')];
+    };
+
     const update = () => {
       raf = 0;
-      const fill = document.querySelector('.post-side-ring-fill');
-      const num = document.querySelector('.post-side-progress-num');
-      if (fill) {
+      if (fillEl) {
         const docH = window.__cjScrollHeight || document.documentElement.scrollHeight;
         const max = docH - window.innerHeight;
         const percent = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
-        fill.style.strokeDashoffset = (RING * (1 - percent)).toFixed(2);
-        if (num) num.textContent = String(Math.round(percent * 100));
+        fillEl.style.strokeDashoffset = (RING * (1 - percent)).toFixed(2);
+        if (numEl) numEl.textContent = String(Math.round(percent * 100));
       }
-      const count = document.querySelector('.post-toc-count');
-      const bar = document.querySelector('.post-toc-progress span');
-      if (count || bar) {
-        const links = [...document.querySelectorAll('.post-toc a.nav-link')];
-        const active = document.querySelector('.post-toc a.nav-link.active-current') ||
-          document.querySelector('.post-toc .active-current');
+      if (countEl || barEl) {
+        const active = links.find(link => link.classList.contains('active-current')) ||
+          links.find(link => link.classList.contains('active'));
         const total = links.length;
         const index = active ? links.indexOf(active) : -1;
         const current = total ? Math.max(1, index + 1) : 0;
-        links.forEach(link => {
+        for (const link of links) {
           if (link === active) link.setAttribute('aria-current', 'location');
           else link.removeAttribute('aria-current');
-        });
-        if (count) count.textContent = total ? `${current}/${total}` : '';
-        if (bar) bar.style.width = total ? `${(current / total * 100).toFixed(1)}%` : '0%';
+        }
+        if (countEl) countEl.textContent = total ? `${current}/${total}` : '';
+        if (barEl) barEl.style.width = total ? `${(current / total * 100).toFixed(1)}%` : '0%';
       }
     };
+
     const schedule = () => { if (!raf) raf = requestAnimationFrame(update); };
     window.addEventListener('scroll', schedule, { passive: true });
     window.addEventListener('resize', schedule, { passive: true });
@@ -2070,11 +2138,16 @@
     const attach = swup => {
       if (!swup || !swup.hooks || swup.__cjSidebarHook) return;
       swup.__cjSidebarHook = true;
-      swup.hooks.on('page:view', () => requestAnimationFrame(update));
+      swup.hooks.on('page:view', () => {
+        const run = () => { refresh(); update(); };
+        if ('requestIdleCallback' in window) requestIdleCallback(run, { timeout: 500 });
+        else setTimeout(run, 120);
+      });
     };
     if (window.swup && window.swup.hooks) attach(window.swup);
     else window.addEventListener('redefine:swup:ready', e => attach(e.detail && e.detail.swup), { once: true });
-    schedule();
+    refresh();
+    setTimeout(schedule, 250);
   }
 
   // ============================
@@ -3472,13 +3545,13 @@
     initSeason();
     initThemeSwitcher();
     syncBannerTheme();
-    initReveal();
-    // 表格包裹和标题锚点不需要赶在内容替换的同一个任务里完成:
-    // 延后到入场动画开始后再改 DOM,避免把 click→content:replace 拖长。
+    // 表格、锚点、滚动入场都不赶在首屏/换页的同一个任务里完成:
+    // 先让内容可见,再延后改 DOM 和读位置,避免强制布局把首屏拖长。
     requestAnimationFrame(() => {
       setTimeout(() => {
         initTableScroll();
         initHeadingAnchors();
+        initReveal();
         initCodeFullscreen();
         initCodeButtonsA11y();
         initCodeLangBadges();

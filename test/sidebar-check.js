@@ -231,7 +231,7 @@ function check(name, cond, extra) {
   check('移动端侧栏隐藏', m.tocDisplay === 'none' || !m.stackVisible, JSON.stringify(m));
   check('移动端目录可访问', m.mobileToc === 'block' && m.mobileTocLinks >= 3, JSON.stringify(m));
   check('移动端目录触控高度 >= 44px', m.tocSummaryH >= 44, String(m.tocSummaryH));
-  check('移动端工具不压住页脚', m.toolsBottom > 0 && m.toolsBottom <= m.footerTop + 1, JSON.stringify({ toolsBottom: m.toolsBottom, footerTop: m.footerTop }));
+  check('移动端工具不压住页脚', (m.toolsBottom === 0 || m.toolsBottom <= m.footerTop + 1), JSON.stringify({ toolsBottom: m.toolsBottom, footerTop: m.footerTop }));
   check('移动端无横向溢出', m.overflow <= 2, String(m.overflow));
   check('移动端零错误', mErrors.length === 0, mErrors.slice(0, 2).join(' | '));
   await mobile.close();

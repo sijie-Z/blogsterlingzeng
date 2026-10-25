@@ -412,9 +412,15 @@ html.dark .navbar-container.scrolled .navbar-content {
 
 .home-hero-cta-secondary {
   border: 1px solid rgba(255, 255, 255, 0.4);
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.18);
   color: #fff !important;
-  backdrop-filter: blur(8px);
+}
+
+/* 主题会在滚过半屏后给横幅加 blur(15px)。全屏滤镜在弱 GPU / 软件渲染下
+   会把滚动压到 30-40fps；这里保留清晰横幅，改用文字阴影保证可读性。 */
+.home-banner-background {
+  filter: none !important;
+  -webkit-filter: none !important;
 }
 
 @media (max-width: 640px) {
@@ -433,8 +439,9 @@ html.dark .navbar-container.scrolled .navbar-content {
 /* ========================================
    ARTICLE CARDS — Glass Morphism
    ======================================== */
-.home-article-item {
-  background: var(--bg-card) !important;
+.home-article-item,
+.home-content-container .home-article-list .home-article-item {
+  background: var(--bg-card-solid) !important;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-xl) !important;
   overflow: hidden;
@@ -576,10 +583,9 @@ html.dark .navbar-container.scrolled .navbar-content {
 /* ========================================
    SIDEBAR — Glass Panel
    ======================================== */
-.sidebar-content {
-  background: var(--bg-card) !important;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+.sidebar-content,
+.home-sidebar-container .sidebar-content {
+  background: var(--bg-card-solid) !important;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-xl) !important;
   padding: 1.5rem !important;
@@ -636,10 +642,9 @@ html.dark .navbar-container.scrolled .navbar-content {
 }
 
 /* Sidebar links */
-.sidebar-links {
-  background: var(--bg-card) !important;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+.sidebar-links,
+.home-sidebar-container .sidebar-links {
+  background: var(--bg-card-solid) !important;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-xl) !important;
   overflow: hidden;
@@ -855,9 +860,7 @@ html.dark .article-content blockquote {
    BACK TO TOP
    ======================================== */
 .tool-scroll-to-top {
-  background: var(--bg-card) !important;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: var(--bg-card-solid) !important;
   box-shadow: var(--shadow-md) !important;
   border-radius: var(--radius-md) !important;
   border: 1px solid var(--border-color);
@@ -897,9 +900,7 @@ a.page-number.current {
    ======================================== */
 .search-popup {
   border-radius: var(--radius-xl) !important;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  background: var(--bg-card) !important;
+  background: var(--bg-card-solid) !important;
   border: 1px solid var(--border-color);
 }
 
@@ -936,9 +937,7 @@ footer.footer .info-container {
   max-width: 92vw;
   padding: 8px 24px !important;
   border-radius: 18px 18px 0 0;
-  background: rgba(255, 255, 255, 0.88) !important;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(255, 255, 255, 0.96) !important;
   border: 1px solid rgba(148, 163, 184, 0.1);
   border-bottom: none;
   box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.06);
@@ -972,7 +971,7 @@ footer.footer.footer-hidden:not(.at-bottom) .info-container {
 }
 
 html.dark footer.footer .info-container {
-  background: rgba(15, 23, 42, 0.75) !important;
+  background: rgba(15, 23, 42, 0.94) !important;
   border-color: rgba(71, 85, 105, 0.15);
   box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.3);
 }
@@ -4705,6 +4704,64 @@ html[data-read-size="l"] .article-content.markdown-body {
   border-color: color-mix(in srgb, var(--primary-color) 34%, var(--border-color));
 }
 
+/* 移动端把阅读设置/引用放进文章统计行,不再用固定浮动按钮压住正文 */
+.read-action-btn,
+.cite-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.read-action-btn:hover,
+.cite-action-btn:hover {
+  color: var(--primary-color);
+  border-color: color-mix(in srgb, var(--primary-color) 34%, var(--border-color));
+}
+
+@media (min-width: 881px) {
+  .read-action-btn,
+  .cite-action-btn {
+    display: none;
+  }
+}
+
+@media (max-width: 880px) {
+  /* 移动端没有安全的页边,右侧工具条总会压住正文/卡片;
+     字号和主题在导航与文章统计行里已有入口,这里直接隐藏。 */
+  .right-side-tools-container {
+    display: none !important;
+  }
+
+  .post-page-stats {
+    flex-wrap: wrap;
+    gap: 8px 10px;
+  }
+
+  .post-page-stats .stat-item,
+  .post-page-stats .like-btn,
+  .read-action-btn,
+  .cite-action-btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .read-action-btn,
+  .cite-action-btn {
+    padding: 0 9px;
+    font-size: 0.78rem;
+  }
+}
+
 @media (max-width: 880px) {
   .read-toggle,
   .mobile-cite {
@@ -4999,7 +5056,7 @@ html.cj-focus .focus-exit {
   padding: 15px 18px;
   border: 1px solid var(--border-color);
   border-radius: 14px;
-  background: var(--bg-card);
+  background: var(--bg-card-solid);
   text-decoration: none !important;
   background-image: none !important;
   transition: transform 0.16s cubic-bezier(0.25, 0.46, 0.45, 0.94), border-color 0.16s ease, box-shadow 0.16s ease;
@@ -5654,6 +5711,25 @@ html.dark .post-series-item-title:hover {
   text-align: center;
 }
 
+/* 封面标题原来用 backdrop-blur 的半透明面板,既依赖模糊又让灰字压在
+   彩色封面上。改成实色卡片,对比度和滚动性能都更稳。 */
+.article-title-cover {
+  background: var(--bg-card-solid) !important;
+  color: var(--text-primary) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-color: var(--border-color) !important;
+  box-shadow: var(--shadow-md);
+}
+
+@media (max-width: 720px) {
+  /* 封面已经有大标题,面包屑不再重复当前文章名 */
+  .cj-breadcrumbs > [aria-current="page"],
+  .cj-breadcrumbs > .cj-breadcrumbs-sep:has(+ [aria-current="page"]) {
+    display: none;
+  }
+}
+
 @media (max-width: 480px) {
   html body .article-title-cover {
     margin-inline: 0.75rem !important;
@@ -5702,6 +5778,13 @@ html.dark .post-series-item-title:hover {
   width: 20px;
   height: 20px;
   color: var(--primary-color);
+}
+
+/* 首页左侧有固定侧栏,宠物入口挪到右侧,避免压住侧栏内容 */
+body:has(.home-sidebar-container) .pet-toggle {
+  left: auto;
+  right: 24px;
+  bottom: 150px;
 }
 
 .pet-toggle:hover {
@@ -6217,7 +6300,8 @@ footer.footer.at-bottom .footer-utility {
   .tagcloud-content .tag-list a,
   .all-category-list-item,
   .photos-static-item,
-  .photos-intro {
+  .photos-intro,
+  .article-title-cover {
     background: #fff !important;
     color: #111827 !important;
     border-color: #d1d5db !important;

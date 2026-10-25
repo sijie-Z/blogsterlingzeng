@@ -319,7 +319,7 @@ footer:
 inject:
   enable: true
   head:
-    - <link rel="stylesheet" href="/css/custom.css?v=20261025x">
+    - <link rel="stylesheet" href="/css/custom.css?v=20261026m">
     - <link rel="stylesheet" href="/css/series.css?v=20261025g">
     - <script>try{var s=localStorage.getItem('cj-read-size');if(s==='s'||s==='l')document.documentElement.setAttribute('data-read-size',s);if(localStorage.getItem('cj-focus')==='on'&&document.documentElement.hasAttribute('data-cj-post'))document.documentElement.classList.add('cj-focus');}catch(e){}</script>
   footer:
@@ -329,7 +329,7 @@ inject:
         <a href="https://github.com/sijie-Z" title="GitHub" aria-label="GitHub" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-github" aria-hidden="true"></i></a>
         <a href="mailto:1683039482@qq.com" title="邮件联系" aria-label="邮件联系"><i class="fa-regular fa-envelope" aria-hidden="true"></i></a>
       </div>
-    - <script src="/js/custom.js?v=20261025o" data-swup-reload-script></script>
+    - <script src="/js/custom.js?v=20261026k" data-swup-reload-script></script>
 # INJECT <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
 
 

@@ -49,6 +49,21 @@ function check(name, cond, extra) {
   check('全局滚动交给 Swup(auto)', cfg.scrollBehavior === 'auto', cfg.scrollBehavior);
   check('文章卡片不再做 backdrop 模糊', cfg.cardBackdrop === 'none', cfg.cardBackdrop);
   check('reveal 不常驻 will-change', cfg.revealWillChange === 'auto', cfg.revealWillChange);
+  const blur = await page.evaluate(() => {
+    const read = sel => {
+      const el = document.querySelector(sel);
+      return el ? getComputedStyle(el).backdropFilter || getComputedStyle(el).webkitBackdropFilter : 'missing';
+    };
+    const banner = document.querySelector('.home-banner-background');
+    return {
+      banner: banner ? getComputedStyle(banner).filter : 'missing',
+      sidebar: read('.sidebar-content'),
+      scrollTop: read('.tool-scroll-to-top'),
+      footer: read('footer.footer .info-container'),
+    };
+  });
+  check('首页横幅不再加全屏 blur', blur.banner === 'none', blur.banner);
+  check('滚动可见面板不再用 backdrop-filter', [blur.sidebar, blur.scrollTop, blur.footer].every(v => v === 'none'), JSON.stringify(blur));
   check('Swup 换页时关闭 pageEnter 双重动画', cfg.pageEnter === 'none', cfg.pageEnter);
   check('Swup 滑动位移收小到 16px', cfg.slideTranslate === '16px', cfg.slideTranslate);
   check('Swup 滑动时长收小', cfg.slideDuration === '0.32s', cfg.slideDuration);

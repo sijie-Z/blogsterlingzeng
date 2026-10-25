@@ -84,7 +84,7 @@
 | 归档页 | 构建期生成页头统计、写作热力图、系列入口与每条文章的分类/阅读时间；单页展示全部文章 | `scripts/archive-heatmap.js` |
 | 标签 / 分类 | 引导语在列表上方，按文章数降序排列；标签去掉按权重模糊，分类整卡可点 | `scripts/taxonomy-pages.js` |
 | 站点视觉 | `/photos/` 展示站点横幅与主题视觉；补导语、加载提示与 `<noscript>` 静态图集 | `scripts/photos-page.js` |
-| 阅读时不挡正文 | 长页面自动收起常驻页脚；移动端向下阅读时 Aa、引用和右侧工具栏淡出 | `source/js/custom.js` |
+| 阅读时不挡正文 | 长页面自动收起常驻页脚；移动端隐藏右侧工具条，Aa / 引用内联到文章统计行 | `source/js/custom.js` |
 | SEO | 每篇文章 BlogPosting + BreadcrumbList JSON-LD、canonical 保留大小写、每篇独立描述 | `scripts/seo-jsonld.js` |
 | 代码块 | 全屏专注查看（Esc / 点背景退出），保留复制与折叠；行号可复制 `#cb1-L3` 永久链接 | `source/js/custom.js` |
 
@@ -129,7 +129,8 @@
 | SPA 整次导航 | **~134ms** | Swup 只替换 `#swup`，滚动即时归零 |
 | Live2D 主纹理 | **1.7MB → 308KB** | 2048 PNG 重采样为 1024 WebP |
 | 手机首屏横幅 | **63KB → 35KB**（亮色） | 960/1280/1920 srcset + DPR 选图 |
-| 自动化浏览器检查 | **495 项** | 跳转、侧栏、系列、阅读记忆、归档、标签分类、站点视觉、页脚收起、平滑度、资源、内容、边注/预览/阅读设置/引用/反向链接/快捷键/图片平移/文章导航/简历 PDF |
+| 首页滚动帧间隔（软件渲染） | **p50 25ms → 8ms，p95 50ms → 25ms** | 移除全屏 blur 和滚动面上的 backdrop-filter；滚动回调只在状态变化时改 class |
+| 自动化浏览器检查 | **500 项** | 跳转、侧栏、系列、阅读记忆、归档、标签分类、站点视觉、页脚收起、平滑度、资源、内容、边注/预览/阅读设置/引用/反向链接/快捷键/图片平移/文章导航/简历 PDF |
 
 **构建期优先**：系列页、写作热力图、文章侧栏、JSON-LD、Markdown 原文、llms.txt 全部在 `hexo generate` 阶段生成，运行时不发额外请求、不引入布局抖动。主题通过 `scripts/theme-patch.js` 做可审计的最小补丁（Swup、TOC、搜索防抖、Giscus 守卫等），补丁可重复执行。
 
@@ -192,7 +193,7 @@ npm run serve               # http://127.0.0.1:4140
 npm test                    # 34 项端到端检查(含 8 个次级页面、Live2D 显式召唤)
 npm run test:features       # 100 项边注 / 内链预览 / 公式复制 / 脚注预览 / 阅读设置 / 引用 / 反向链接 / 快捷键 / 图片平移 / 文章导航 / 简历 PDF
 npm run test:l2d            # Live2D 加载诊断(模型 / Core / 404)
-npm run test:smooth         # 26 项滚动与动效平滑度回归
+npm run test:smooth         # 28 项滚动与动效平滑度回归
 npm run test:content        # 文章 front matter / 站内链接 / 图片 / OG 卡 / 文风检查
 npm run test:links          # 构建产物内链检查（99 个 HTML）
 npm run test:transitions    # 49 项 SPA 跳转 / 连点 / 前后退 / 搜索焦点 / 路由播报 / 页脚收起
@@ -203,7 +204,7 @@ npm run test:search         # 20 项搜索 combobox / 方向键 / Enter / 空态
 npm run test:a11y           # 68 项无障碍:名称 / alt / 列表语义 / 标题 / 地标 / 脚注
 npm run test:resume         # 7 项阅读位置记忆与“继续阅读”
 npm run test:archive        # 19 项归档页头/单页列表/旧分页跳转/热力图
-npm run test:pages          # 29 项标签分类排序/说说日期/站点视觉/页脚与浮动控件
+npm run test:pages          # 32 项标签分类排序/说说日期/站点视觉/页脚与浮动控件
 npm run profile:nav         # 第一次跳转的 CPU 采样诊断
 npm run perf                # 滚动性能探针(帧间隔 / 长任务 / 布局)
 npm run test:vitals         # CLS / LCP 与最大位移来源
