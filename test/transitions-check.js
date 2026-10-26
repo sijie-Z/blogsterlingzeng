@@ -214,6 +214,30 @@ async function waitIdle(page, timeout = 8000) {
     const season = await page.evaluate(() => document.documentElement.dataset.season);
     check('切换太空站完成', season === 'space', '实际 ' + season);
   }
+  await page.click('.nb-theme-btn');
+  await page.waitForFunction(() => document.querySelector('.nb-dropdown')?.classList.contains('show'), { timeout: 3000 }).catch(() => {});
+  await page.keyboard.press('Escape');
+  await sleep(250);
+  const seasonEsc = await page.evaluate(() => ({
+    show: document.querySelector('.nb-dropdown')?.classList.contains('show') || false,
+    expanded: document.querySelector('.nb-theme-btn')?.getAttribute('aria-expanded'),
+    focus: document.activeElement?.classList.contains('nb-theme-btn') || false,
+  }));
+  check('季节菜单 Esc 关闭并归还焦点', !seasonEsc.show && seasonEsc.expanded === 'false' && seasonEsc.focus, JSON.stringify(seasonEsc));
+  await page.click('.nb-timer-btn');
+  await page.waitForFunction(() => document.querySelector('.nb-timer-panel')?.classList.contains('show'), { timeout: 3000 }).catch(() => {});
+  await page.click('#nbStart');
+  const timerPauseFocus = await page.evaluate(() => document.activeElement?.id || '');
+  await page.click('#nbPause');
+  const timerStartFocus = await page.evaluate(() => document.activeElement?.id || '');
+  check('计时器开始暂停切换不丢焦点', timerPauseFocus === 'nbPause' && timerStartFocus === 'nbStart', JSON.stringify({ timerPauseFocus, timerStartFocus }));
+  await page.keyboard.press('Escape');
+  await sleep(250);
+  const timerEsc = await page.evaluate(() => ({
+    show: document.querySelector('.nb-timer-panel')?.classList.contains('show') || false,
+    focus: document.activeElement?.classList.contains('nb-timer-btn') || false,
+  }));
+  check('计时器 Esc 关闭并归还焦点', !timerEsc.show && timerEsc.focus, JSON.stringify(timerEsc));
 
   console.log('=== 5. 搜索弹层 ===');
   const searchStart = Date.now();

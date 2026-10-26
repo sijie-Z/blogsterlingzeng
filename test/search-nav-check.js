@@ -232,7 +232,7 @@ async function typeQuery(page, text) {
   console.log('=== 8. 后退恢复搜索现场 ===');
   const savedSearchScroll = await page.evaluate(() => {
     const result = document.querySelector('#search-result');
-    result.scrollTop = Math.min(420, result.scrollHeight);
+    result.scrollTop = Math.min(850, result.scrollHeight);
     const top = result.scrollTop;
     document.querySelector('#search-result li[data-cj-href]')?.click();
     return top;
@@ -258,6 +258,19 @@ async function typeQuery(page, text) {
   }));
   check('后退恢复关键词和结果列表', restoredSearch && restoredState.path === '/' && restoredState.query === 'RAG' && restoredState.count > 0, JSON.stringify(restoredState));
   check('后退恢复结果滚动位置', Math.abs(restoredState.scrollTop - savedSearchScroll) < 60, JSON.stringify({ savedSearchScroll, restoredState }));
+  await page.keyboard.press('Escape');
+  await sleep(300);
+  await page.evaluate(() => window.swup.navigate('/about/'));
+  await page.waitForFunction(() => location.pathname === '/about/', { timeout: 10000 }).catch(() => {});
+  await sleep(500);
+  await page.goBack();
+  await page.waitForFunction(() => location.pathname === '/', { timeout: 10000 }).catch(() => {});
+  await sleep(900);
+  const staleSearch = await page.evaluate(() => ({
+    active: !!document.querySelector('.search-pop-overlay.active'),
+    saved: !!(history.state && history.state.cjSearch),
+  }));
+  check('手动关闭后普通后退不重开旧搜索', !staleSearch.active && !staleSearch.saved, JSON.stringify(staleSearch));
 
   console.log('=== 9. 首次输入与索引加载竞态 ===');
   const race = await browser.newPage();
@@ -281,6 +294,24 @@ async function typeQuery(page, text) {
   ).then(() => true).catch(() => false);
   check('索引返回后自动渲染当前输入', raceReady);
   await race.close();
+
+  const navSearch = await browser.newPage();
+  await navSearch.setViewport({ width: 1440, height: 900 });
+  await navSearch.goto(BASE, { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(700);
+  await openSearch(navSearch);
+  await navSearch.evaluate(() => window.swup?.navigate('/about/'));
+  await navSearch.waitForFunction(() => location.pathname === '/about/', { timeout: 10000 }).catch(() => {});
+  await sleep(700);
+  const navInert = await navSearch.evaluate(() => ({
+    active: !!document.querySelector('.search-pop-overlay.active'),
+    overflow: getComputedStyle(document.body).overflow,
+    leaked: [...document.querySelectorAll('[inert]')]
+      .filter(el => !el.classList.contains('navbar-drawer'))
+      .map(el => el.className || el.id || el.tagName),
+  }));
+  check('搜索打开时换页清理全部 inert', !navInert.active && navInert.overflow !== 'hidden' && navInert.leaked.length === 0, JSON.stringify(navInert));
+  await navSearch.close();
 
   console.log('=== 10. 页面错误 ===');
   check('零页面错误', errors.length === 0, errors.slice(0, 2).join(' | '));

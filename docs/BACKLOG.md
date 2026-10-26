@@ -28,12 +28,13 @@
 - **页脚与标记**：长页面自动收起常驻页脚，向上滚或触底展开；短页面保持可见；`data-cj-post` 只写在文章页，避免非文章页误用专注模式。
 - **滚动卡顿第二轮**：首页横幅滚过半屏后的全屏 `blur(15px)`、侧栏/回到顶部/页脚的 `backdrop-filter`、主题每个 scroll 事件的 `navbar-shrink` / 工具条 class 切换，是软件渲染下 40fps 的主因。改为清晰横幅 + 实色面板 + 状态变化才改 class，首页 p50 25ms→8ms、p95 50ms→25ms。首屏 init 的同步 `scrollHeight` 读取、SPA 换页后的焦点/侧栏/高度读取也延后到 idle。
 - **移动端遮挡**：隐藏右侧工具条，阅读设置/引用改成文章统计行里的内联按钮；文章封面标题改为实色卡片，移动端面包屑不再重复标题。
-- **缓存**：主题 `main.js` 与被打补丁的模块加 `?v=20261026f`，避免 4 小时 JS 缓存继续用旧滚动逻辑；`custom.js` 同步到 `aa`，`custom.css` 同步到 `x`。
+- **缓存**：主题 `main.js` 与被打补丁的模块加 `?v=20261026f`，避免 4 小时 JS 缓存继续用旧滚动逻辑；`custom.js` 同步到 `ae`，`custom.css` 同步到 `x`。
 - **对抗性修复（2026-10-26）**：隐藏导航在键盘聚焦时重新进入视口；移动抽屉沿祖先链把正文/导航/工具条全部 inert，只保留抽屉和遮罩；`localStorage` 被禁时字号/专注改用 `window.__cjPrefs` 内存副本仍可切换；引用菜单按 Tab 先回到触发按钮，不再跳回 skip link；图片查看器把主题的 `.is-disabled` 同步成原生 `disabled`/`aria-disabled`；giscus iframe 载入前移出 Tab 顺序，load 后恢复；首页缩略图链接退出 Tab 顺序；季节/计时按钮补 `type="button"`。
 - **内容与兜底（2026-10-26）**：原生 `loading="lazy"`/`decoding="async"` 替代主题 `loading.svg` 占位（`articles.lazyload: false` + `scripts/native-images.js`）；照片墙补 `<noscript>` 静态图集和失败提示；搜索索引/画廊加载失败不再永久转圈；相关阅读补前导斜杠；归档年/月页和首页分页补唯一 title/description/og；旧文章与归档分页改纯 HTML canonical 跳转；打印隐藏 skip link、内联阅读/引用按钮和右侧工具条。
 - **第二轮对抗审计（2026-10-26）**：搜索 overlay 的 inert observer 改为按当前节点绑定，关闭时先释放背景再归还焦点（首次加载和 SPA 都生效）；搜索结果去掉 `role=option` 内嵌链接，改用 `data-cj-href` 跳转；移动端设置卡调字号不再关闭卡片，点遮罩关闭会归还焦点；打印首页隐藏横幅/侧栏/缩略图并单列排布，表格/代码强制换行，表头补深色文字；短页面页脚直接静态排布，不再盖住系列归档入口；照片墙在 `main.js`/MiniMasonry 被拦截 4 秒后显示静态图集；`forced-colors` 下站名与 404 数字恢复可见；giscus 被拦截 8.5 秒后显示 GitHub 讨论入口；sitemap 补归档年/月页，分类/标签页 `og:title` 加类型前缀；移动端阅读/引用按钮实测命中区补到 44px。
 - **用户旅程与内容可信度（2026-10-26 第三轮）**：移动抽屉增加非 inert 的真实关闭按钮，并在 SPA/后退时统一清理锁定；首页社交区不再遮挡简历 CTA；首屏补充真实身份与求职方向，侧栏移除无意义的 Lv3。搜索换词回顶部、英文按词边界、完整标题优先、索引返回后主动渲染；后退恢复关键词/结果/滚动位置，同时兼容 Swup 与历史文档恢复。相关阅读渲染后按 Swup 缓存校正后退位置；代码随阅读字号缩放；320px 隐藏次要计时器，页脚提供返回顶部。暗色首屏改为两张真实地址的原生懒加载，只下载可见横幅；友链两张失效头像改为自托管。内容修正二分答案上界、Docker 卷与密码、Grid 区域、闭包释放、React cleanup、NFT 拍卖下溢与 ERC721A 原理；NFT 明示 fork 与贡献边界，MiQroGate 按公开仓库更新为 8 家 23 个产品和路由快照口径，DocMind/MindPilot 的 Reranker 归属统一，裸露 Markdown 纳入 `test:content`。
-- **测试**：新增 `test:pages`（49 项）；`test:archive` 19、`test:transitions` 56、`test:a11y` 73、`test:assets` 51、`test:smooth` 28；浏览器检查合计 538 项，23 篇内容检查，99 个 HTML 内链检查。
+- **历史复核续修（2026-10-26 第四轮）**：搜索后退恢复增加本次渲染时间戳与可滚动条件，避免高度过渡把 850px 钳成 0；手动 Esc/关闭/背景点击才清除恢复标记，普通换页不再被重复观察者误清；搜索打开时换页统一清理 body 级 inert。季节下拉与计时器支持 Esc 关闭并归还焦点，开始/暂停焦点跟随可见按钮，季节选项补 `aria-pressed`；专注阅读焦点移到退出按钮；阅读/边注卡的 skip link 等 body 外背景也完整 inert。
+- **测试**：新增 `test:pages`（52 项）；`test:archive` 19、`test:transitions` 59、`test:a11y` 73、`test:assets` 51、`test:search` 29、`test:smooth` 28；浏览器检查合计 546 项，23 篇内容检查，99 个 HTML 内链检查。
 
 ## 2026-10-23 第一轮（历史记录）
 

@@ -86,6 +86,12 @@
   function setPageInert(on) {
     const swup = document.getElementById('swup');
     if (swup) swup.inert = on;
+    // 阅读设置/边注卡挂在 body 上,#swup 外还有 skip link、宠物和工具入口;
+    // 这些也必须退出可访问树,否则模态打开后仍能 Tab 到背景。
+    document.querySelectorAll(
+      '.skip-link, #route-announcer, .right-side-tools-container, .mouse-follower, ' +
+      '#pet-toggle, #waifu, #focus-exit, #read-toggle, #mobile-cite, .reading-resume'
+    ).forEach(el => { el.inert = on; });
   }
 
   function setSearchBackgroundInert(overlay, on) {
@@ -762,14 +768,21 @@
         return;
       }
       if (e.target.closest('.read-focus-btn')) {
-        setReadPref(READ_FOCUS_KEY, focusPref() ? 'off' : 'on');
+        const enableFocus = !focusPref();
+        setReadPref(READ_FOCUS_KEY, enableFocus ? 'on' : 'off');
         applyReadingPrefs();
         closeReadSheet(false);
+        const next = enableFocus
+          ? document.getElementById('focus-exit')
+          : document.getElementById('read-toggle');
+        if (next) next.focus({ preventScroll: true });
         return;
       }
       if (e.target.closest('#focus-exit')) {
         setReadPref(READ_FOCUS_KEY, 'off');
         applyReadingPrefs();
+        const toggle = document.getElementById('read-toggle');
+        if (toggle) toggle.focus({ preventScroll: true });
         return;
       }
       if (e.target.closest('#read-toggle')) {
@@ -1344,6 +1357,7 @@
       swup.__cjNavPause = true;
       swup.hooks.on('visit:start', () => {
         resetImageViewerState();
+        resetSearchStateForNav();
         closeDrawerForNav();
         swup.__cjAnnounceNext = true;
         swup.__cjFocusNext = !window.__cjPointerNav;
@@ -1587,17 +1601,24 @@
   // 搜索弹层关闭后把焦点还给触发按钮;MutationObserver 负责即时恢复
   function restoreSearchFocus() {
     if (document.querySelector('.search-pop-overlay.active')) return;
+    // 即使旧触发按钮已随换页移除,也必须先释放 body 级 inert。
+    setSearchBackgroundInert(document.querySelector('.search-pop-overlay'), false);
     const trigger = window.__cjSearchTrigger;
     if (!trigger || !trigger.isConnected) {
       window.__cjSearchTrigger = null;
       return;
     }
-    // close 的 MutationObserver 可能先于 inert 清理运行;先释放背景再聚焦,
-    // 否则 trigger 仍在 inert 子树里,focus() 会静默失败。
-    setSearchBackgroundInert(document.querySelector('.search-pop-overlay'), false);
     try { trigger.focus({ preventScroll: true }); } catch (err) {}
     // 焦点确实回去后才清空引用,留给 30/200ms 的重试一次机会
     if (document.activeElement === trigger) window.__cjSearchTrigger = null;
+  }
+
+  function resetSearchStateForNav() {
+    const overlay = document.querySelector('.search-pop-overlay');
+    setSearchBackgroundInert(overlay, false);
+    if (overlay) overlay.classList.remove('active');
+    document.body.style.overflow = '';
+    window.__cjSearchTrigger = null;
   }
 
   // 弹层随 Swup 换页重建,每次 init 给当前 overlay 挂关闭观察
@@ -1698,6 +1719,9 @@
     } else {
       input.removeAttribute('aria-activedescendant');
     }
+    // 给当前结果渲染打时间戳,历史恢复必须等这次查询真正渲染完,
+    // 不能把上一组结果误认为已经就绪。
+    if (options.length) result.__cjRenderedAt = performance.now();
     updateSearchStatus(overlay);
   }
 
@@ -1732,6 +1756,15 @@
     revealSearchOption(result, options[index]);
   }
 
+  function clearSearchHistoryState() {
+    if (!history.state || !history.state.cjSearch) return;
+    try {
+      const next = Object.assign({}, history.state);
+      delete next.cjSearch;
+      history.replaceState(next, '', location.href);
+    } catch (_) {}
+  }
+
   function saveSearchHistory(overlay) {
     const input = overlay && overlay.querySelector('.search-input');
     const result = overlay && overlay.querySelector('#search-result');
@@ -1751,6 +1784,7 @@
     if (!saved || !saved.query || saved.path !== location.pathname) return;
     const started = performance.now();
     let filled = false;
+    let filledAt = 0;
     const tick = () => {
       if (saved.path !== location.pathname || performance.now() - started > 4500) return;
       const overlay = document.querySelector('.search-pop-overlay');
@@ -1766,15 +1800,25 @@
       if (!input || !result) { setTimeout(tick, 100); return; }
       if (!filled) {
         filled = true;
+        filledAt = performance.now();
         input.value = saved.query;
         input.dispatchEvent(new Event('input', { bubbles: true }));
+        setTimeout(tick, 100);
+        return;
       }
-      if (result.querySelector('li[data-cj-href]')) {
+      const options = result.querySelector('li[data-cj-href]');
+      if (options && Number(result.__cjRenderedAt) >= filledAt) {
         const top = Number(saved.scrollTop) || 0;
+        if (top === 0) return;
+        // 搜索弹层的高度还在过渡时,scrollHeight === clientHeight,
+        // 写入会被浏览器直接钳成 0;等它真的可滚动再恢复。
+        if (result.scrollHeight <= result.clientHeight + 1) {
+          setTimeout(tick, 60);
+          return;
+        }
         const applyScroll = () => { result.scrollTop = top; };
         applyScroll();
         requestAnimationFrame(applyScroll);
-        setTimeout(applyScroll, 80);
         return;
       }
       setTimeout(tick, 100);
@@ -1987,13 +2031,17 @@
         setTimeout(restoreSearchFocus, 200);
       };
       document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') scheduleRestore();
+        if (e.key === 'Escape') {
+          if (document.querySelector('.search-pop-overlay.active')) clearSearchHistoryState();
+          scheduleRestore();
+        }
       }, true);
       document.addEventListener('keyup', e => {
         if (e.key === 'Escape') scheduleRestore();
       }, true);
       document.addEventListener('click', e => {
         if (!e.target.closest('.popup-btn-close') && !e.target.classList.contains('search-pop-overlay')) return;
+        clearSearchHistoryState();
         setTimeout(restoreSearchFocus, 80);
       }, true);
     }
@@ -3346,7 +3394,9 @@
 
     // 同步导航栏按钮状态
     document.querySelectorAll('.nb-opt[data-season]').forEach(el => {
-      el.classList.toggle('active', el.dataset.season === season);
+      const selected = el.dataset.season === season;
+      el.classList.toggle('active', selected);
+      el.setAttribute('aria-pressed', String(selected));
     });
     const btn = document.querySelector('.nb-theme-btn');
     if (btn) btn.textContent = season === 'auto' ? '🍀' : SEASON_ICONS[season];
@@ -3391,6 +3441,32 @@
     window.__cjTimerInterval = null;
     if (!window.__cjNavControlsGlobal) {
       window.__cjNavControlsGlobal = true;
+      document.addEventListener('keydown', e => {
+        if (e.key !== 'Escape') return;
+        const controls = document.querySelector('.nb-controls');
+        if (!controls) return;
+        const dropdown = controls.querySelector('.nb-dropdown');
+        const themeBtn = controls.querySelector('.nb-theme-btn');
+        if (dropdown && dropdown.classList.contains('show')) {
+          e.preventDefault();
+          dropdown.classList.remove('show');
+          if (themeBtn) {
+            themeBtn.setAttribute('aria-expanded', 'false');
+            themeBtn.focus({ preventScroll: true });
+          }
+          return;
+        }
+        const panel = controls.querySelector('.nb-timer-panel');
+        const timerBtn = controls.querySelector('.nb-timer-btn');
+        if (panel && panel.classList.contains('show')) {
+          e.preventDefault();
+          panel.classList.remove('show');
+          if (timerBtn) {
+            timerBtn.setAttribute('aria-expanded', 'false');
+            timerBtn.focus({ preventScroll: true });
+          }
+        }
+      });
       document.addEventListener('click', e => {
         // 只处理真实用户点击。APlayer 初始化时会自己 click 一次图标,
         // 那种合成事件不应该把刚打开的季节菜单关掉。
@@ -3424,9 +3500,9 @@
     controls.innerHTML = `
       <button type="button" class="nb-theme-btn" title="切换季节主题" aria-label="切换季节主题" aria-haspopup="true" aria-expanded="false">${current === 'auto' ? '🍀' : SEASON_ICONS[current]}</button>
       <div class="nb-dropdown">
-        <button type="button" class="nb-opt${current === 'auto' ? ' active' : ''}" data-season="auto"><span>🍀</span><span>自动(跟随明暗)</span></button>
+        <button type="button" class="nb-opt${current === 'auto' ? ' active' : ''}" data-season="auto" aria-pressed="${current === 'auto'}"><span>🍀</span><span>自动(跟随明暗)</span></button>
         ${Object.keys(SEASON_ICONS).map(s =>
-          `<button type="button" class="nb-opt${current === s ? ' active' : ''}" data-season="${s}"><span>${SEASON_ICONS[s]}</span><span>${SEASON_NAMES[s]}</span></button>`
+          `<button type="button" class="nb-opt${current === s ? ' active' : ''}" data-season="${s}" aria-pressed="${current === s}"><span>${SEASON_ICONS[s]}</span><span>${SEASON_NAMES[s]}</span></button>`
         ).join('')}
         <div class="nb-div"></div>
         <button type="button" class="nb-opt flashlight-opt"><span>🔦</span><span>管中窥豹</span></button>
@@ -3462,12 +3538,14 @@
         if (opt.classList.contains('flashlight-opt')) {
           toggleFlashlight();
           setDropdown(false);
+          themeBtn.focus({ preventScroll: true });
           return;
         }
         storageSet('blog-season', opt.dataset.season);
         const rect = opt.getBoundingClientRect();
         switchTheme(() => applySeason(opt.dataset.season), rect.left + rect.width / 2, rect.top + rect.height / 2);
         setDropdown(false);
+        themeBtn.focus({ preventScroll: true });
       });
     });
 
@@ -3492,11 +3570,13 @@
     startBtn.addEventListener('click', () => {
       window.__cjTimerInterval = setInterval(() => { seconds++; timerTime.textContent = fmt(seconds); }, 1000);
       startBtn.style.display = 'none'; pauseBtn.style.display = '';
+      pauseBtn.focus({ preventScroll: true });
     });
     pauseBtn.addEventListener('click', () => {
       clearInterval(window.__cjTimerInterval);
       window.__cjTimerInterval = null;
       startBtn.style.display = ''; pauseBtn.style.display = 'none';
+      startBtn.focus({ preventScroll: true });
     });
     resetBtn.addEventListener('click', () => {
       clearInterval(window.__cjTimerInterval);

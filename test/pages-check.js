@@ -216,6 +216,20 @@ function check(name, cond, extra) {
 
   await mobile.evaluate(() => window.scrollTo(0, 0));
   await sleep(400);
+  await mobile.evaluate(() => document.querySelector('.mn-ref > button')?.click());
+  await sleep(300);
+  const marginBefore = await mobile.evaluate(() => ({
+    open: document.querySelector('.mn-sheet')?.classList.contains('is-open') || false,
+    swup: document.getElementById('swup')?.inert || false,
+    skip: document.querySelector('.skip-link')?.inert || false,
+  }));
+  await mobile.keyboard.press('Escape');
+  await sleep(250);
+  const marginAfter = await mobile.evaluate(() => ({
+    swup: document.getElementById('swup')?.inert || false,
+    skip: document.querySelector('.skip-link')?.inert || false,
+  }));
+  check('边注卡隔离 body 外背景并在关闭后恢复', marginBefore.open && marginBefore.swup && marginBefore.skip && !marginAfter.swup && !marginAfter.skip, JSON.stringify({ marginBefore, marginAfter }));
   await mobile.click('#read-toggle');
   await sleep(350);
   const inlineRead = await mobile.evaluate(() => document.getElementById('read-sheet')?.classList.contains('is-open') || false);
@@ -236,6 +250,20 @@ function check(name, cond, extra) {
   });
   check('设置卡内调字号不关闭卡片', sheetSize.open && sheetSize.size === 'l', JSON.stringify(sheetSize));
   check('阅读字号同时放大代码', sheetSize.codeBefore > 0 && sheetSize.codeAfter > sheetSize.codeBefore, JSON.stringify(sheetSize));
+  await mobile.click('#read-sheet .read-focus-btn');
+  await sleep(300);
+  const focusOn = await mobile.evaluate(() => ({
+    enabled: document.documentElement.classList.contains('cj-focus'),
+    active: document.activeElement?.id || '',
+  }));
+  check('开启专注后焦点移到退出按钮', focusOn.enabled && focusOn.active === 'focus-exit', JSON.stringify(focusOn));
+  await mobile.click('#focus-exit');
+  await sleep(250);
+  const focusOff = await mobile.evaluate(() => ({
+    enabled: document.documentElement.classList.contains('cj-focus'),
+    active: document.activeElement?.id || '',
+  }));
+  check('退出专注后焦点回到阅读设置', !focusOff.enabled && focusOff.active === 'read-toggle', JSON.stringify(focusOff));
   await mobile.keyboard.press('Escape');
   await sleep(250);
   await mobile.click('#mobile-cite');
