@@ -906,18 +906,28 @@ patchText('layout/pages/post/post-tools.ejs', [
 patchText('layout/pages/home/home-banner.ejs', [
   [
     '<a href="<%- resolvedUrl %>">',
+    '<a class="home-hero-email" href="<%- resolvedUrl %>" aria-label="发送邮件至 <%= resolvedUrl.replace(/^mailto:/, \'\') %>" title="<%= resolvedUrl.replace(/^mailto:/, \'\') %>">',
+    'social email accessible address',
+  ],
+  [
     '<a class="home-hero-email" href="<%- resolvedUrl %>">',
-    'social visible email',
+    '<a class="home-hero-email" href="<%- resolvedUrl %>" aria-label="发送邮件至 <%= resolvedUrl.replace(/^mailto:/, \'\') %>" title="<%= resolvedUrl.replace(/^mailto:/, \'\') %>">',
+    'social compact email existing',
   ],
   [
     '<a href="<%- resolvedUrl %>" aria-label="邮件">',
-    '<a class="home-hero-email" href="<%- resolvedUrl %>">',
-    'social visible email existing',
+    '<a class="home-hero-email" href="<%- resolvedUrl %>" aria-label="发送邮件至 <%= resolvedUrl.replace(/^mailto:/, \'\') %>" title="<%= resolvedUrl.replace(/^mailto:/, \'\') %>">',
+    'social compact email legacy',
   ],
   [
     '<i class="<%= emailIcon %> fa-fw fa-lg"></i>',
+    '<i class="<%= emailIcon %> fa-fw fa-lg" aria-hidden="true"></i>',
+    'social email icon hidden',
+  ],
+  [
     '<i class="<%= emailIcon %> fa-fw" aria-hidden="true"></i><span class="home-hero-email-text"><%= resolvedUrl.replace(/^mailto:/, \'\') %></span>',
-    'social email text',
+    '<i class="<%= emailIcon %> fa-fw fa-lg" aria-hidden="true"></i>',
+    'social remove long email text',
   ],
   [
     '<a target="_blank" href="<%- resolvedUrl %>">',

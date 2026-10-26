@@ -44,7 +44,7 @@ function check(name, cond, extra) {
     check('下拉打开', dropOpen);
     // 点夏季(第 3 个选项:auto/spring/summer)
     const opts = await page.$$('.nb-opt');
-    check('下拉选项数 = 7', opts.length === 7, '实际 ' + opts.length);
+    check('下拉选项数 = 6', opts.length === 6, '实际 ' + opts.length);
     if (opts.length >= 3) {
       // 选项用 DOM click:View Transition 的快照层仍在时,真实坐标点击会被吞掉
       await page.evaluate(() => document.querySelector('.nb-opt[data-season="summer"]').click());
@@ -54,24 +54,15 @@ function check(name, cond, extra) {
       await page.waitForFunction(() => !document.documentElement.hasAttribute('data-theme-switching'), { timeout: 15000 }).catch(() => {});
     }
     const spaceOpt = await page.$('.nb-opt[data-season="space"]');
-    check('太空站选项存在', !!spaceOpt);
-    if (spaceOpt) {
-      await page.evaluate(() => {
-        const dropdown = document.querySelector('.nb-dropdown');
-        if (!dropdown.classList.contains('show')) document.querySelector('.nb-theme-btn').click();
-      });
-      await page.waitForFunction(() => document.querySelector('.nb-dropdown').classList.contains('show'), { timeout: 5000 }).catch(() => {});
-      await new Promise(r => setTimeout(r, 300));
-      await page.evaluate(() => document.querySelector('.nb-opt[data-season="space"]').click());
-      await page.waitForFunction(() => document.documentElement.dataset.season === 'space', { timeout: 15000 }).catch(() => {});
-      await page.waitForFunction(() => !document.documentElement.hasAttribute('data-theme-switching'), { timeout: 15000 }).catch(() => {});
-      const spaceState = await page.evaluate(() => ({
-        season: document.documentElement.dataset.season,
-        imgs: [...document.querySelectorAll('.home-banner-background img')].map(i => i.getAttribute('src')),
-      }));
-      check('选择太空站模式', spaceState.season === 'space', '实际 ' + spaceState.season);
-      check('太空站 banner 生效', spaceState.imgs.some(s => s && s.includes('banner-light.webp')), JSON.stringify(spaceState.imgs));
-    }
+    check('固定太空站模式已从菜单移除', !spaceOpt);
+    await page.evaluate(() => localStorage.setItem('blog-season', 'space'));
+    await page.reload({ waitUntil: 'networkidle2', timeout: 30000 });
+    const fallbackState = await page.evaluate(() => ({
+      season: document.documentElement.dataset.season,
+      imgs: [...document.querySelectorAll('.home-banner-background img')].filter(i => getComputedStyle(i).display !== 'none').map(i => i.currentSrc),
+    }));
+    check('旧 space 设置自动回退默认', fallbackState.season === 'auto', '实际 ' + fallbackState.season);
+    check('回退后默认横幅仍可用', fallbackState.imgs.some(s => s && (s.includes('banner-light') || s.includes('banner-dark'))), JSON.stringify(fallbackState.imgs));
   }
 
   console.log('=== 3. 明暗切换(View Transition) ===');

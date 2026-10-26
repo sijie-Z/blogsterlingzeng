@@ -65,7 +65,7 @@
 | 反向链接 | 构建期扫描正文内链，在目标文章底部列出引用来源与上下文 | `scripts/backlinks.js` |
 | 文章导航 | 文末“更早 / 更新一篇”，head 输出 `rel=prev/next`，支持 `[` `]` 快捷键 | `scripts/post-nav.js` |
 | Live2D 按需加载 | 默认 0 请求，点击“召唤宠物”后才加载约 4MB 模型；滚动只暂停渲染，不再隐藏角色 | `source/js/custom.js` |
-| 背景音乐 | 点击“音乐”才加载播放器，默认暂停且 `preload:none`；再点播放才请求音频，支持键盘和手机 | `_config.redefine.yml` + `source/js/custom.js` |
+| 背景音乐 | 点击“音乐”才加载播放器，默认暂停且 `preload:none`；再点播放才请求音频，可收起为音乐按钮并复用实例，支持键盘和手机 | `_config.redefine.yml` + `source/js/custom.js` |
 | 数学公式 | `$...$` / `$$...$$` 构建期 KaTeX MathML，无客户端 JS/字体 | `scripts/math.js` |
 | 图片集 | `{% gallery %}` 图片网格，复用查看器与懒加载 | `scripts/gallery.js` |
 | 首页入口 | 项目 / 简历 / 系列三张快速卡片，构建期插入 | `scripts/home-start.js` |
@@ -131,7 +131,7 @@
 | Live2D 主纹理 | **1.7MB → 308KB** | 2048 PNG 重采样为 1024 WebP |
 | 手机首屏横幅 | **63KB → 35KB**（亮色） | 960/1280/1920 srcset + DPR 选图 |
 | 首页滚动帧间隔（软件渲染） | **p50 25ms → 8ms，p95 50ms → 25ms** | 移除全屏 blur 和滚动面上的 backdrop-filter；滚动回调只在状态变化时改 class |
-| 自动化浏览器检查 | **602 项** | 跳转、侧栏、系列、阅读记忆、归档、标签分类、站点视觉、页脚收起、平滑度、资源、内容、边注/预览/阅读设置/引用/反向链接/快捷键/图片平移/文章导航/简历 PDF/音乐/宠物/主题连点 |
+| 自动化浏览器检查 | **605 项** | 跳转、侧栏、系列、阅读记忆、归档、标签分类、站点视觉、页脚收起、平滑度、资源、内容、边注/预览/阅读设置/引用/反向链接/快捷键/图片平移/文章导航/简历 PDF/音乐/宠物/主题连点 |
 
 **构建期优先**：系列页、写作热力图、文章侧栏、JSON-LD、Markdown 原文、llms.txt 全部在 `hexo generate` 阶段生成，运行时不发额外请求、不引入布局抖动。主题通过 `scripts/theme-patch.js` 做可审计的最小补丁（Swup、TOC、搜索防抖、Giscus 守卫等），补丁可重复执行。
 
@@ -208,7 +208,7 @@ npm run test:a11y           # 73 项无障碍:名称 / alt / 列表语义 / 标�
 npm run test:resume         # 7 项阅读位置记忆与“继续阅读”
 npm run test:archive        # 19 项归档页头/单页列表/旧分页跳转/热力图
 npm run test:pages          # 52 项标签分类排序/说说日期/站点视觉/页脚与浮动控件/静态 HTML 卫生
-npm run test:polish         # 56 项首屏几何/真实邮箱/音乐/宠物/主题连点/原始主题 fresh-install 与补丁边界
+npm run test:polish         # 59 项紧凑首屏/邮件图标/音乐收起与重开/宠物/默认主题回退/原始主题 fresh-install
 npm run profile:nav         # 第一次跳转的 CPU 采样诊断
 npm run perf                # 滚动性能探针(帧间隔 / 长任务 / 布局)
 npm run test:vitals         # CLS / LCP 与最大位移来源
@@ -262,7 +262,7 @@ blogsterlingzeng/
 │   ├── fontawesome/webfonts/        # FontAwesome 子集字体
 │   └── images/                      # 图片资源
 │       ├── avatar.jpg               # 头像 (75KB)
-│       ├── banner-light.webp        # 太空站横幅（亮色/太空站模式）
+│       ├── banner-light.webp        # 默认浅色横幅（太空站）
 │       ├── banner-dark.webp         # 赛博雨夜横幅（暗色）
 │       ├── banner-spring.webp       # 春季横幅
 │       ├── banner-summer.webp       # 夏季横幅
@@ -616,7 +616,7 @@ $E = mc^2$ 行内公式；$$...$$ 块级公式（右上角可复制 LaTeX）
        dark: /images/你的暗色图.webp
    ```
 3. 推荐尺寸：1920x1080px，文件大小 500KB 以内
-4. 四季与太空站模式在 `source/js/custom.js` 的 `SEASON_BANNERS` 中配置，导航栏 🍀 菜单可切换
+4. 默认与四季横幅在 `source/js/custom.js` 的 `SEASON_BANNERS` 中配置；默认模式随明暗切换，固定 `space` 模式已移除，旧设置自动回退默认
 
 ### 修改头像
 

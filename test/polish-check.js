@@ -113,18 +113,20 @@ function count(text, needle) {
         leftAligned: [description, identity, cta].every(item => Math.abs(item.left - description.left) <= 1),
         emailText: email?.textContent.trim(),
         emailHref: email?.getAttribute('href'),
+        emailLabel: email?.getAttribute('aria-label'),
+        emailTitle: email?.getAttribute('title'),
         arrowTag: document.querySelector('.home-scroll-down')?.tagName,
         arrowName: document.querySelector('.home-scroll-down')?.getAttribute('aria-label'),
       };
     });
-    check('首页直接显示 163 邮箱与 mailto', hero.emailText === PRIMARY && hero.emailHref === `mailto:${PRIMARY}`);
+    check('首屏邮件入口紧凑且保留真实地址', !hero.emailText && hero.emailHref === `mailto:${PRIMARY}` && hero.emailLabel.includes(PRIMARY) && hero.emailTitle === PRIMARY);
     check('底部控件完整位于首屏内', hero.controls.left >= hero.banner.left - 1 && hero.controls.right <= hero.banner.right + 1 && hero.controls.bottom <= hero.banner.bottom + 1, JSON.stringify(hero.controls));
     check('底部控件不遮标题、身份或 CTA', hero.overlaps.every(value => !value), JSON.stringify(hero.overlaps));
     check('标题、身份与 CTA 左边缘一致', hero.leftAligned);
     check('桌面内容容器与首屏底部对齐', Math.abs(hero.content.bottom - hero.banner.bottom) <= 1, JSON.stringify(hero.content));
     check('下箭头是具名原生按钮', hero.arrowTag === 'BUTTON' && !!hero.arrowName);
-    const footerContact = await page.$eval('.footer-contact', element => ({ text: element.textContent, href: element.querySelector('a')?.getAttribute('href') }));
-    check('页脚直接显示同一个优先邮箱', footerContact.text.includes(PRIMARY) && footerContact.href === `mailto:${PRIMARY}`);
+    const footerContact = await page.$eval('.footer-extra-icons a[href^="mailto:"]', element => ({ label: element.getAttribute('aria-label'), title: element.getAttribute('title'), href: element.getAttribute('href') }));
+    check('页脚邮件图标保留真实地址且无重复文字行', footerContact.label.includes(PRIMARY) && footerContact.title === PRIMARY && footerContact.href === `mailto:${PRIMARY}` && !(await page.$('.footer-contact')));
 
     await page.click('.nb-theme-btn');
     await page.waitForFunction(() => document.querySelector('.nb-dropdown').classList.contains('show'));
@@ -134,11 +136,12 @@ function count(text, needle) {
       const rect = document.querySelector('.nb-dropdown').getBoundingClientRect();
       return {
         auto: auto.textContent,
-        space: space.textContent,
+        hasSpace: !!space,
+        optionCount: document.querySelectorAll('.nb-opt').length,
         inside: rect.left >= 0 && rect.right <= innerWidth && rect.top >= 0 && rect.bottom <= innerHeight,
       };
     });
-    check('默认与太空站说明横幅差异', season.auto.includes('浅色太空站，深色雨夜') && season.space.includes('固定横幅') && season.space.includes('界面配色仍随明暗'));
+    check('默认模式保留说明且固定太空站已移除', season.auto.includes('浅色太空站，深色雨夜') && !season.hasSpace && season.optionCount === 6);
     check('季节菜单完整位于视口内', season.inside);
     await page.keyboard.press('Escape');
     check('Escape 关闭菜单并归还焦点', await page.evaluate(() => !document.querySelector('.nb-dropdown').classList.contains('show') && document.activeElement === document.querySelector('.nb-theme-btn')));
@@ -158,10 +161,11 @@ function count(text, needle) {
           overflow: document.documentElement.scrollWidth > innerWidth + 1,
           outside: controls.left < -1 || controls.right > innerWidth + 1 || controls.bottom > banner.bottom + 1,
           overlaps: [description, identity, cta].some(item => overlap(controls, item)),
-          email: document.querySelector('.home-hero-email')?.textContent.trim(),
+          emailText: document.querySelector('.home-hero-email')?.textContent.trim(),
+          emailHref: document.querySelector('.home-hero-email')?.getAttribute('href'),
         };
       });
-      check(`${width}px 首屏无溢出、遮挡且邮箱可见`, !result.overflow && !result.outside && !result.overlaps && result.email === PRIMARY, JSON.stringify(result));
+      check(`${width}px 首屏无溢出、遮挡且邮件入口紧凑`, !result.overflow && !result.outside && !result.overlaps && !result.emailText && result.emailHref === `mailto:${PRIMARY}`, JSON.stringify(result));
     }
 
     console.log('=== 4. 文章侧栏与简历 ===');
@@ -173,17 +177,19 @@ function count(text, needle) {
         const card = document.querySelector('.post-side-author-card').getBoundingClientRect();
         const actions = [...document.querySelectorAll('.post-side-author-links > *')].map(element => ({ rect: element.getBoundingClientRect().toJSON() }));
         const overlap = (a, b) => Math.min(a.right, b.right) - Math.max(a.left, b.left) > 1 && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 1;
-        const email = document.querySelector('.post-side-email a');
+        const email = document.querySelector('.post-side-author-links a[href^="mailto:"]');
         return {
           count: actions.length,
           outside: actions.some(({ rect }) => rect.left < card.left - 1 || rect.right > card.right + 1),
           overlaps: actions.some((item, index) => actions.slice(index + 1).some(other => overlap(item.rect, other.rect))),
-          text: email?.textContent,
+          label: email?.getAttribute('aria-label'),
+          title: email?.getAttribute('title'),
           href: email?.getAttribute('href'),
+          hasEmailLine: !!document.querySelector('.post-side-email'),
         };
       }, PRIMARY);
-      check(`${width}px 侧栏操作不裁切、不重叠`, side.count === 5 && !side.outside && !side.overlaps, JSON.stringify(side));
-      check(`${width}px 侧栏显示优先邮箱`, side.text === PRIMARY && side.href === `mailto:${PRIMARY}`);
+      check(`${width}px 侧栏操作不裁切、不重叠`, side.count === 6 && !side.outside && !side.overlaps, JSON.stringify(side));
+      check(`${width}px 侧栏邮件图标保留真实地址且无重复行`, side.label.includes(PRIMARY) && side.title === PRIMARY && side.href === `mailto:${PRIMARY}` && !side.hasEmailLine);
     }
 
     await page.goto(`${BASE}/resume/`, { waitUntil: 'networkidle2' });
@@ -231,15 +237,30 @@ function count(text, needle) {
     await page.click('.aplayer-pic');
     await page.waitForFunction(() => window.__cjAPlayer.audio.paused, { timeout: 5000 });
     check('再次真实点击暂停且更新无障碍状态', await page.$eval('.aplayer-pic', element => element.getAttribute('aria-label') === '播放背景音乐' && element.getAttribute('aria-pressed') === 'false'));
+    const mediaRequestCount = requests.filter(url => /APlayer\.min\.js|plugins\/aplayer\.js|123\.mp3/.test(url)).length;
+    await page.evaluate(() => { window.__cjPlayerBeforeCollapse = window.__cjAPlayer; });
+    await page.click('#music-collapse');
+    check('播放器可收起为音乐按钮并暂停', await page.evaluate(() => {
+      const root = document.getElementById('aplayer');
+      const launcher = document.getElementById('music-toggle');
+      return root.classList.contains('cj-music-collapsed') && getComputedStyle(root).display === 'none' && window.__cjAPlayer.audio.paused && !!launcher && document.activeElement === launcher;
+    }));
+    await page.click('#music-toggle');
+    await page.waitForFunction(() => !document.getElementById('aplayer').classList.contains('cj-music-collapsed') && !!document.getElementById('music-collapse'));
+    check('重新打开复用实例且不重复下载或自动播放', await page.evaluate(() => {
+      return window.__cjAPlayer === window.__cjPlayerBeforeCollapse && window.__cjAPlayer.audio.paused && !document.getElementById('music-toggle');
+    }) && requests.filter(url => /APlayer\.min\.js|plugins\/aplayer\.js|123\.mp3/.test(url)).length === mediaRequestCount);
     await page.evaluate(() => document.querySelector('a[href="/about"], a[href="/about/"]').click());
     await page.waitForFunction(() => /^\/about\/?$/.test(location.pathname) && !!window.__cjAPlayer);
     check('SPA 后播放器保留且无重复入口', await page.evaluate(() => document.querySelectorAll('#aplayer').length === 1 && !document.getElementById('music-toggle')));
     check('播放器与宠物入口互不遮挡', await page.evaluate(() => {
-      const player = document.querySelector('.aplayer-pic').getBoundingClientRect();
       const pet = document.getElementById('pet-toggle').getBoundingClientRect();
-      const x = Math.min(player.right, pet.right) - Math.max(player.left, pet.left);
-      const y = Math.min(player.bottom, pet.bottom) - Math.max(player.top, pet.top);
-      return x <= 0 || y <= 0;
+      return ['.aplayer-pic', '#music-collapse'].every(selector => {
+        const rect = document.querySelector(selector).getBoundingClientRect();
+        const x = Math.min(rect.right, pet.right) - Math.max(rect.left, pet.left);
+        const y = Math.min(rect.bottom, pet.bottom) - Math.max(rect.top, pet.top);
+        return x <= 0 || y <= 0;
+      });
     }));
 
     await reset(390, 844);
@@ -249,6 +270,12 @@ function count(text, needle) {
       const player = document.getElementById('aplayer');
       const rect = player.template ? player.template.pic.getBoundingClientRect() : document.querySelector('.aplayer-pic').getBoundingClientRect();
       return getComputedStyle(player).display !== 'none' && rect.left >= 0 && rect.right <= innerWidth && rect.top >= 0 && rect.bottom <= innerHeight;
+    }));
+    await page.click('#music-collapse');
+    check('手机也能收起为音乐按钮', await page.evaluate(() => {
+      const launcher = document.getElementById('music-toggle');
+      const rect = launcher.getBoundingClientRect();
+      return getComputedStyle(document.getElementById('aplayer')).display === 'none' && document.activeElement === launcher && rect.left >= 0 && rect.right <= innerWidth && rect.bottom <= innerHeight;
     }));
 
     console.log('=== 6. 宠物滚动可见 ===');
@@ -299,14 +326,13 @@ function count(text, needle) {
     await waitTheme();
     const autoDark = await page.evaluate(() => [...document.querySelectorAll('.home-banner-background img')].filter(image => getComputedStyle(image).display !== 'none').map(image => image.currentSrc));
     check('默认深色改用雨夜横幅', autoDark.some(url => url.includes('banner-dark')));
-    await page.evaluate(() => {
-      document.querySelector('.nb-theme-btn').click();
-      document.querySelector('.nb-opt[data-season="space"]').click();
-    });
-    await page.waitForFunction(() => document.documentElement.dataset.season === 'space');
-    await waitTheme();
-    const spaceDark = await page.evaluate(() => [...document.querySelectorAll('.home-banner-background img')].filter(image => getComputedStyle(image).display !== 'none').map(image => image.currentSrc));
-    check('太空站在深色界面仍固定太空站横幅', spaceDark.some(url => url.includes('banner-light')));
+    await page.evaluate(() => localStorage.setItem('blog-season', 'space'));
+    await page.reload({ waitUntil: 'networkidle2', timeout: 30000 });
+    const legacyState = await page.evaluate(() => ({
+      season: document.documentElement.dataset.season,
+      images: [...document.querySelectorAll('.home-banner-background img')].filter(image => getComputedStyle(image).display !== 'none').map(image => image.currentSrc),
+    }));
+    check('旧 space 设置回退默认并保持深色雨夜', legacyState.season === 'auto' && legacyState.images.some(url => url.includes('banner-dark')), JSON.stringify(legacyState));
 
     await page.evaluate(() => window.scrollTo(0, 160));
     await sleep(900);

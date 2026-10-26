@@ -90,7 +90,7 @@
     // 这些也必须退出可访问树,否则模态打开后仍能 Tab 到背景。
     document.querySelectorAll(
       '.skip-link, #route-announcer, .right-side-tools-container, .mouse-follower, ' +
-      '#pet-toggle, #waifu, #music-toggle, #aplayer, #focus-exit, #read-toggle, #mobile-cite, .reading-resume'
+      '#pet-toggle, #waifu, #music-toggle, #music-collapse, #aplayer, #focus-exit, #read-toggle, #mobile-cite, .reading-resume'
     ).forEach(el => { el.inert = on; });
   }
 
@@ -1148,10 +1148,37 @@
     }
   }
 
+  function ensureMusicCollapse(root) {
+    if (document.getElementById('music-collapse')) return;
+    const btn = document.createElement('button');
+    btn.id = 'music-collapse';
+    btn.type = 'button';
+    btn.className = 'music-collapse';
+    btn.setAttribute('aria-label', '收起为音乐按钮');
+    btn.title = '收起为音乐按钮';
+    btn.innerHTML = '<span aria-hidden="true">×</span>';
+    btn.addEventListener('click', () => {
+      try { window.__cjAPlayer?.pause(); } catch (e) {}
+      root.classList.add('cj-music-collapsed');
+      btn.remove();
+      initMusicToggle();
+      document.getElementById('music-toggle')?.focus({ preventScroll: true });
+    });
+    document.body.appendChild(btn);
+  }
+
   function initMusicToggle() {
     const root = document.getElementById('aplayer');
     let btn = document.getElementById('music-toggle');
-    if (!root || root.classList.contains('aplayer')) {
+    const collapse = document.getElementById('music-collapse');
+    const playerOpen = root && root.classList.contains('aplayer') && !root.classList.contains('cj-music-collapsed');
+    if (playerOpen) {
+      if (btn) btn.remove();
+      ensureMusicCollapse(root);
+      return;
+    }
+    if (collapse) collapse.remove();
+    if (!root) {
       if (btn) btn.remove();
       return;
     }
@@ -1161,7 +1188,7 @@
     btn.type = 'button';
     btn.className = 'music-toggle';
     btn.setAttribute('aria-controls', 'aplayer');
-    btn.setAttribute('aria-label', '加载音乐播放器');
+    btn.setAttribute('aria-label', root.classList.contains('aplayer') ? '展开音乐播放器' : '加载音乐播放器');
     btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg><span>音乐</span>';
     btn.addEventListener('click', async () => {
       if (typeof window.__cjLoadAPlayer !== 'function') {
@@ -1173,8 +1200,10 @@
       btn.querySelector('span').textContent = '加载中';
       try {
         await window.__cjLoadAPlayer();
+        root.classList.remove('cj-music-collapsed');
         initAplayerA11y();
-        btn.remove();
+        initMusicToggle();
+        root.querySelector('.aplayer-pic')?.focus({ preventScroll: true });
       } catch (e) {
         btn.disabled = false;
         btn.setAttribute('aria-label', '重新加载音乐播放器');
@@ -3362,16 +3391,15 @@
   }
 
   // ============================
-  // Seasonal theme — 默认横幅随明暗变化,也可手动固定季节/太空站
+  // Seasonal theme — 默认横幅随明暗变化,也可手动选择四季
   // ============================
-  const SEASON_ICONS = { spring: '🌸', summer: '🌻', autumn: '🍂', winter: '❄️', space: '🛰️' };
-  const SEASON_NAMES = { spring: '春季', summer: '夏季', autumn: '秋季', winter: '冬季', space: '太空站' };
+  const SEASON_ICONS = { spring: '🌸', summer: '🌻', autumn: '🍂', winter: '❄️' };
+  const SEASON_NAMES = { spring: '春季', summer: '夏季', autumn: '秋季', winter: '冬季' };
   const SEASON_BANNERS = {
     spring: '/images/banner-spring.webp',
     summer: '/images/banner-summer.webp',
     autumn: '/images/banner-autumn.webp',
     winter: '/images/banner-winter.webp',
-    space: '/images/banner-light.webp',
   };
 
   // 和构建期注入的 srcset 保持一致;季节切换时 srcset 也要换,
@@ -3533,7 +3561,7 @@
       <div class="nb-dropdown">
         <button type="button" class="nb-opt${current === 'auto' ? ' active' : ''}" data-season="auto" aria-pressed="${current === 'auto'}"><span>🍀</span><span class="nb-opt-copy"><span>默认（跟随明暗）</span><small>浅色太空站，深色雨夜</small></span></button>
         ${Object.keys(SEASON_ICONS).map(s =>
-          `<button type="button" class="nb-opt${current === s ? ' active' : ''}" data-season="${s}" aria-pressed="${current === s}"><span>${SEASON_ICONS[s]}</span><span class="nb-opt-copy"><span>${SEASON_NAMES[s]}${s === 'space' ? '（固定横幅）' : ''}</span>${s === 'space' ? '<small>界面配色仍随明暗</small>' : ''}</span></button>`
+          `<button type="button" class="nb-opt${current === s ? ' active' : ''}" data-season="${s}" aria-pressed="${current === s}"><span>${SEASON_ICONS[s]}</span><span>${SEASON_NAMES[s]}</span></button>`
         ).join('')}
         <div class="nb-div"></div>
         <button type="button" class="nb-opt flashlight-opt"><span>🔦</span><span>管中窥豹</span></button>

@@ -216,14 +216,14 @@ async function audit(page) {
   });
   check('禁用 localStorage 时字号按钮仍生效', blockedSize.attr === 's', JSON.stringify(blockedSize));
   await blocked.click('.nb-theme-btn');
-  await blocked.click('.nb-opt[data-season="space"]');
+  await blocked.click('.nb-opt[data-season="winter"]');
   await sleep(650);
   const blockedSeasonBefore = await blocked.evaluate(() => document.documentElement.dataset.season || null);
   await blocked.evaluate(() => window.swup?.navigate('/about/'));
   await blocked.waitForFunction(() => location.pathname === '/about/', { timeout: 8000 }).catch(() => {});
   await sleep(700);
   const blockedSeasonAfter = await blocked.evaluate(() => document.documentElement.dataset.season || null);
-  check('禁用 localStorage 时季节设置换页不丢失', blockedSeasonBefore === 'space' && blockedSeasonAfter === 'space', JSON.stringify({ blockedSeasonBefore, blockedSeasonAfter }));
+  check('禁用 localStorage 时季节设置换页不丢失', blockedSeasonBefore === 'winter' && blockedSeasonAfter === 'winter', JSON.stringify({ blockedSeasonBefore, blockedSeasonAfter }));
   await blocked.close();
 
   // 新开页面直接打开搜索:验证 overlay 的 inert observer 按当前节点绑定,

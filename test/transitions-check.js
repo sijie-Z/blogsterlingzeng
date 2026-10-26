@@ -205,14 +205,15 @@ async function waitIdle(page, timeout = 8000) {
   console.log('=== 4. 季节菜单 ===');
   await page.click('.nb-theme-btn').catch(() => {});
   await page.waitForFunction(() => document.querySelector('.nb-dropdown')?.classList.contains('show'), { timeout: 5000 }).catch(() => {});
-  const spaceOpt = await page.$('.nb-opt[data-season="space"]');
-  check('太空站选项存在', !!spaceOpt);
-  if (spaceOpt) {
-    await spaceOpt.click();
-    await page.waitForFunction(() => document.documentElement.dataset.season === 'space', { timeout: 10000 }).catch(() => {});
+  const removedSpace = await page.$('.nb-opt[data-season="space"]');
+  check('固定太空站模式已从菜单移除', !removedSpace);
+  const winterOpt = await page.$('.nb-opt[data-season="winter"]');
+  if (winterOpt) {
+    await winterOpt.click();
+    await page.waitForFunction(() => document.documentElement.dataset.season === 'winter', { timeout: 10000 }).catch(() => {});
     await page.waitForFunction(() => !document.documentElement.hasAttribute('data-theme-switching'), { timeout: 10000 }).catch(() => {});
     const season = await page.evaluate(() => document.documentElement.dataset.season);
-    check('切换太空站完成', season === 'space', '实际 ' + season);
+    check('切换冬季完成', season === 'winter', '实际 ' + season);
   }
   await page.click('.nb-theme-btn');
   await page.waitForFunction(() => document.querySelector('.nb-dropdown')?.classList.contains('show'), { timeout: 3000 }).catch(() => {});
