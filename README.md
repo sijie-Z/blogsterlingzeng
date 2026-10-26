@@ -134,6 +134,8 @@
 
 **构建期优先**：系列页、写作热力图、文章侧栏、JSON-LD、Markdown 原文、llms.txt 全部在 `hexo generate` 阶段生成，运行时不发额外请求、不引入布局抖动。主题通过 `scripts/theme-patch.js` 做可审计的最小补丁（Swup、TOC、搜索防抖、Giscus 守卫等），补丁可重复执行。
 
+**编辑式阅读设计**：首屏直接交代技术身份与项目入口，桌面约 68dvh、移动约 42dvh；背景只留在首屏，列表使用纯色阅读区。桌面文章采用左文右图目录，移动端去掉装饰封面并压缩快捷入口；长文限宽、项目案例收窄叙述、代码与表格使用中性材质。视觉升级不改变现有搜索、导航和阅读逻辑。
+
 更完整的架构、测量方法和已知边界见 [docs/ENGINEERING.md](docs/ENGINEERING.md)；下一轮可以继续做的方向见 [docs/BACKLOG.md](docs/BACKLOG.md)。
 
 ---
@@ -144,7 +146,7 @@
 |------|------|------|
 | 框架 | Hexo | 7.3.0 |
 | 主题 | hexo-theme-redefine | 2.9.0 |
-| 样式 | 自定义 CSS | ~6800 行 |
+| 样式 | 自定义 CSS | ~7300 行 |
 | 脚本 | 自定义 JS | ~4200 行 |
 | 静态资源 | 本地自托管 | - |
 | 搜索 | hexo-generator-searchdb | - |
@@ -251,7 +253,7 @@ blogsterlingzeng/
 │   ├── robots.txt                   # 爬虫规则
 │   ├── 404.md                       # 自定义 404
 │   │
-│   ├── css/custom.css               # 自定义样式 (~6800 行)
+│   ├── css/custom.css               # 自定义样式 (~7300 行)
 │   ├── css/series.css               # 系列阅读样式
 │   ├── js/custom.js                 # 自定义脚本 (~4200 行)
 │   ├── live2d/                      # Live2D 组件 + DeepSeek 大肥鱼模型

@@ -89,11 +89,11 @@ home_banner:
   image:
     light: /images/banner-light.webp
     dark: /images/banner-dark.webp
-  title: Sterling's Space
+  title: 用代码解决问题，用复盘留下证据。
   subtitle:
     text:
-      - "用代码构建世界，用文字记录成长"
-      - "在这里，技术和思考相遇"
+      - "记录项目里的取舍、验证和失败"
+      - "从数据与代码，到可读的技术复盘"
       - "Keep Rolling, Keep Coding"
     hitokoto:
       enable: false
@@ -319,7 +319,7 @@ footer:
 inject:
   enable: true
   head:
-    - <link rel="stylesheet" href="/css/custom.css?v=20261026x">
+    - <link rel="stylesheet" href="/css/custom.css?v=20261026bg">
     - <link rel="stylesheet" href="/css/series.css?v=20261025g">
     - <script>try{var s=localStorage.getItem('cj-read-size');if(s==='s'||s==='l')document.documentElement.setAttribute('data-read-size',s);if(localStorage.getItem('cj-focus')==='on'&&document.documentElement.hasAttribute('data-cj-post'))document.documentElement.classList.add('cj-focus');}catch(e){}</script>
   footer:

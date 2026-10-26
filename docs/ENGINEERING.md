@@ -40,7 +40,7 @@ scripts/                 构建期脚本（Hexo 启动时加载）
 └── theme-patch.js       对主题做可审计、可重复执行的最小补丁
 
 source/js/custom.js      运行时交互：导航、搜索、目录、边注、预览、阅读设置、代码全屏、阅读记忆、无障碍（约 4200 行）
-source/css/custom.css    设计系统与页面覆盖（约 6800 行）
+source/css/custom.css    设计系统与页面覆盖（约 7300 行）
 source/css/series.css    系列阅读样式
 test/                    14 套 Puppeteer / Node 检查
 ```
@@ -100,7 +100,8 @@ test/                    14 套 Puppeteer / Node 检查
 - **PNG 纹理仍部署**：WebP 已切换，但旧 `index.json` 可能被缓存 10 分钟；PNG 作为回退保留。设置 `CJ_SKIP_OLD_TEXTURES=1` 可移除。
 - **移除滚动面上的模糊**：主题会在首页滚过半屏后给横幅加 `filter: blur(15px)`，侧栏、回到顶部、页脚还用 `backdrop-filter`。软件渲染实测首页滚动 p50 25ms / p95 50ms；改为清晰横幅 + 实色面板后 p50 8ms / p95 25ms。搜索弹层也去掉模糊。
 - **主题滚动回调去抖动**：`navbar-shrink` 与工具条 `hide` 只在状态变化时改 class；工具条状态未变直接返回。首屏 init 不再同步读 `scrollHeight`，首页约 207ms 的整页布局从 DOMContentLoaded 任务里移走；SPA 换页后的高度读取、焦点和侧栏更新都延后到 idle。
-- **主题 JS 版本**：`main.js` 与被打补丁的 `navbarShrink.js` / `utils.js` / `sideTools.js` / `toc.js` 带 `?v=20261026f`，`custom.js` 带 `?v=20261026ae`，`custom.css` 带 `?v=20261026x`；Cloudflare 的 4 小时 JS 缓存不会继续提供旧滚动逻辑。
+- **编辑式视觉改造**：桌面首屏约 68dvh、移动约 42dvh；主题会内联写入 `100dvh`，旧 CSS 还有 `html body ... 38vh !important`，新规则必须覆盖这两个层级。背景用 `position:absolute` 留在首屏，移动端同时清理独立 `scale` 属性；`test:assets` 会拦截移动横幅超过 45% 视口的回归。
+- **主题 JS 版本**：`main.js` 与被打补丁的 `navbarShrink.js` / `utils.js` / `sideTools.js` / `toc.js` 带 `?v=20261026f`，`custom.js` 带 `?v=20261026ae`，`custom.css` 带 `?v=20261026bg`；Cloudflare 的 4 小时 JS 缓存不会继续提供旧滚动逻辑。
 
 ## 5. 阅读体验与内容增强
 
@@ -109,7 +110,7 @@ test/                    14 套 Puppeteer / Node 检查
 | 功能 | 实现 | 运行时成本 |
 |---|---|---|
 | 边注 | `{% margin %}` 由 `scripts/marginnote.js` 输出引用 + 注释；≥1680px 浮动到左页边，窄屏点开底部卡片 | 0 请求；约 150 行 JS/CSS |
-| 内链预览 | generator 输出 `link-preview.json`（32 条，约 10KB / gzip 4KB），首次悬停才 fetch | 1 个 JSON + 1 张封面，仅悬停时 |
+| 内链预览 | generator 输出 `link-preview.json`（33 条，约 10KB / gzip 4KB），首次悬停才 fetch | 1 个 JSON + 1 张封面，仅悬停时 |
 | 脚注预览 | 复用构建期 `#fn-*`，悬停/聚焦时克隆到 fixed tooltip | 0 请求 |
 | 公式复制 | `scripts/math.js` 包一层 `.katex-block`，按钮读取 MathML `annotation` 里的 TeX 源码 | 0 请求 |
 | 阅读设置 | 侧栏三档字号 + 专注模式；head 内联脚本在首屏前应用，字号不闪动 | 0 请求 |

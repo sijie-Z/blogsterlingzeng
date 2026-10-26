@@ -1,6 +1,5 @@
 /* ========================================
-   Sterling Zeng's Blog — Premium UI
-   Inspired by modern glass-morphism design
+   Sterling Zeng's Blog — Editorial technical reading interface
    ======================================== */
 
 /* ---- Variables ---- */
@@ -6775,5 +6774,502 @@ body:has(footer.footer.at-bottom) .pet-toggle {
 
   html[data-read-size="l"] .article-content pre {
     font-size: 15px !important;
+  }
+}
+
+/* ========================================
+   EDITORIAL VISUAL PASS — 作者与文章优先,不做迎宾页
+   保留城市横幅作为唯一视觉高潮,列表回归阅读目录。
+   ======================================== */
+@media screen and (min-width: 769px) {
+  .home-banner-container {
+    height: 68dvh !important;
+    min-height: 520px;
+    max-height: 640px;
+  }
+
+  .home-banner-container::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: linear-gradient(90deg,
+      rgba(3, 7, 18, 0.72) 0%,
+      rgba(3, 7, 18, 0.42) 52%,
+      rgba(3, 7, 18, 0.08) 100%);
+  }
+
+  .home-banner-container .content {
+    position: relative;
+    z-index: 1;
+    align-items: flex-start;
+    box-sizing: border-box;
+    width: min(1180px, calc(100% - 80px));
+    min-height: 0 !important;
+    padding-left: clamp(16px, 3vw, 64px);
+    text-align: left;
+  }
+
+  .home-banner-container .description {
+    max-width: 920px;
+    font-family: "Songti SC", "Noto Serif CJK SC", Georgia, serif;
+    font-size: clamp(2.3rem, 4vw, 4rem);
+    font-weight: 600;
+    line-height: 1.22;
+    letter-spacing: -0.035em;
+  }
+
+  .home-banner-container .description p {
+    max-width: 560px;
+    font-size: 1.05rem;
+    line-height: 1.75;
+  }
+
+  .home-hero-identity {
+    text-align: left;
+    font-size: 1rem;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  html body .home-banner-container {
+    height: 42dvh !important;
+    min-height: 320px !important;
+  }
+
+  .home-banner-container::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: linear-gradient(180deg,
+      rgba(3, 7, 18, 0.12) 0%,
+      rgba(3, 7, 18, 0.5) 100%);
+  }
+
+  .home-banner-container .content {
+    position: relative;
+    z-index: 1;
+    align-items: flex-start;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-height: 0 !important;
+    padding: 48px 24px 76px;
+    text-align: left;
+  }
+
+  html body .home-banner-container .content .description {
+    max-width: 100%;
+    font-family: "Songti SC", "Noto Serif CJK SC", Georgia, serif;
+    font-size: clamp(1.8rem, 7vw, 2.5rem) !important;
+    font-weight: 600;
+    line-height: 1.24;
+    letter-spacing: -0.03em;
+  }
+
+  .home-banner-container .description p {
+    max-width: 32rem;
+    font-size: 1rem;
+    line-height: 1.65;
+  }
+
+  .home-hero-identity {
+    max-width: 320px;
+    text-align: left;
+    font-size: 0.88rem;
+  }
+}
+
+/* 文章目录:桌面左文右图,减少卡片边界和装饰动画 */
+@media screen and (min-width: 769px) {
+  .home-content-container .home-article-list .home-article-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 220px;
+    gap: 28px;
+    align-items: stretch;
+    margin: 0;
+    padding: 26px 0;
+    position: relative;
+    overflow: visible;
+    background: transparent !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    animation: none;
+  }
+
+  .home-content-container .home-article-list .home-article-item:hover {
+    transform: none;
+    border-color: var(--border-color-strong) !important;
+    box-shadow: none !important;
+  }
+
+  .home-article-item::after {
+    display: none !important;
+  }
+
+  .home-article-item .home-article-thumbnail {
+    order: 2;
+    height: 150px !important;
+    min-height: 150px;
+    margin: 0;
+    overflow: hidden;
+    border-radius: 12px;
+  }
+
+  .home-article-item > .flex.flex-col {
+    order: 1;
+    min-width: 0;
+    padding: 0 !important;
+    gap: 12px !important;
+  }
+
+  .home-article-item .home-article-title a {
+    font-size: 1.35rem;
+    line-height: 1.45;
+    letter-spacing: -0.02em;
+    text-wrap: pretty;
+  }
+
+  .home-article-item .home-article-content {
+    display: -webkit-box;
+    margin-top: 0;
+    overflow: hidden;
+    font-size: 0.94rem;
+    line-height: 1.8;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+
+  .home-article-item .home-article-meta-info-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+    margin-top: auto;
+  }
+
+  .home-article-item:hover .home-article-thumbnail img {
+    transform: none;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .home-content-container .home-article-list .home-article-item {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin: 0;
+    padding: 22px 0;
+    position: relative;
+    overflow: visible;
+    background: transparent !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    animation: none;
+  }
+
+  .home-content-container .home-article-list .home-article-item:hover {
+    transform: none;
+    border-color: var(--border-color-strong) !important;
+    box-shadow: none !important;
+  }
+
+  .home-article-item::after {
+    display: none !important;
+  }
+
+  .home-article-item .home-article-thumbnail {
+    order: 0;
+    width: 100%;
+    height: 170px !important;
+    min-height: 0;
+    margin: 0;
+    overflow: hidden;
+    border-radius: 12px;
+  }
+
+  .home-article-item > .flex.flex-col {
+    order: 1;
+    min-width: 0;
+    padding: 0 2px !important;
+    gap: 12px !important;
+  }
+
+  .home-article-item .home-article-title a {
+    font-size: 1.22rem;
+    line-height: 1.5;
+    text-wrap: pretty;
+  }
+
+  .home-article-item .home-article-content {
+    display: -webkit-box;
+    margin-top: 0;
+    overflow: hidden;
+    line-height: 1.8;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+
+  .home-article-item:hover .home-article-thumbnail img {
+    transform: none;
+  }
+}
+
+/* 长文靠栏宽和段落节奏,不靠更大的卡片 */
+.article-content.markdown-body > p {
+  max-width: 42rem;
+  text-wrap: pretty;
+}
+
+.article-content.markdown-body h1,
+.article-content.markdown-body h2,
+.article-content.markdown-body h3 {
+  text-wrap: balance;
+}
+
+@media screen and (max-width: 768px) {
+  .article-content.markdown-body > p {
+    max-width: none;
+  }
+}
+
+@media screen and (max-height: 520px) and (orientation: landscape) {
+  .home-banner-container {
+    height: 520px !important;
+    min-height: 520px;
+  }
+
+  .home-banner-container .content {
+    padding-top: 72px;
+  }
+
+  .home-banner-container .description {
+    font-size: 1.85rem;
+  }
+}
+
+/* 背景只服务首屏,离开 Hero 后回到纯色阅读区 */
+@media screen and (min-width: 769px) {
+  .home-banner-background {
+    position: absolute !important;
+    width: 100% !important;
+    height: 68dvh !important;
+    min-height: 520px;
+    max-height: 640px;
+    overflow: hidden;
+    transform: none !important;
+    scale: 1 !important;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .home-banner-background {
+    position: absolute !important;
+    width: 100% !important;
+    height: 42dvh !important;
+    min-height: 320px;
+    overflow: hidden;
+    transform: none !important;
+    scale: 1 !important;
+  }
+}
+
+@media screen and (max-height: 520px) and (orientation: landscape) {
+  .home-banner-background {
+    height: 520px !important;
+    min-height: 520px;
+  }
+}
+
+/* 移动端把重复快捷入口和装饰封面让给第一篇文章 */
+@media screen and (max-width: 640px) {
+  .home-start {
+    display: flex;
+    gap: 0;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .home-start-card {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 54px;
+    justify-content: center;
+    padding: 8px 6px;
+    border: 0;
+    border-right: 1px solid var(--border-color);
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .home-start-card:last-child {
+    border-right: 0;
+  }
+
+  .home-start-card::before {
+    display: none;
+  }
+
+  .home-start-card::after {
+    position: static;
+    margin-left: 4px;
+    font-size: 0.85rem;
+    transform: none;
+  }
+
+  .home-start-card:hover {
+    transform: none;
+    background: var(--bg-secondary);
+    box-shadow: none;
+  }
+
+  .home-start-card:hover::after {
+    transform: none;
+  }
+
+  .home-start-kicker,
+  .home-start-desc {
+    display: none;
+  }
+
+  .home-start-title {
+    font-size: 0.86rem;
+    font-weight: 600;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .home-article-item .home-article-thumbnail {
+    display: none !important;
+  }
+
+  .post-page-container .article-content,
+  .page-template-content {
+    padding-right: 8px !important;
+  }
+
+  .post-page-container .article-content {
+    font-size: 16px;
+    line-height: 1.8;
+  }
+
+  .article-title > img {
+    height: 160px !important;
+  }
+}
+
+@media screen and (min-width: 769px) {
+  .home-content-container .home-article-list .home-article-item {
+    grid-template-columns: minmax(0, 1fr) 200px;
+  }
+}
+
+/* 正文与案例研究的层级 */
+.article-content h2 {
+  border-bottom: 0;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.article-content h3 {
+  font-size: 1.45rem;
+}
+
+@media screen and (max-width: 768px) {
+  .article-content h2 {
+    font-size: 1.65rem;
+  }
+
+  .article-content h3 {
+    font-size: 1.3rem;
+  }
+}
+
+.article-content table thead {
+  background: var(--bg-secondary) !important;
+  background-image: none !important;
+}
+
+.article-content table thead th {
+  color: var(--text-primary) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+.article-content .highlight,
+.article-content .highlight-container {
+  box-shadow: none !important;
+}
+
+.page-template-container:has(#miqrogate) .page-template-content > p,
+.page-template-container:has(#miqrogate) .page-template-content > ul {
+  max-width: 48rem;
+}
+
+.page-template-container:has(#miqrogate) .page-template-content > h2 {
+  margin-top: 4rem;
+  border-bottom: 0;
+  font-size: 2rem;
+  line-height: 1.3;
+}
+
+.page-template-container:has(#miqrogate) .page-template-content > h3 {
+  font-size: 1.35rem;
+}
+
+.page-template-container:has(#miqrogate) .page-template-content > hr {
+  display: none;
+}
+
+/* 亮色空间站本身很亮,白字需要中性暗化才能保证对比度 */
+@media screen and (min-width: 769px) {
+  html:not(.dark) .home-banner-container::before {
+    background: linear-gradient(90deg,
+      rgba(3, 7, 18, 0.7) 0%,
+      rgba(3, 7, 18, 0.52) 52%,
+      rgba(3, 7, 18, 0.42) 100%);
+  }
+}
+
+@media screen and (max-width: 768px) {
+  html:not(.dark) .home-banner-container::before {
+    background: linear-gradient(180deg,
+      rgba(3, 7, 18, 0.32) 0%,
+      rgba(3, 7, 18, 0.55) 100%);
+  }
+}
+
+@media screen and (max-width: 360px) {
+  .home-banner-container .content {
+    padding: 36px 18px 70px;
+  }
+
+  html body .home-banner-container .content .description {
+    font-size: 1.65rem !important;
+  }
+
+  .home-hero-identity {
+    margin-top: 0.5rem;
+    font-size: 0.76rem;
+  }
+
+  .home-hero-cta {
+    margin-top: 0.65rem;
+  }
+
+  .home-hero-cta a {
+    min-height: 38px;
+    padding: 0 14px;
+  }
+
+  .home-banner-container .absolute.bottom-0\.5 {
+    bottom: 0.5rem !important;
   }
 }

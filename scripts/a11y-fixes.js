@@ -59,5 +59,11 @@ hexo.extend.filter.register('after_render:html', function (str) {
     return `<input${attrs} aria-label="站内搜索">`;
   });
 
+  // 主题的 Lv3 对访客没有含义,统一换成真实身份信息。
+  str = str.replace(
+    /(<(?:span|div) class="(?:author-label|label)[^"]*"[^>]*>)\s*Lv3\s*(<\/(?:span|div)>)/g,
+    '$1GIS · 大四$2'
+  );
+
   return str;
 });
