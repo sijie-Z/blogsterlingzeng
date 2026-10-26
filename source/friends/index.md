@@ -9,7 +9,7 @@ type: links
 
 ## 申请友链
 
-如果你也想交换友链（互相放链接），欢迎通过 [邮件](mailto:1683039482@qq.com) 或 [GitHub](https://github.com/sijie-Z) 联系我。
+如果你也想交换友链（互相放链接），欢迎发邮件至 [19150649985@163.com](mailto:19150649985@163.com)（优先），或通过 [GitHub](https://github.com/sijie-Z) 联系我。
 
 ```yaml
 name: 你的名字

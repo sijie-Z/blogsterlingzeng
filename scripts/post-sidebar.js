@@ -53,7 +53,7 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
     (theme.defaults && theme.defaults.avatar) || '/images/avatar.jpg';
   const bio = sideCfg.author_bio || '大四 · 地信（GIS）· 用代码解决问题';
   const github = sideCfg.github || 'https://github.com/sijie-Z';
-  const email = sideCfg.email || '1683039482@qq.com';
+  const email = sideCfg.email || '19150649985@163.com';
   const absUrl = p => '/' + String(p || '').replace(/^\/+/, '');
   const editUrl = 'https://github.com/sijie-Z/blogsterlingzeng/edit/main/source/' +
     encodeURI(String(page.source || '')).replace(/#/g, '%23');
@@ -109,9 +109,9 @@ hexo.extend.filter.register('after_render:html', function (str, locals) {
         <div class="post-side-progress-line"><span class="post-side-progress-num">0</span>% · 约 ${minutes} 分钟</div>
       </div>
     </div>
+    <div class="post-side-email">Email：<a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a><span>（优先）</span></div>
     <div class="post-side-author-links">
       <a href="${escapeHtml(github)}" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="fa-brands fa-github" aria-hidden="true"></i></a>
-      <a href="mailto:${escapeHtml(email)}" aria-label="Email"><i class="fa-regular fa-envelope" aria-hidden="true"></i></a>
       <button type="button" class="post-side-share" aria-label="引用与分享本文" aria-haspopup="menu" aria-expanded="false" title="引用与分享"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i></button>
       <a href="${escapeHtml(editUrl)}" target="_blank" rel="noopener noreferrer" aria-label="在 GitHub 编辑本文"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i></a>
       <a href="${escapeHtml(markdownUrl)}" target="_blank" rel="noopener noreferrer" aria-label="查看 Markdown 原文"><i class="fa-solid fa-file-lines" aria-hidden="true"></i></a>

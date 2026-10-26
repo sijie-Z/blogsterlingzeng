@@ -15,7 +15,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const themeRoot = path.join(__dirname, '..', 'node_modules', 'hexo-theme-redefine');
+const themeRoot = process.env.CJ_THEME_ROOT
+  ? path.resolve(process.env.CJ_THEME_ROOT)
+  : path.join(__dirname, '..', 'node_modules', 'hexo-theme-redefine');
 
 /**
  * 精确字符串替换,并统计替换次数。找不到标记时告警但不抛错,
@@ -59,6 +61,16 @@ patchText('source/js/utils/sideTools.js', [
     'const height = y <= 100 ? 0 : (window.__cjScrollHeight || document.body.scrollHeight);',
     'sideTools source cached height',
   ],
+  [
+    '  const aplayer = document.getElementById("aplayer");\n',
+    '',
+    'aplayer not hidden by scroll source',
+  ],
+  [
+    '    if (aplayer !== null && aplayer.classList.contains("hide") !== hide) {\n      aplayer.classList.toggle("hide", hide);\n    }\n',
+    '',
+    'aplayer stays interactive source',
+  ],
 ]);
 patchText('source/js/build/utils/sideTools.js', [
   [
@@ -70,6 +82,16 @@ patchText('source/js/build/utils/sideTools.js', [
     'let e=0;if(t>100)e=document.body.scrollHeight;const ',
     'let e=0;if(t>100)e=window.__cjScrollHeight||document.body.scrollHeight;const ',
     'sideTools build cached height',
+  ],
+  [
+    ',s=document.getElementById("aplayer")',
+    '',
+    'aplayer not hidden by scroll build',
+  ],
+  [
+    ';null!==s&&s.classList.contains("hide")!==h&&s.classList.toggle("hide",h)',
+    '',
+    'aplayer stays interactive build',
   ],
 ]);
 
@@ -389,13 +411,46 @@ patchText('layout/components/scripts.ejs', [
   ],
 ]);
 
-// 5. APlayer:首屏初始化实测有 ~400ms 长任务。保留播放器,
-//    但把脚本推迟到首次交互或 6 秒后加载,避免和文章首屏抢主线程。
+// 5. APlayer:只在访客点击“音乐”后加载播放器;音频仍由 Play 单独触发。
+const aplayerClickLoader = `<div id="aplayer"></div>
+<script>
+(function () {
+  var pending = null;
+  function append(src) {
+    return new Promise(function (resolve, reject) {
+      var script = document.createElement('script');
+      script.src = src;
+      script.onload = resolve;
+      script.onerror = function () {
+        script.remove();
+        reject(new Error('Failed to load ' + src));
+      };
+      document.body.appendChild(script);
+    });
+  }
+  window.__cjLoadAPlayer = function () {
+    if (document.querySelector('#aplayer.aplayer')) return Promise.resolve();
+    if (pending) return pending;
+    var core = window.APlayer ? Promise.resolve() : append('/js/build/libs/APlayer.min.js');
+    pending = core.then(function () {
+      return append('/js/build/plugins/aplayer.js?v=20261026g');
+    }).catch(function (error) {
+      pending = null;
+      throw error;
+    });
+    return pending;
+  };
+})();
+</script>`;
 patchText('layout/components/plugins/aplayer.ejs', [
   [
     `<div id="aplayer"></div>
 <%- renderJS('libs/APlayer.min.js') %>
 <%- renderJS('plugins/aplayer.js') %>`,
+    aplayerClickLoader,
+    'aplayer click loader',
+  ],
+  [
     `<div id="aplayer"></div>
 <script>
 (function () {
@@ -417,30 +472,23 @@ patchText('layout/components/plugins/aplayer.ejs', [
   // 只在 12 秒后加载,避免用户点击导航/按钮时被播放器初始化打断
 })();
 </script>`,
-    'aplayer defer',
+    aplayerClickLoader,
+    'aplayer replace timed loader',
   ],
 ]);
 
-// 5.1 归一旧版 aplayer 补丁(requestIdleCallback 常常 ~1s 就触发,
-//     仍然会和首屏抢主线程):改成 12s 后加载,不再绑定用户交互。
-const aplayerFile = path.join(themeRoot, 'layout/components/plugins/aplayer.ejs');
+const aplayerTemplateFile = path.join(themeRoot, 'layout/components/plugins/aplayer.ejs');
 try {
-  let ap = fs.readFileSync(aplayerFile, 'utf8');
-  const before = ap;
-  ap = ap.replace(
-    "  var loaded = false;\n  function load() {\n    if (loaded) return;\n    loaded = true;\n",
-    "  var loaded = false;\n  var timer = setTimeout(load, 12000);\n  function load() {\n    if (loaded) return;\n    loaded = true;\n    clearTimeout(timer);\n"
-  );
-  ap = ap.replace(
-    "  if ('requestIdleCallback' in window) requestIdleCallback(load, { timeout: 8000 });\n  else setTimeout(load, 2500);",
-    "  // 只在 12 秒后加载,避免用户点击导航/按钮时被播放器初始化打断\n"
-  );
-  if (ap !== before) {
-    fs.writeFileSync(aplayerFile, ap, 'utf8');
-    console.log('[theme-patch] 已更新 aplayer 延迟策略');
+  let template = fs.readFileSync(aplayerTemplateFile, 'utf8');
+  const normalized = template
+    .replace("document.querySelector('#aplayer .aplayer')", "document.querySelector('#aplayer.aplayer')")
+    .replace("append('/js/build/plugins/aplayer.js')", "append('/js/build/plugins/aplayer.js?v=20261026g')");
+  if (normalized !== template) {
+    fs.writeFileSync(aplayerTemplateFile, normalized, 'utf8');
+    console.log('[theme-patch] 已归一 APlayer 容器检测');
   }
 } catch (e) {
-  console.warn('[theme-patch] aplayer 归一失败:', e.message);
+  console.warn('[theme-patch] APlayer 容器检测归一失败:', e.message);
 }
 
 // 5.2 搜索输入防抖:主题对每个 input 事件都全量扫描 searchdb,
@@ -519,6 +567,16 @@ patchText('source/js/plugins/aplayer.js', [
       fixed: true,`,
     'aplayer preload none fixed',
   ],
+  [
+    'if (isMini) {\n    new APlayer({',
+    'if (isMini) {\n    window.__cjAPlayer = new APlayer({',
+    'aplayer expose mini',
+  ],
+  [
+    'const player = new APlayer({',
+    'window.__cjAPlayer = new APlayer({',
+    'aplayer expose fixed',
+  ],
 ]);
 patchText('source/js/build/plugins/aplayer.js', [
   [
@@ -530,6 +588,16 @@ patchText('source/js/build/plugins/aplayer.js', [
     'container:document.getElementById("aplayer"),fixed:!0,lrcType:',
     'container:document.getElementById("aplayer"),preload:"none",fixed:!0,lrcType:',
     'aplayer preload none fixed build',
+  ],
+  [
+    'if(n)new APlayer({',
+    'if(n)window.__cjAPlayer=new APlayer({',
+    'aplayer expose mini build',
+  ],
+  [
+    'else if(t){new APlayer({',
+    'else if(t){window.__cjAPlayer=new APlayer({',
+    'aplayer expose fixed build',
   ],
 ]);
 
@@ -731,47 +799,6 @@ patchText('layout/components/header/head.ejs', [
     'googlebot noindex 404',
   ],
   [
-    `    <!--- Inject Part-->
-    <% if (theme.inject.enable == true) { %>
-        <% for (let i in theme.inject.head) { %>
-            <% if (theme.inject.head[i] !== null){ %>
-                <% if (theme.global.single_page == true) { %>
-                    <%- theme.inject.head[i].replace("<script", "<script data-swup-reload-script") %>
-                <% } else { %>
-                    <%- theme.inject.head[i] %>
-            <% } }%>
-    <% } }%>
-`,
-    '',
-    'move inject head after theme css',
-  ],
-  [
-    `    <% if (theme.developer && theme.developer.enable) {%>
-        <%- css('css/build/tailwind.css') %>
-    <% } else {%>
-        <%- renderCSS('css/build/tailwind.css') %>
-    <% } %>
-`,
-    `    <% if (theme.developer && theme.developer.enable) {%>
-        <%- css('css/build/tailwind.css') %>
-    <% } else {%>
-        <%- renderCSS('css/build/tailwind.css') %>
-    <% } %>
-
-    <!--- Inject Part-->
-    <% if (theme.inject.enable == true) { %>
-        <% for (let i in theme.inject.head) { %>
-            <% if (theme.inject.head[i] !== null){ %>
-                <% if (theme.global.single_page == true) { %>
-                    <%- theme.inject.head[i].replace("<script", "<script data-swup-reload-script") %>
-                <% } else { %>
-                    <%- theme.inject.head[i] %>
-            <% } }%>
-    <% } }%>
-`,
-    'inject head after tailwind',
-  ],
-  [
     "String(page.path || '').replace(/index\\.html$/, '')",
     "String(page.path || '').replace(/^\\/+/, '').replace(/index\\.html$/, '')",
     'path normalize for robots/og',
@@ -784,6 +811,25 @@ const headFile = path.join(themeRoot, 'layout/components/header/head.ejs');
 try {
   let head = fs.readFileSync(headFile, 'utf8');
   const before = head;
+  const headInjectBlock = `    <!--- Inject Part-->
+    <% if (theme.inject.enable == true) { %>
+        <% for (let i in theme.inject.head) { %>
+            <% if (theme.inject.head[i] !== null){ %>
+                <% if (theme.global.single_page == true) { %>
+                    <%- theme.inject.head[i].replace("<script", "<script data-swup-reload-script") %>
+                <% } else { %>
+                    <%- theme.inject.head[i] %>
+            <% } }%>
+    <% } }%>`;
+  const tailwindBlock = `    <% if (theme.developer && theme.developer.enable) {%>
+        <%- css('css/build/tailwind.css') %>
+    <% } else {%>
+        <%- renderCSS('css/build/tailwind.css') %>
+    <% } %>`;
+  head = head.split(headInjectBlock).join('').replace(/\n{3,}/g, '\n\n');
+  if (head.includes(tailwindBlock)) {
+    head = head.replace(tailwindBlock, tailwindBlock + '\n\n' + headInjectBlock);
+  }
   head = head.replace(
     /(?:\n[ \t]*\/\/ og:url[^\n]*)?\n[ \t]*url: \(config\.url \|\| ''\)[^\n]*,/g,
     ''
@@ -856,17 +902,37 @@ patchText('layout/pages/post/post-tools.ejs', [
   ],
 ]);
 
-// 6.7 首页社交图标链接补 aria-label,避免只有图标的空链接
+// 6.7 首页社交链接显示真实邮箱,其余图标补可访问名称
 patchText('layout/pages/home/home-banner.ejs', [
   [
     '<a href="<%- resolvedUrl %>">',
+    '<a class="home-hero-email" href="<%- resolvedUrl %>">',
+    'social visible email',
+  ],
+  [
     '<a href="<%- resolvedUrl %>" aria-label="邮件">',
-    'social email label',
+    '<a class="home-hero-email" href="<%- resolvedUrl %>">',
+    'social visible email existing',
+  ],
+  [
+    '<i class="<%= emailIcon %> fa-fw fa-lg"></i>',
+    '<i class="<%= emailIcon %> fa-fw" aria-hidden="true"></i><span class="home-hero-email-text"><%= resolvedUrl.replace(/^mailto:/, \'\') %></span>',
+    'social email text',
   ],
   [
     '<a target="_blank" href="<%- resolvedUrl %>">',
     '<a target="_blank" href="<%- resolvedUrl %>" aria-label="<%= name || \'社交链接\' %>">',
     'social icon label',
+  ],
+  [
+    '<div class="<%- display %> p-3 bg-gray-300/50 dark:bg-gray-500/40 backdrop-blur-lg border border-white/20 dark:border-gray-500/30 group rounded-full cursor-pointer flex justify-center items-center aspect-square h-full shadow-redefine-flat hover:shadow-redefine-flat-hover transition-shadow" onclick="scrollToMain()" >',
+    '<button type="button" class="home-scroll-down <%- display %> p-3 bg-gray-300/50 dark:bg-gray-500/40 backdrop-blur-lg border border-white/20 dark:border-gray-500/30 group rounded-full cursor-pointer flex justify-center items-center aspect-square h-full shadow-redefine-flat hover:shadow-redefine-flat-hover transition-shadow" onclick="scrollToMain()" aria-label="滚动到文章列表">',
+    'home scroll native button',
+  ],
+  [
+    '<i class="fa-solid fa-arrow-down fa-fw fa-lg group-hover:translate-y-1 transition-transform"></i>\n                </div>',
+    '<i class="fa-solid fa-arrow-down fa-fw fa-lg group-hover:translate-y-1 transition-transform" aria-hidden="true"></i>\n                </button>',
+    'home scroll native button close',
   ],
 ]);
 
@@ -1183,9 +1249,6 @@ patchText('source/js/utils/sideTools.js', [
     if (tools.classList.contains("hide") !== hide) {
       tools.classList.toggle("hide", hide);
     }
-    if (aplayer !== null && aplayer.classList.contains("hide") !== hide) {
-      aplayer.classList.toggle("hide", hide);
-    }
   }
 };`,
     'sideTools source class hysteresis',
@@ -1195,7 +1258,7 @@ patchText('source/js/utils/sideTools.js', [
 patchText('source/js/build/utils/sideTools.js', [
   [
     'for(let i=0;i<n.length;i++){const l=n[i];t<=100?location.pathname===config.root&&(l.classList.add("hide"),null!==s&&s.classList.add("hide")):t+o>=e-20?(l.classList.add("hide"),null!==s&&s.classList.add("hide")):(l.classList.remove("hide"),null!==s&&s.classList.remove("hide"))}};',
-    'let h=null;if(t<=100){if(location.pathname===config.root)h=!0}else{h=t+o>=e-20}if(null===h)return;for(let i=0;i<n.length;i++){const l=n[i];l.classList.contains("hide")!==h&&l.classList.toggle("hide",h);null!==s&&s.classList.contains("hide")!==h&&s.classList.toggle("hide",h)}};',
+    'let h=null;if(t<=100){if(location.pathname===config.root)h=!0}else{h=t+o>=e-20}if(null===h)return;for(let i=0;i<n.length;i++){const l=n[i];l.classList.contains("hide")!==h&&l.classList.toggle("hide",h)}};',
     'sideTools build class hysteresis',
   ],
 ]);
@@ -1244,7 +1307,7 @@ patchText('source/js/build/layouts/navbarShrink.js', [
 
 // 主题 JS 没有版本号,Cloudflare / GitHub Pages 会缓存 4 小时。
 // 给入口 main.js 和两个被改过的模块加查询串,确保滚动补丁能立即生效。
-const CJ_THEME_JS_VERSION = '20261026f';
+const CJ_THEME_JS_VERSION = '20261026g';
 patchText('source/js/build/main.js', [
   ['from"./layouts/navbarShrink.js"', `from"./layouts/navbarShrink.js?v=${CJ_THEME_JS_VERSION}"`, 'main navbarShrink version'],
   ['from"./utils.js"', `from"./utils.js?v=${CJ_THEME_JS_VERSION}"`, 'main utils version'],
@@ -1413,28 +1476,45 @@ patchText('source/js/build/utils.js', [
   ['?v=20261026b', '?v=20261026c', 'utils bump theme js version c'],
 ]);
 
-// reduced-motion 下停止打字机循环,直接显示第一句
-patchText('source/js/plugins/typed.js', [
-  [
-    'export default function initTyped(id) {',
-    `export default function initTyped(id) {
-  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+// reduced-motion 下停止打字机循环,直接显示第一句。
+// 先归一旧补丁可能重复插入的守卫,再在唯一函数入口保留一份。
+const typedGuardPatches = [
+  {
+    file: 'source/js/plugins/typed.js',
+    marker: 'export default function initTyped(id) {',
+    guard: `\n  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
     const element = document.getElementById(id);
     const text = theme?.home_banner?.subtitle?.text;
     const first = Array.isArray(text) ? text.find(Boolean) : text;
     if (element && first) element.textContent = first;
     return;
   }`,
-    'typed reduced motion source',
-  ],
-]);
-patchText('source/js/build/plugins/typed.js', [
-  [
-    'export default function initTyped(e){',
-    'export default function initTyped(e){if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches){const t=document.getElementById(e),o=theme?.home_banner?.subtitle?.text,s=Array.isArray(o)?o.find(Boolean):o;t&&s&&(t.textContent=s);return}',
-    'typed reduced motion build',
-  ],
-]);
+  },
+  {
+    file: 'source/js/build/plugins/typed.js',
+    marker: 'export default function initTyped(e){',
+    guard: 'if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches){const t=document.getElementById(e),o=theme?.home_banner?.subtitle?.text,s=Array.isArray(o)?o.find(Boolean):o;t&&s&&(t.textContent=s);return}',
+  },
+];
+for (const patch of typedGuardPatches) {
+  const file = path.join(themeRoot, patch.file);
+  try {
+    let content = fs.readFileSync(file, 'utf8');
+    const before = content;
+    content = content.split(patch.guard).join('');
+    if (!content.includes(patch.marker)) {
+      console.warn('[theme-patch] Typed 入口缺失:', patch.file);
+      continue;
+    }
+    content = content.replace(patch.marker, patch.marker + patch.guard);
+    if (content !== before) {
+      fs.writeFileSync(file, content, 'utf8');
+      console.log('[theme-patch] 已归一 Typed reduced-motion:', patch.file);
+    }
+  } catch (e) {
+    console.warn('[theme-patch] Typed 归一失败:', patch.file, e.message);
+  }
+}
 
 // 继续推进主题模块版本号
 patchText('source/js/build/main.js', [
@@ -1616,4 +1696,12 @@ patchText('source/js/build/main.js', [
 ]);
 patchText('source/js/build/utils.js', [
   ['?v=20261026e', '?v=20261026f', 'utils bump theme js version f'],
+]);
+
+// 用户主动打开的播放器不再随滚动隐藏,主题模块统一推进到 g。
+patchText('source/js/build/main.js', [
+  ['?v=20261026f', '?v=20261026g', 'main bump theme js version g'],
+]);
+patchText('source/js/build/utils.js', [
+  ['?v=20261026f', '?v=20261026g', 'utils bump theme js version g'],
 ]);

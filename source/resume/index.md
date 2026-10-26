@@ -12,7 +12,7 @@ comments: false
 
 **前端 / 全栈 / AI 应用工程** ｜ 本科 · 地理信息科学（GIS）· 大四在读（2023–2027，预计）
 
-[GitHub](https://github.com/sijie-Z) · [博客](https://sterlingzeng.cn) · [项目案例](/projects/) · [1683039482@qq.com](mailto:1683039482@qq.com)
+[GitHub](https://github.com/sijie-Z) · [博客](https://sterlingzeng.cn) · [项目案例](/projects/) · [19150649985@163.com](mailto:19150649985@163.com)
 
 <button type="button" class="resume-print" onclick="window.print()">打印 / 存为 PDF</button>
 
@@ -22,7 +22,7 @@ comments: false
   <a href="/files/resume/resume-fullstack-zh.pdf" download>后端全栈 中文版</a>
   <a href="/files/resume/resume-ai-agent-en.pdf" download>AI Agent 英文版</a>
 </div>
-<p class="resume-downloads-note">这些 PDF 是定向历史版本；项目当前状态以本页和对应仓库为准，也可以直接打印本页获取最新简历。</p>
+<p class="resume-downloads-note">这些 PDF 是定向历史版本；项目当前状态与联系方式以本页和对应仓库为准，也可以直接打印本页获取最新简历。</p>
 
 ## 求职方向
 
@@ -78,13 +78,13 @@ comments: false
 ## 写作与开源
 
 - 个人博客 [sterlingzeng.cn](https://sterlingzeng.cn)：23 篇技术文章，含[系列阅读](/series/)与构建期生成的 Atom / JSON Feed。
-- 站点工程化：Swup SPA、构建期系列系统、无障碍（axe WCAG A/AA 0 违规）、CLS 0.0001、546 项浏览器回归测试。
+- 站点工程化：Swup SPA、构建期系列系统、无障碍（axe WCAG A/AA 0 违规）、CLS 0.0001、602 项浏览器回归测试。
 - GitHub：[github.com/sijie-Z](https://github.com/sijie-Z)
 
 ## 联系
 
-- Email：[1683039482@qq.com](mailto:1683039482@qq.com)（优先）
-- 备用邮箱：[19150649985@163.com](mailto:19150649985@163.com)
+- Email：[19150649985@163.com](mailto:19150649985@163.com)（优先）
+- 备用邮箱：[1683039482@qq.com](mailto:1683039482@qq.com)
 - GitHub：[github.com/sijie-Z](https://github.com/sijie-Z)
 
 </div>

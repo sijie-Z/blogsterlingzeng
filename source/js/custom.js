@@ -90,7 +90,7 @@
     // 这些也必须退出可访问树,否则模态打开后仍能 Tab 到背景。
     document.querySelectorAll(
       '.skip-link, #route-announcer, .right-side-tools-container, .mouse-follower, ' +
-      '#pet-toggle, #waifu, #focus-exit, #read-toggle, #mobile-cite, .reading-resume'
+      '#pet-toggle, #waifu, #music-toggle, #aplayer, #focus-exit, #read-toggle, #mobile-cite, .reading-resume'
     ).forEach(el => { el.inert = on; });
   }
 
@@ -1089,8 +1089,13 @@
     }, 8500);
   }
 
-  // APlayer 的图标按钮默认只有 SVG,补上可访问名称
+  // APlayer 的图标按钮默认只有 SVG,补上可访问名称;按需加载完成后由观察器处理。
   function initAplayerA11y() {
+    const root = document.getElementById('aplayer');
+    if (root && !root.__cjA11yObserver) {
+      root.__cjA11yObserver = true;
+      new MutationObserver(initAplayerA11y).observe(root, { childList: true, subtree: true });
+    }
     const labels = {
       'aplayer-icon-play': '播放',
       'aplayer-icon-pause': '暂停',
@@ -1116,6 +1121,68 @@
       btn.dataset.cjA11y = '1';
       btn.setAttribute('aria-label', labels[cls]);
     });
+    const pic = root && root.querySelector('.aplayer-pic');
+    const player = window.__cjAPlayer;
+    if (pic && player) {
+      if (!pic.dataset.cjA11y) {
+        pic.dataset.cjA11y = '1';
+        pic.setAttribute('role', 'button');
+        pic.setAttribute('tabindex', '0');
+        pic.addEventListener('keydown', e => {
+          if (e.key !== 'Enter' && e.key !== ' ') return;
+          e.preventDefault();
+          player.toggle();
+        });
+      }
+      const syncPlayState = () => {
+        const playing = !player.audio.paused;
+        pic.setAttribute('aria-label', playing ? '暂停背景音乐' : '播放背景音乐');
+        pic.setAttribute('aria-pressed', String(playing));
+      };
+      if (!pic.__cjAudioBound) {
+        pic.__cjAudioBound = true;
+        player.audio.addEventListener('play', syncPlayState);
+        player.audio.addEventListener('pause', syncPlayState);
+      }
+      syncPlayState();
+    }
+  }
+
+  function initMusicToggle() {
+    const root = document.getElementById('aplayer');
+    let btn = document.getElementById('music-toggle');
+    if (!root || root.classList.contains('aplayer')) {
+      if (btn) btn.remove();
+      return;
+    }
+    if (btn) return;
+    btn = document.createElement('button');
+    btn.id = 'music-toggle';
+    btn.type = 'button';
+    btn.className = 'music-toggle';
+    btn.setAttribute('aria-controls', 'aplayer');
+    btn.setAttribute('aria-label', '加载音乐播放器');
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg><span>音乐</span>';
+    btn.addEventListener('click', async () => {
+      if (typeof window.__cjLoadAPlayer !== 'function') {
+        showToast('音乐播放器暂未就绪，请刷新后重试');
+        return;
+      }
+      btn.disabled = true;
+      btn.setAttribute('aria-label', '正在加载音乐播放器');
+      btn.querySelector('span').textContent = '加载中';
+      try {
+        await window.__cjLoadAPlayer();
+        initAplayerA11y();
+        btn.remove();
+      } catch (e) {
+        btn.disabled = false;
+        btn.setAttribute('aria-label', '重新加载音乐播放器');
+        btn.querySelector('span').textContent = '重试音乐';
+        showToast('音乐加载失败，请检查网络后重试');
+      }
+    });
+    document.body.appendChild(btn);
   }
 
   // ============================
@@ -1248,7 +1315,7 @@
   function resumeLive2D() {
     if (!window.__l2dPaused) return;
     window.__l2dPaused = false;
-    if (document.hidden || window.__l2dReducedMotion || window.__l2dNavPaused) return;
+    if (document.hidden || window.__l2dReducedMotion || window.__l2dNavPaused || window.__l2dThemePaused) return;
     const waifu = document.querySelector('#waifu');
     if (!waifu || !waifu.classList.contains('waifu-active')) return;
     try { window.__l2dApp.run(); } catch (e) {}
@@ -1266,7 +1333,7 @@
     clearTimeout(window.__l2dNavResumeTimer);
     window.__l2dNavResumeTimer = setTimeout(() => {
       window.__l2dNavPaused = false;
-      if (window.__l2dPaused || window.__l2dReducedMotion || document.hidden) return;
+      if (window.__l2dPaused || window.__l2dReducedMotion || window.__l2dNavPaused || window.__l2dThemePaused || document.hidden) return;
       const waifu = document.querySelector('#waifu');
       if (!waifu || !waifu.classList.contains('waifu-active')) return;
       if (window.__l2dApp && window.__l2dApp._drawFrameId == null) {
@@ -1492,7 +1559,6 @@
     window.__cjWaifuEl = waifu;
     waifu.addEventListener('mouseenter', () => { waifu.__cjHovered = true; });
     waifu.addEventListener('mouseleave', () => { waifu.__cjHovered = false; });
-    if (window.scrollY > 160) waifu.classList.add('waifu-reading');
     const canvas = document.getElementById('live2d');
     if (canvas) canvas.setAttribute('aria-hidden', 'true');
     initLive2DDrag(waifu);
@@ -1509,7 +1575,7 @@
       const active = waifu.classList.contains('waifu-active') && !waifu.classList.contains('waifu-hidden');
       if (!active) {
         try { app.stop(); } catch (e) {}
-      } else if (!window.__l2dPaused && !window.__l2dReducedMotion && !window.__l2dNavPaused && !document.hidden && app._drawFrameId == null) {
+      } else if (!window.__l2dPaused && !window.__l2dReducedMotion && !window.__l2dNavPaused && !window.__l2dThemePaused && !document.hidden && app._drawFrameId == null) {
         try { app.run(); } catch (e) {}
       }
     }).observe(waifu, { attributes: true, attributeFilter: ['class'] });
@@ -1519,7 +1585,7 @@
   // Live2D opt-in — 默认不加载 4MB 模型
   // ============================
   const PET_PREF = 'cj-pet';
-  const PET_SCRIPT = '/live2d/autoload.js?v=20261024e';
+  const PET_SCRIPT = '/live2d/autoload.js?v=20261026f';
 
   function petPref() {
     return storageGet(PET_PREF);
@@ -2303,7 +2369,7 @@
         try { window.__l2dApp.stop(); } catch (e) {}
         return;
       }
-      if (window.__l2dPaused || window.__l2dReducedMotion || window.__l2dNavPaused) return;
+      if (window.__l2dPaused || window.__l2dReducedMotion || window.__l2dNavPaused || window.__l2dThemePaused) return;
       const waifu = document.querySelector('#waifu');
       if (!waifu || !waifu.classList.contains('waifu-active')) return;
       if (window.__l2dApp._drawFrameId == null) {
@@ -2318,7 +2384,7 @@
       window.__l2dReducedMotion = mq.matches;
       if (mq.matches) {
         try { window.__l2dApp?.stop(); } catch (e) {}
-      } else if (window.__l2dApp && !window.__l2dPaused && !window.__l2dNavPaused && !document.hidden && window.__l2dApp._drawFrameId == null) {
+      } else if (window.__l2dApp && !window.__l2dPaused && !window.__l2dNavPaused && !window.__l2dThemePaused && !document.hidden && window.__l2dApp._drawFrameId == null) {
         try { window.__l2dApp.run(); } catch (e) {}
       }
     };
@@ -2345,25 +2411,6 @@
           window.__cjFloatsHidden = hideFloats;
           document.documentElement.classList.toggle('cj-scroll-down', hideFloats);
         }
-        // 首页过了 hero 之后不再显示召唤宠物的固定按钮,避免压住文章卡片;
-        // 回到顶部/向上滚时它还会出现。只在状态变化时改 class。
-        const pastHero = scrollTop > 320;
-        if (pastHero !== window.__cjPastHero) {
-          window.__cjPastHero = pastHero;
-          document.documentElement.classList.toggle('cj-past-hero', pastHero);
-        }
-
-        const waifu = window.__cjWaifuEl;
-        if (waifu) {
-          if (waifu.__cjHovered) {
-            waifu.classList.remove('waifu-reading');
-          } else if (scrollTop < 120 || scrollTop < prevY - 8) {
-            waifu.classList.remove('waifu-reading');
-          } else if (scrollTop > prevY + 8 && scrollTop > 160) {
-            waifu.classList.add('waifu-reading');
-          }
-        }
-
       }
 
       // 文档高度用缓存:load / resize / 字体就绪 / 换页后都会刷新,
@@ -3315,8 +3362,7 @@
   }
 
   // ============================
-  // Seasonal theme — 春夏秋冬四套配色
-  // 默认按月份自动换季;导航栏可手动覆盖(localStorage 'blog-season')
+  // Seasonal theme — 默认横幅随明暗变化,也可手动固定季节/太空站
   // ============================
   const SEASON_ICONS = { spring: '🌸', summer: '🌻', autumn: '🍂', winter: '❄️', space: '🛰️' };
   const SEASON_NAMES = { spring: '春季', summer: '夏季', autumn: '秋季', winter: '冬季', space: '太空站' };
@@ -3340,30 +3386,15 @@
     img.src = url;
   }
 
-  function autoSeason() {
-    const month = new Date().getMonth() + 1;
-    if (month >= 3 && month <= 5) return 'spring';
-    if (month >= 6 && month <= 8) return 'summer';
-    if (month >= 9 && month <= 11) return 'autumn';
-    return 'winter';
-  }
-
   function effectiveSeason() {
     const saved = storageGet('blog-season');
     return SEASON_NAMES[saved] ? saved : 'auto';
   }
 
   function applySeason(season) {
-    // 自动 = 旧版 light 明亮主题:浅色主题 + 太空城市 banner(配置默认)
-    // 手动选季节 = 季节完整主题 + 对应季节图
+    // 自动 = 浅色太空站 + 深色雨夜;手动季节 = 固定横幅 + 对应配色
     const isAuto = season === 'auto';
     document.documentElement.dataset.season = isAuto ? 'auto' : season;
-
-    // 主题切换平滑过渡(旧版 theme-transitioning)
-    const body = document.body;
-    body.classList.add('theme-transitioning');
-    clearTimeout(applySeason._t);
-    applySeason._t = setTimeout(() => body.classList.remove('theme-transitioning'), 600);
 
     if (!isAuto) {
       // 季节 banner:直接换 src。浏览器会保持旧图显示直到新图加载完成,
@@ -3498,11 +3529,11 @@
     const controls = document.createElement('div');
     controls.className = 'nb-controls';
     controls.innerHTML = `
-      <button type="button" class="nb-theme-btn" title="切换季节主题" aria-label="切换季节主题" aria-haspopup="true" aria-expanded="false">${current === 'auto' ? '🍀' : SEASON_ICONS[current]}</button>
+      <button type="button" class="nb-theme-btn" title="选择配色与横幅" aria-label="选择配色与横幅" aria-haspopup="true" aria-expanded="false">${current === 'auto' ? '🍀' : SEASON_ICONS[current]}</button>
       <div class="nb-dropdown">
-        <button type="button" class="nb-opt${current === 'auto' ? ' active' : ''}" data-season="auto" aria-pressed="${current === 'auto'}"><span>🍀</span><span>自动(跟随明暗)</span></button>
+        <button type="button" class="nb-opt${current === 'auto' ? ' active' : ''}" data-season="auto" aria-pressed="${current === 'auto'}"><span>🍀</span><span class="nb-opt-copy"><span>默认（跟随明暗）</span><small>浅色太空站，深色雨夜</small></span></button>
         ${Object.keys(SEASON_ICONS).map(s =>
-          `<button type="button" class="nb-opt${current === s ? ' active' : ''}" data-season="${s}" aria-pressed="${current === s}"><span>${SEASON_ICONS[s]}</span><span>${SEASON_NAMES[s]}</span></button>`
+          `<button type="button" class="nb-opt${current === s ? ' active' : ''}" data-season="${s}" aria-pressed="${current === s}"><span>${SEASON_ICONS[s]}</span><span class="nb-opt-copy"><span>${SEASON_NAMES[s]}${s === 'space' ? '（固定横幅）' : ''}</span>${s === 'space' ? '<small>界面配色仍随明暗</small>' : ''}</span></button>`
         ).join('')}
         <div class="nb-div"></div>
         <button type="button" class="nb-opt flashlight-opt"><span>🔦</span><span>管中窥豹</span></button>
@@ -4051,12 +4082,9 @@
     onceGlobal('citationMenu', initCitationMenu);
     applyReadingPrefs();
     initExternalLinks();
+    initMusicToggle();
     initAplayerA11y();
     initGiscusA11y();
-    if (!window.__cjAplayerTimers) {
-      window.__cjAplayerTimers = true;
-      [1500, 4000, 7000, 13000].forEach(ms => setTimeout(initAplayerA11y, ms));
-    }
     onceGlobal('readingProgress', initReadingProgress);
     onceGlobal('readingResume', initReadingResume);
     onceGlobal('scrollHeightCache', initScrollHeightCache);
@@ -4139,25 +4167,73 @@
     }
   }
 
-  function switchTheme(applyFn, x, y) {
-    const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (!reduced && typeof document.startViewTransition === 'function') {
-      document.documentElement.setAttribute('data-theme-switching', 'ripple');
-      let vt;
-      try {
-        vt = document.startViewTransition(applyFn);
-      } catch (e) {
-        document.documentElement.removeAttribute('data-theme-switching');
-        applyFn();
-        return;
-      }
-      const ripple = vt.ready.then(() => rippleAnim(x, y)).catch(() => undefined);
-      Promise.allSettled([vt.finished, ripple]).finally(() => {
-        document.documentElement.removeAttribute('data-theme-switching');
-      });
-    } else {
-      applyFn();
+  function themeMotionState() {
+    return window.__cjThemeMotion = window.__cjThemeMotion || {
+      epoch: 0,
+      active: null,
+      desiredDark: document.documentElement.classList.contains('dark'),
+    };
+  }
+
+  function resumeLive2DAfterTheme() {
+    window.__l2dThemePaused = false;
+    if (window.__l2dPaused || window.__l2dReducedMotion || window.__l2dNavPaused || document.hidden) return;
+    const waifu = document.querySelector('#waifu');
+    if (!waifu || !waifu.classList.contains('waifu-active') || waifu.classList.contains('waifu-hidden')) return;
+    if (window.__l2dApp && window.__l2dApp._drawFrameId == null) {
+      try { window.__l2dApp.run(); } catch (e) {}
     }
+  }
+
+  function finishThemeMotion(active) {
+    const state = themeMotionState();
+    if (state.active !== active) return;
+    state.active = null;
+    state.desiredDark = document.documentElement.classList.contains('dark');
+    document.documentElement.removeAttribute('data-theme-switching');
+    resumeLive2DAfterTheme();
+  }
+
+  function switchTheme(applyFn, x, y) {
+    const state = themeMotionState();
+    const token = ++state.epoch;
+
+    // 快照回调可能延迟到下一次点击之后。旧动画立即收尾,最后一次选择同步落地。
+    if (state.active) {
+      const active = state.active;
+      active.token = token;
+      try { active.vt.skipTransition(); } catch (e) {}
+      applyFn();
+      return;
+    }
+
+    const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced || typeof document.startViewTransition !== 'function') {
+      applyFn();
+      return;
+    }
+
+    document.documentElement.setAttribute('data-theme-switching', 'ripple');
+    window.__l2dThemePaused = true;
+    try { window.__l2dApp?.stop(); } catch (e) {}
+    const active = { token, vt: null, ripple: null };
+    try {
+      active.vt = document.startViewTransition(() => {
+        if (state.epoch !== token) return;
+        applyFn();
+      });
+    } catch (e) {
+      document.documentElement.removeAttribute('data-theme-switching');
+      applyFn();
+      resumeLive2DAfterTheme();
+      return;
+    }
+    state.active = active;
+    active.ripple = active.vt.ready.then(() => {
+      if (state.epoch !== token || state.active !== active || active.token !== token) return;
+      return rippleAnim(x, y);
+    }).catch(() => undefined);
+    Promise.allSettled([active.vt.finished, active.ripple]).then(() => finishThemeMotion(active));
   }
 
   // 暗色横幅延迟到真正需要时再下载
@@ -4211,32 +4287,23 @@
     }
   }
 
-  // 拦截 Redefine 的明暗切换按钮,包进 View Transition
+  // 始终在捕获阶段接管,避免 Redefine 与延迟快照各自切换一次。
   function initThemeToggle() {
     const html = document.documentElement;
-    let lastDark = html.classList.contains('dark');
+    const state = themeMotionState();
     document.addEventListener('click', e => {
       const btn = e.target.closest('.tool-dark-light-toggle');
       if (!btn) return;
-      // 防抖:如果 Redefine 已处理(状态已变),只补 ripple
-      const isDark = html.classList.contains('dark');
-      if (isDark === lastDark) {
-        // Redefine 还没来得及处理,我们自己接管
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        const next = !isDark;
-        lastDark = next;
-        const x = e.clientX || window.innerWidth / 2;
-        const y = e.clientY || window.innerHeight / 2;
-        switchTheme(() => toggleDarkManually(next), x, y);
-      } else {
-        lastDark = isDark;
-        syncBannerTheme();
-      }
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      if (!state.active) state.desiredDark = html.classList.contains('dark');
+      const next = !state.desiredDark;
+      state.desiredDark = next;
+      const x = e.clientX || window.innerWidth / 2;
+      const y = e.clientY || window.innerHeight / 2;
+      switchTheme(() => toggleDarkManually(next), x, y);
     }, true);
-    // 不做 MutationObserver 兜底:切换已被捕获拦截接管,
-    // 若 Redefine 自行切换(拦截失败),让它瞬间完成,避免空 View Transition 假过渡
   }
 
 })();

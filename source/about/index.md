@@ -112,7 +112,8 @@ RAG / LangGraph / 向量数据库 / LoRA 微调 / 评测设计
 
 ## 联系方式
 
-- **Email**: [1683039482@qq.com](mailto:1683039482@qq.com)（优先） / 19150649985@163.com（备用）
+- **Email**: [19150649985@163.com](mailto:19150649985@163.com)（优先）
+- **备用邮箱**: [1683039482@qq.com](mailto:1683039482@qq.com)
 - **QQ**: 1683039482
 - **GitHub**: [github.com/sijie-Z](https://github.com/sijie-Z)
 

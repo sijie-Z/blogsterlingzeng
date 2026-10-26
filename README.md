@@ -64,7 +64,8 @@
 | 引用与分享 | 侧栏菜单复制 Markdown / BibTeX / APA / GB/T 7714 / RIS / 链接；窄屏用左下角浮动引用按钮；head 输出 `citation_*` 元数据 | `scripts/citation.js` |
 | 反向链接 | 构建期扫描正文内链，在目标文章底部列出引用来源与上下文 | `scripts/backlinks.js` |
 | 文章导航 | 文末“更早 / 更新一篇”，head 输出 `rel=prev/next`，支持 `[` `]` 快捷键 | `scripts/post-nav.js` |
-| Live2D 按需加载 | 默认 0 请求，点击“召唤宠物”后才加载约 4MB 模型 | `source/js/custom.js` |
+| Live2D 按需加载 | 默认 0 请求，点击“召唤宠物”后才加载约 4MB 模型；滚动只暂停渲染，不再隐藏角色 | `source/js/custom.js` |
+| 背景音乐 | 点击“音乐”才加载播放器，默认暂停且 `preload:none`；再点播放才请求音频，支持键盘和手机 | `_config.redefine.yml` + `source/js/custom.js` |
 | 数学公式 | `$...$` / `$$...$$` 构建期 KaTeX MathML，无客户端 JS/字体 | `scripts/math.js` |
 | 图片集 | `{% gallery %}` 图片网格，复用查看器与懒加载 | `scripts/gallery.js` |
 | 首页入口 | 项目 / 简历 / 系列三张快速卡片，构建期插入 | `scripts/home-start.js` |
@@ -130,7 +131,7 @@
 | Live2D 主纹理 | **1.7MB → 308KB** | 2048 PNG 重采样为 1024 WebP |
 | 手机首屏横幅 | **63KB → 35KB**（亮色） | 960/1280/1920 srcset + DPR 选图 |
 | 首页滚动帧间隔（软件渲染） | **p50 25ms → 8ms，p95 50ms → 25ms** | 移除全屏 blur 和滚动面上的 backdrop-filter；滚动回调只在状态变化时改 class |
-| 自动化浏览器检查 | **546 项** | 跳转、侧栏、系列、阅读记忆、归档、标签分类、站点视觉、页脚收起、平滑度、资源、内容、边注/预览/阅读设置/引用/反向链接/快捷键/图片平移/文章导航/简历 PDF |
+| 自动化浏览器检查 | **602 项** | 跳转、侧栏、系列、阅读记忆、归档、标签分类、站点视觉、页脚收起、平滑度、资源、内容、边注/预览/阅读设置/引用/反向链接/快捷键/图片平移/文章导航/简历 PDF/音乐/宠物/主题连点 |
 
 **构建期优先**：系列页、写作热力图、文章侧栏、JSON-LD、Markdown 原文、llms.txt 全部在 `hexo generate` 阶段生成，运行时不发额外请求、不引入布局抖动。主题通过 `scripts/theme-patch.js` 做可审计的最小补丁（Swup、TOC、搜索防抖、Giscus 守卫等），补丁可重复执行。
 
@@ -207,6 +208,7 @@ npm run test:a11y           # 73 项无障碍:名称 / alt / 列表语义 / 标�
 npm run test:resume         # 7 项阅读位置记忆与“继续阅读”
 npm run test:archive        # 19 项归档页头/单页列表/旧分页跳转/热力图
 npm run test:pages          # 52 项标签分类排序/说说日期/站点视觉/页脚与浮动控件/静态 HTML 卫生
+npm run test:polish         # 56 项首屏几何/真实邮箱/音乐/宠物/主题连点/原始主题 fresh-install 与补丁边界
 npm run profile:nav         # 第一次跳转的 CPU 采样诊断
 npm run perf                # 滚动性能探针(帧间隔 / 长任务 / 布局)
 npm run test:vitals         # CLS / LCP 与最大位移来源
@@ -703,6 +705,7 @@ DeepSeek 大肥鱼模型为 CC BY-NC-SA 4.0，Live2D Cubism Core 为 Live2D Inc.
 ## 联系方式
 
 - **GitHub**: [github.com/sijie-Z](https://github.com/sijie-Z)
-- **Email**: 1683039482@qq.com（优先）/ 19150649985@163.com（备用）
+- **Email**: [19150649985@163.com](mailto:19150649985@163.com)（优先）
+- **备用邮箱**: [1683039482@qq.com](mailto:1683039482@qq.com)
 - **QQ**: 1683039482
 - **Blog**: [sterlingzeng.cn](https://sterlingzeng.cn)

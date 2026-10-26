@@ -29,7 +29,7 @@ GitHub Actions(push 后自动构建部署)
 - **域名**:阿里云,域名 `sterlingzeng.cn`(备案号:蜀ICP备2026016586号)
 - **Cloudflare**:邮箱见密码管理器,站点 `sterlingzeng.cn`(Free 套餐)
 - **GitHub**:`sijie-Z`,邮箱见密码管理器(git 提交身份)
-- **博客邮箱(展示用)**:`1683039482@qq.com`(优先)/ `19150649985@163.com`(备用)
+- **博客邮箱(展示用)**:`19150649985@163.com`(优先)/ `1683039482@qq.com`(备用)
 
 ## DNS 现状(重要)
 
@@ -133,7 +133,8 @@ curl -sI "https://sterlingzeng.cn/" | grep -i cache-control
 
 - **主题**:hexo-theme-redefine 2.9.0(npm 包,版本已锁定);自定义样式/脚本通过 inject 注入
 - **theme-patch.js**:postinstall 对主题做可审计的最小补丁(Swup、TOC、搜索防抖、APlayer、无障碍语义、页脚清理等);补丁在 `scripts/theme-patch.js` 中集中维护
-- **季节主题**:html[data-season](auto/spring/summer/autumn/winter),导航栏 🍀 切换,localStorage 记忆
+- **季节主题**:html[data-season](auto/spring/summer/autumn/winter/space),导航栏 🍀 切换,localStorage 记忆;auto 是“浅色太空站、深色雨夜”,space 固定太空站横幅
+- **公开联系方式**:`scripts/public-contact.js` 在 body 内写入 Cloudflare `email_off` 标记;博客展示的邮箱是站长主动公开的信息,不应被边缘混淆成 `[email protected]`。部署后需检查首页、关于、简历与文章页的可见文本和 `mailto:`
 - **banner 图**:`source/images/banner-*.webp`(1920×1080),本地自托管;960/1280 变体由 `scripts/responsive-images.js` 注入 srcset
 - **文章图**:cover-*.jpg(本地)
 - **搜索**:hexo-generator-searchdb(search.xml),Ctrl/Cmd+K 或 `/` 打开,支持 ↑/↓/Enter

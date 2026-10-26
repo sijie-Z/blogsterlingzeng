@@ -34,6 +34,7 @@ scripts/                 构建期脚本（Hexo 启动时加载）
 ├── seo-jsonld.js        BlogPosting / BreadcrumbList / WebSite / ProfilePage / CollectionPage
 ├── responsive-images.js 横幅 960/1280/1920 srcset
 ├── prepaint-toc.js      主题态预置、skip link、路由播报
+├── public-contact.js    主动公开邮箱的 Cloudflare email_off 边界
 ├── a11y-fixes.js        装饰性图片 alt 兜底
 ├── skip-assets.js       移除 source map、未启用的 mermaid/waline、可选旧纹理
 ├── image-metadata.js    懒加载图片尺寸补全
@@ -42,7 +43,7 @@ scripts/                 构建期脚本（Hexo 启动时加载）
 source/js/custom.js      运行时交互：导航、搜索、目录、边注、预览、阅读设置、代码全屏、阅读记忆、无障碍（约 4200 行）
 source/css/custom.css    设计系统与页面覆盖（约 7300 行）
 source/css/series.css    系列阅读样式
-test/                    14 套 Puppeteer / Node 检查
+test/                    15 套 Puppeteer / Node 检查
 ```
 
 主题来自 npm 包 `hexo-theme-redefine@2.9.0`，没有复制进 `themes/`。`theme-patch.js` 在 postinstall 和 Hexo 启动时对 `node_modules` 打补丁；所有补丁都有标记检查，重复执行不会叠加。
@@ -96,12 +97,14 @@ test/                    14 套 Puppeteer / Node 检查
 - **移除 Swup 退出动画**：旧流程先播 320ms 旧页退出，再替换 DOM，首跳 click→replace 实测 426ms。现在只播新页入场，代价是页面切换少了一层“退场”叙事，收益是内容快一个数量级到达。
 - **滚动期间暂停 Live2D**：用 `scrollend` + 180ms 时间窗避免程序化滚动每帧触发 resume。
 - **缓存文档高度**：主题的滚动进度/侧栏工具需要 `scrollHeight`，每帧读取会强制布局；改为 load/resize/fonts/换页后更新缓存，仅在接近页脚时读一次真实值。
-- **APlayer 已关闭**：占位音轨会显示 “123 - Unknown”，固定播放器展开后会遮挡正文；关闭后 2.5MB 的 mp3 也不再部署。需要背景音乐时可在 `plugins.aplayer.enable` 重新打开。
+- **APlayer 按需恢复**：首屏只有一个轻量“音乐”按钮；点击后才加载播放器核心，默认紧凑、暂停且 `preload:"none"`，再点封面播放才请求约 2.5MB 的 MP3。主题不再随滚动给播放器加 `hide`，手机端也可用；封面支持 Enter/Space 与播放状态名称。音轨没有标题/艺术家元数据，因此界面如实写“背景音乐 / 本地音频 · 02:41”。
 - **PNG 纹理仍部署**：WebP 已切换，但旧 `index.json` 可能被缓存 10 分钟；PNG 作为回退保留。设置 `CJ_SKIP_OLD_TEXTURES=1` 可移除。
 - **移除滚动面上的模糊**：主题会在首页滚过半屏后给横幅加 `filter: blur(15px)`，侧栏、回到顶部、页脚还用 `backdrop-filter`。软件渲染实测首页滚动 p50 25ms / p95 50ms；改为清晰横幅 + 实色面板后 p50 8ms / p95 25ms。搜索弹层也去掉模糊。
 - **主题滚动回调去抖动**：`navbar-shrink` 与工具条 `hide` 只在状态变化时改 class；工具条状态未变直接返回。首屏 init 不再同步读 `scrollHeight`，首页约 207ms 的整页布局从 DOMContentLoaded 任务里移走；SPA 换页后的高度读取、焦点和侧栏更新都延后到 idle。
 - **编辑式视觉改造**：桌面首屏约 68dvh、移动约 42dvh；主题会内联写入 `100dvh`，旧 CSS 还有 `html body ... 38vh !important`，新规则必须覆盖这两个层级。背景用 `position:absolute` 留在首屏，移动端同时清理独立 `scale` 属性；`test:assets` 会拦截移动横幅超过 45% 视口的回归。
-- **主题 JS 版本**：`main.js` 与被打补丁的 `navbarShrink.js` / `utils.js` / `sideTools.js` / `toc.js` 带 `?v=20261026f`，`custom.js` 带 `?v=20261026ae`，`custom.css` 带 `?v=20261026bg`；Cloudflare 的 4 小时 JS 缓存不会继续提供旧滚动逻辑。
+- **主题 JS 版本**：`main.js` 与被打补丁的 `navbarShrink.js` / `utils.js` / `sideTools.js` / `toc.js` 带 `?v=20261026g`，`custom.js` 带 `?v=20261026af`，`custom.css` 带 `?v=20261026bh`；APlayer 初始化模块带 `?v=20261026g`，Live2D 入口/运行时分别带 `?v=20261026f` / `?v=20261026b`。Cloudflare 的 4 小时缓存不会继续提供旧交互逻辑。
+- **明暗切换只有一条动画管线**：移除了对所有元素生效的 `theme-transitioning` 颜色动画。View Transition 采用 latest-request-wins：快速连点时跳过旧快照并同步应用最后选择，清理只归当前任务；动画期间暂停 Live2D，结束后仅在滚动、导航、隐藏标签页和 reduced-motion 等守卫允许时恢复一个渲染循环。
+- **补丁幂等与 fresh-install**：Typed 的 reduced-motion 守卫和 head 的 inject 区块改为先归一、再保留一份；sideTools 的后续补丁不再重新引用已移除的 APlayer 变量。`test:polish` 会用 `test/fixtures/redefine-2.9.0/` 的原始文件在 `.scratch/theme-patch-fresh/` 执行两遍补丁，验证语法、无悬挂引用和逐字节一致，而不只检查当前 `node_modules`。
 
 ## 5. 阅读体验与内容增强
 
@@ -114,7 +117,9 @@ test/                    14 套 Puppeteer / Node 检查
 | 脚注预览 | 复用构建期 `#fn-*`，悬停/聚焦时克隆到 fixed tooltip | 0 请求 |
 | 公式复制 | `scripts/math.js` 包一层 `.katex-block`，按钮读取 MathML `annotation` 里的 TeX 源码 | 0 请求 |
 | 阅读设置 | 侧栏三档字号 + 专注模式；head 内联脚本在首屏前应用，字号不闪动 | 0 请求 |
-| Live2D | 默认不加载；显式“召唤宠物”后才拉模型，选择写入 localStorage | 用户点击前 0 请求 |
+| Live2D | 默认不加载；显式“召唤宠物”后才拉模型，选择写入 localStorage；滚动时仅暂停渲染，角色与入口不再淡出 | 用户点击前 0 请求 |
+| 背景音乐 | 点击“音乐”后才加载 APlayer；默认紧凑、暂停、无预加载，真实播放才请求 MP3 | 首次点击前 0 请求 / 0 播放 |
+| 公开联系方式 | 163 邮箱优先、QQ 邮箱备用；正文直接显示地址与 `mailto:`，body 内 `email_off` 防止 Cloudflare 改成占位 | 0 请求 / 无 JS 也可读 |
 | 引用与分享 | head 输出 `citation_*`；侧栏菜单复制 Markdown / BibTeX / APA / GB/T 7714 / RIS / 链接；body JSON 随 Swup 换页更新 | 0 请求 |
 | 键盘快捷键 | `?` 打开原生 `<dialog>` 帮助；`t` 切换主题；`g h` / `g a` 站内跳转；输入框和弹层打开时不触发 | 0 请求 |
 | 反向链接 | 构建期扫描所有文章正文内链，目标文章底部列出来源与上下文 | 0 请求 |
@@ -166,10 +171,11 @@ test/                    14 套 Puppeteer / Node 检查
 | `test:resume` | 7 | 阅读位置记忆与继续阅读 |
 | `test:archive` | 19 | 归档页头、单页列表、旧分页跳转、热力图与移动端 |
 | `test:pages` | 52 | 标签/分类排序、说说日期、站点视觉兜底、归档元数据、页脚、内联阅读/引用按钮、静态 HTML 卫生、打印样式 |
+| `test:polish` | 56 | 首屏几何与 320px 边界、侧栏裁切、真实邮箱、音乐真实播放、宠物初始化与滚动可见、快速明暗连点、Redefine 原始文件 fresh-install 与重复补丁 |
 | `test:content` | 23 篇 | front matter、站内链接、图片、OG 卡、文风硬规则、构建后 Markdown 残留检查 |
 | `test:links` | 99 HTML | 构建产物站内 href 断链检查 |
 
-合计 546 项浏览器检查、23 篇文章的内容检查和 99 个 HTML 的内链检查。所有套件在本机通过；CI 跑 `test:content`、构建和 `test:links`，浏览器套件留在本地或 self-hosted runner。
+合计 602 项浏览器检查、23 篇文章的内容检查和 99 个 HTML 的内链检查。所有套件在本机通过；CI 跑 `test:content`、构建和 `test:links`，浏览器套件留在本地或 self-hosted runner。
 
 ## 8. 已知边界
 
@@ -179,13 +185,13 @@ test/                    14 套 Puppeteer / Node 检查
 - **边注阈值**：≥1680px 才放进左页边；更窄时只能点开底部卡片，因为正文左侧只剩约 143px。
 - **内链预览**：只在桌面 hover / 键盘聚焦时出现，触屏直接跳转；每次悬停会额外请求一张封面图。
 - **引用元数据**：`citation_*` 只存在静态 HTML 的 head 里，Swup 换页不会更新 head；引用菜单读正文 JSON，所以复制内容始终是当前文章。
-- **窄屏浮动按钮**：左下角依次是引用（96px）和 Aa（150px）；宠物入口只在 >900px 出现，避免三者重叠。
+- **窄屏浮动按钮**：左下角依次是引用（96px）和 Aa（150px）；音乐入口按页脚安全区定位，宠物入口只在 >900px 出现，避免多个控件挤在一起。
 - **反向链接**：只扫描文章正文，不把页面（关于/项目/简历）算作来源；最多展示 5 条，计数显示全部。同源绝对 URL、协议相对 URL 和相对路径都能识别，非法字符实体原样保留。
 - **剪贴板**：后台标签页里 `navigator.clipboard` 可能一直 pending，菜单会保持打开并提示重试；引用菜单的状态存在 DOM 上而不是闭包里，SPA 换页会收起，复制内容始终来自当前文章的 JSON。
 - **阅读设置**：只改正文字号，标题仍走主题的 rem 阶梯；专注模式只作用于文章页，离开文章自动收起。
 - **构建缓存**：`scripts/` 里的 tag/renderer 改动不会让 Hexo 的文章缓存失效（缓存按源文件内容哈希）；改标签或渲染器后需要重建缓存或改动文章内容才会重新渲染。
 - **时区**：站点时区是 `Asia/Shanghai`，两个 GitHub Actions workflow 都设置 `TZ=Asia/Shanghai`。`test:content` 会拒绝 08:00 之前的 `date`，因为 UTC 构建会把这类文章排到前一天，导致链接和实际产物路径不一致。
-- **Live2D**：默认不加载，用户点击“召唤宠物”后才请求；暂停/恢复仍由滚动自动管理，没有常驻可见控件。
+- **Live2D**：默认不加载，用户点击“召唤宠物”后才请求；召唤入口在桌面持续可见，返回访客按之前的选择恢复。滚动、换页、隐藏标签页和主题快照只暂停渲染，不再通过淡出角色来“优化”。
 - **按页拆 CSS/JS 暂未做**：coverage 显示 custom.css 单页只用 14–30%，但 Swup 只替换 `#swup`，按页注入到 head 的样式表在 SPA 跳转时不会加载；要做需要把 `<link>` 放进被替换内容或加运行时 loader，收益（约 8–10KB gzip/页）不足以抵消闪烁和维护成本。
 - **文章导航的 head 链接只在首屏 HTML 生效**：Swup 不替换 `<head>`，SPA 换页后 `rel=prev/next` 仍是进入站点时的页面；文末卡片每次换页都会重建，键盘 `[` `]` 也用当前页的卡片，不受影响。
 - **Giscus 主题同步**：主题在 iframe 被 Swup 移除后仍可能对 null `contentWindow` 调 `postMessage`；`theme-patch.js` 已在源码和构建产物里补 `isConnected/contentWindow` 守卫。
@@ -195,7 +201,8 @@ test/                    14 套 Puppeteer / Node 检查
 - **移动端浮动控件**：右侧工具条直接隐藏；Aa / 引用内联在文章统计行，不覆盖正文；桌面端保留右侧工具条和浮动 Aa。
 - **数据标记**：`data-cj-post` 只写在真正的文章页（`page.__post`），归档/标签/关于等页面不会误用专注模式。
 - **系列样式**：`series.css` 改为全站加载。之前按页注入 `<head>`，SPA 换页或缓存命中旧版本时卡片会失去布局，退化成一段连续文字。
-- **宠物**：画布缩到 170px，向下阅读时淡出、向上滚或回顶部恢复，避免遮挡正文。
+- **宠物**：画布缩到 170px，向下滚动仍保持可见；滚动时只暂停 Cubism 渲染。初始化期间的空模型/空命中区域有守卫，鼠标与触摸事件不会抛出 `getHitAreasCount` 空值错误。宠物入口与播放器之间保留实测间距。
+- **公开邮箱**：163 优先、QQ 备用由用户确认；`public-contact.js` 的 `email_off` 只作用于站长主动公开的联系信息。三份定向 PDF 仍是没有可编辑源文件的历史版本，在线简历明确注明项目与联系方式以在线页为准。
 - **主题升级**：补丁目标是 2.9.0 的模板文本；版本已锁定，升级时需要重新核对 `theme-patch.js` 的标记。改主题 JS 后要同时推进 `theme-patch.js` 与 `asset-version.js` 里的版本号。
 - **移动端不再显示右侧工具条**：阅读设置与引用按钮放进文章统计行；桌面端保留右侧工具条和浮动 Aa。
 - **首帧布局**：首页仍有约 170–220ms 的首次整页布局（1195 个对象），这是 DOM/CSS 首次布局成本；已从 init 任务里移出，但没有做按区块的 `content-visibility`（实测会更抖）。

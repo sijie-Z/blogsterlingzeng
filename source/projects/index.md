@@ -11,7 +11,7 @@ date: 2026-08-28 10:00:00
 下面三个项目分别回答三个问题：**怎么把密钥管住**（MiQroGate）、**一个信号到底能不能投资**（quant_platform）、**RAG 的效果差在检索还是生成**（DocMind）。每个案例都写了问题、取舍、证据和边界——包括没做成的部分。
 
 - 最值得先看：[MiQroGate](#miqrogate) · [quant_platform](#quant-platform) · [DocMind](#docmind)
-- 更快的方式：看[系列文章](/series/)、[简历](/resume/)，或直接[发邮件](mailto:1683039482@qq.com)
+- 更快的方式：看[系列文章](/series/)、[简历](/resume/)，或直接发邮件至 [19150649985@163.com](mailto:19150649985@163.com)（优先）
 
 ---
 
@@ -271,7 +271,7 @@ date: 2026-08-28 10:00:00
 | **GeoData Security** | 空间数据安全分发与溯源 | 3 种栅格水印 + QR 码水印 + HMAC 签名；双级审批与民主召回 | [GitHub](https://github.com/sijie-Z/GeoData-Security-System) · [文章](/2026/05/10/geodata-security-traceability/) |
 | **NFT Launchpad Kit** | Agent-Native 链上发行基础设施 | trusted-signer 离线签名铸造；204 个测试，v1.0.0 已发布 | [GitHub](https://github.com/sijie-Z/nft-launchpad-kit) · [架构文章](/2026/05/10/nft-launchpad-kit-web3/) · [发布复盘](/2026/08/28/nft-launchpad-release-sprint/) |
 | **NLP Training Lab** | 从 BERT 到 LoRA 微调的渐进式实验 | 4GB 显存跑通全流程，LoRA 只训练 0.42% 参数；保留 Accuracy 44% / F1 30% 的失败记录 | [GitHub](https://github.com/sijie-Z/nlp-training-lab) · [实验记录](/2026/08/28/nlp-training-lab/) |
-| **这个博客** | Hexo + Swup + 构建期生成器 | 23 篇文章、构建期系列/OG/Feed、546 项回归、axe 0 违规 | [GitHub](https://github.com/sijie-Z/blogsterlingzeng) · [工程说明](https://github.com/sijie-Z/blogsterlingzeng/blob/main/docs/ENGINEERING.md) |
+| **这个博客** | Hexo + Swup + 构建期生成器 | 23 篇文章、构建期系列/OG/Feed、602 项回归、axe 0 违规 | [GitHub](https://github.com/sijie-Z/blogsterlingzeng) · [工程说明](https://github.com/sijie-Z/blogsterlingzeng/blob/main/docs/ENGINEERING.md) |
 
 > 以上均为个人项目；角色与边界以各项目文章为准。测试数字来自仓库，未做第三方审计。
 

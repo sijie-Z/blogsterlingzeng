@@ -23,6 +23,7 @@
     "test:features": "node test/features-check.js",
     "test:archive": "node test/archive-check.js",
     "test:pages": "node test/pages-check.js",
+    "test:polish": "node test/polish-check.js",
     "profile:nav": "node test/nav-profile.js",
     "postinstall": "node scripts/theme-patch.js",
     "test:series": "node test/series-check.js",
