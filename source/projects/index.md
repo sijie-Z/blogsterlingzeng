@@ -230,11 +230,11 @@ date: 2026-08-28 10:00:00
 
   <path class="arch-line" d="M160 76 H202" marker-end="url(#arrow-docmind)"/>
   <path class="arch-line" d="M370 76 H412" marker-end="url(#arrow-docmind)"/>
-  <path class="arch-line" d="M560 76 H614" marker-end="url(#arrow-docmind)"/>
+  <path class="arch-line" d="M560 76 H622" marker-end="url(#arrow-docmind)"/>
   <path class="arch-line arch-dash" d="M725 107 V177" marker-end="url(#arrow-docmind)"/>
   <path class="arch-line" d="M160 216 H202" marker-end="url(#arrow-docmind)"/>
   <path class="arch-line" d="M370 216 H412" marker-end="url(#arrow-docmind)"/>
-  <path class="arch-line" d="M560 216 H614" marker-end="url(#arrow-docmind)"/>
+  <path class="arch-line" d="M560 216 H622" marker-end="url(#arrow-docmind)"/>
   <path class="arch-line" d="M760 216 H792" marker-end="url(#arrow-docmind)"/>
 </svg>
 <figcaption>索引链路负责离线构建 BM25 + 向量混合索引；查询链路做混合召回、RRF 融合、Reranker 精排，最后交给大模型生成带引用的回答。</figcaption>
@@ -271,7 +271,7 @@ date: 2026-08-28 10:00:00
 | **GeoData Security** | 空间数据安全分发与溯源 | 3 种栅格水印 + QR 码水印 + HMAC 签名；双级审批与民主召回 | [GitHub](https://github.com/sijie-Z/GeoData-Security-System) · [文章](/2026/05/10/geodata-security-traceability/) |
 | **NFT Launchpad Kit** | Agent-Native 链上发行基础设施 | trusted-signer 离线签名铸造；204 个测试，v1.0.0 已发布 | [GitHub](https://github.com/sijie-Z/nft-launchpad-kit) · [架构文章](/2026/05/10/nft-launchpad-kit-web3/) · [发布复盘](/2026/08/28/nft-launchpad-release-sprint/) |
 | **NLP Training Lab** | 从 BERT 到 LoRA 微调的渐进式实验 | 4GB 显存跑通全流程，LoRA 只训练 0.42% 参数；保留 Accuracy 44% / F1 30% 的失败记录 | [GitHub](https://github.com/sijie-Z/nlp-training-lab) · [实验记录](/2026/08/28/nlp-training-lab/) |
-| **这个博客** | Hexo + Swup + 构建期生成器 | 23 篇文章、构建期系列/OG/Feed、614 项回归、axe 0 违规 | [GitHub](https://github.com/sijie-Z/blogsterlingzeng) · [工程说明](https://github.com/sijie-Z/blogsterlingzeng/blob/main/docs/ENGINEERING.md) |
+| **这个博客** | Hexo + Swup + 构建期生成器 | 23 篇文章、构建期系列/OG/Feed、622 项回归、axe 0 违规 | [GitHub](https://github.com/sijie-Z/blogsterlingzeng) · [工程说明](https://github.com/sijie-Z/blogsterlingzeng/blob/main/docs/ENGINEERING.md) |
 
 > 以上均为个人项目；角色与边界以各项目文章为准。测试数字来自仓库，未做第三方审计。
 

@@ -958,7 +958,7 @@ footer.footer {
   border-top: none !important;
   background: transparent !important;
   padding: 0 !important;
-  margin-top: 3rem !important;
+  margin-top: 2rem !important;
   z-index: 100;
 }
 
@@ -1021,7 +1021,7 @@ footer.footer.at-bottom .info-container {
   transform: none;
   flex-wrap: wrap;
   border-radius: 0;
-  padding: 12px 24px !important;
+  padding: 8px 20px !important;
   border: 0;
   border-top: 1px solid rgba(148, 163, 184, 0.1);
   box-shadow: none;
@@ -1030,13 +1030,6 @@ footer.footer.at-bottom .info-container {
 html.dark footer.footer.at-bottom .info-container {
   border-top-color: rgba(71, 85, 105, 0.12);
   box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.35);
-}
-
-footer.footer .info-container .customize-info {
-  font-size: 0.8rem;
-  margin: 0 !important;
-  opacity: 0.75;
-  white-space: nowrap;
 }
 
 footer.footer .info-container .text-center {
@@ -1065,7 +1058,7 @@ footer.footer .info-container .icp-info a {
   text-decoration: none;
 }
 
-footer.footer .info-container div:not(.customize-info):not(.text-center):not(.icp-info):not(.post-count) {
+footer.footer .info-container .footer-runtime {
   display: inline;
   white-space: nowrap;
 }
@@ -2922,13 +2915,8 @@ footer.footer .info-container .customize-info {
     white-space: normal !important;
   }
 
-  footer.footer .info-container .customize-info,
-  .footer-extra-icons {
-    display: none !important;
-  }
-
-  /* 首屏页脚只保留版权与备案,运行时长放到页面末尾 */
-  footer.footer .info-container > div:not([class]) {
+  /* 窄屏只隐藏运行天数,版权/备案与社交入口仍保留 */
+  footer.footer .info-container .footer-runtime {
     display: none !important;
   }
 
@@ -7475,5 +7463,122 @@ footer.footer.at-bottom .footer-utility {
 
   .home-banner-container .social-contacts {
     padding-inline: 10px;
+  }
+}
+
+/* ========================================
+   COMPACT FOOTER — 主信息与次级入口各一行
+   ======================================== */
+footer.footer.at-bottom .info-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.footer-primary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px 16px;
+  width: 100%;
+}
+
+.footer-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  color: var(--text-tertiary);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.footer-meta a {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px !important;
+  color: var(--text-secondary);
+}
+
+.footer-meta a::before {
+  content: "";
+  position: absolute;
+  inset: -8px;
+}
+
+.footer-extra-icons {
+  display: flex !important;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin: 0;
+}
+
+.footer-extra-icons a {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  min-height: 30px !important;
+  border-radius: 50%;
+}
+
+.footer-extra-icons a::before {
+  content: "";
+  position: absolute;
+  inset: -7px;
+}
+
+.footer-utility {
+  gap: 0 18px;
+  padding-top: 5px !important;
+  font-size: 0.76rem;
+}
+
+.footer-utility a {
+  position: relative;
+  min-height: 28px !important;
+  padding: 0 3px;
+}
+
+.footer-utility a::before {
+  content: "";
+  position: absolute;
+  inset: -8px;
+}
+
+@media screen and (max-width: 880px) {
+  footer.footer.at-bottom .info-container {
+    padding: 8px 12px !important;
+  }
+
+  .footer-meta {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .footer-utility {
+    gap: 0 12px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .footer-primary {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+
+  .footer-extra-icons {
+    justify-content: center;
+  }
+}
+
+@media screen and (max-width: 360px) {
+  footer.footer.at-bottom .footer-utility {
+    display: grid;
+    grid-template-columns: repeat(4, auto);
+    justify-content: center;
+    gap: 0 10px;
   }
 }

@@ -351,12 +351,11 @@ async function waitIdle(page, timeout = 8000) {
   await sleep(900);
   const backTop = await page.evaluate(() => !document.querySelector('footer.footer')?.classList.contains('at-bottom'));
   check('回顶收回', backTop);
+  const runtimeBefore = await page.evaluate(() => document.getElementById('runtime_days')?.textContent.trim() || '');
   await sleep(1200);
-  const runtimeText = await page.evaluate(() =>
-    ['runtime_days', 'runtime_hours', 'runtime_minutes', 'runtime_seconds']
-      .map(id => (document.getElementById(id)?.textContent || '').trim())
-  );
-  check('页脚运行时间正常显示', runtimeText.every(v => v !== ''), JSON.stringify(runtimeText));
+  const runtimeAfter = await page.evaluate(() => document.getElementById('runtime_days')?.textContent.trim() || '');
+  const hasLegacyRuntime = await page.evaluate(() => !!document.getElementById('runtime_hours'));
+  check('页脚仅显示运行天数且不再秒级刷新', runtimeBefore !== '' && runtimeBefore === runtimeAfter && !hasLegacyRuntime, JSON.stringify({ runtimeBefore, runtimeAfter, hasLegacyRuntime }));
 
   console.log('=== 8.5 导航自动隐藏与键盘 ===');
   await page.evaluate(() => window.scrollTo(0, 1400));

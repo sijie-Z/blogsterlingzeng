@@ -1012,6 +1012,13 @@ patchText('layout/page.ejs', [
     '</div>\n\n<% if (theme.global.single_page !== false) { %>',
     'close swup div',
   ],
+  [
+    `\t<% } else if (theme.home_banner.enable === true && is_home() && page.prev && theme.home_banner.style === "fixed") { %>
+\t<%- partial('pages/home/home-background') %>
+\t<% } %>`,
+    `\t<% } %>`,
+    'no fixed background on paginated home',
+  ],
 ]);
 
 patchText('layout/pages/category/category-detail.ejs', [
@@ -1317,7 +1324,7 @@ patchText('source/js/build/layouts/navbarShrink.js', [
 
 // 主题 JS 没有版本号,Cloudflare / GitHub Pages 会缓存 4 小时。
 // 给入口 main.js 和两个被改过的模块加查询串,确保滚动补丁能立即生效。
-const CJ_THEME_JS_VERSION = '20261026g';
+const CJ_THEME_JS_VERSION = '20261027ab';
 patchText('source/js/build/main.js', [
   ['from"./layouts/navbarShrink.js"', `from"./layouts/navbarShrink.js?v=${CJ_THEME_JS_VERSION}"`, 'main navbarShrink version'],
   ['from"./utils.js"', `from"./utils.js?v=${CJ_THEME_JS_VERSION}"`, 'main utils version'],
@@ -1714,4 +1721,144 @@ patchText('source/js/build/main.js', [
 ]);
 patchText('source/js/build/utils.js', [
   ['?v=20261026f', '?v=20261026g', 'utils bump theme js version g'],
+]);
+
+// 页脚精简:同年不重复年份,移除装饰口号/心跳,运行时间只显示天数。
+patchText('layout/components/footer/footer.ejs', [
+  [
+    `    <% if (theme.footer.hasOwnProperty('customize') && theme.footer.customize) { %>
+            <div class="customize-info my-1"><%- theme.footer.customize %></div>
+        <% } %>`,
+    '',
+    'footer remove decorative tagline',
+  ],
+  [
+    `            &copy;
+            <% if (theme.footer.hasOwnProperty('start') && theme.footer.start) { %>
+              <span><%= date(new Date(theme.footer.start), 'YYYY') %></span>
+              -
+            <% } %>
+            <%= date(new Date(), 'YYYY') %>&nbsp;&nbsp;<%- theme.footer.icon || '<i class="fa-regular fa-computer-classic"></i>' %>&nbsp;&nbsp;<a href="<%= config.root %>"><%= theme.info.author || config.author %></a>`,
+    `            &copy;
+            <% if (theme.footer.hasOwnProperty('start') && theme.footer.start) { %>
+              <span><%= date(new Date(theme.footer.start), 'YYYY') %></span>
+              <% if (date(new Date(theme.footer.start), 'YYYY') !== date(new Date(), 'YYYY')) { %>-<%= date(new Date(), 'YYYY') %><% } %>
+            <% } else { %>
+              <%= date(new Date(), 'YYYY') %>
+            <% } %>
+            &nbsp;&nbsp;<a href="<%= config.root %>"><%= theme.info.author || config.author %></a>`,
+    'footer single year when possible',
+  ],
+  [
+    `            <div>
+                <%= __('runtime') %> <span class="odometer" id="runtime_days" ></span> <%= __('days') %> <span class="odometer" id="runtime_hours"></span> <%= __('hours') %> <span class="odometer" id="runtime_minutes"></span> <%= __('minutes') %> <span class="odometer" id="runtime_seconds"></span> <%= __('seconds') %>
+            </div>`,
+    `            <div class="footer-runtime">已运行 <span class="odometer" id="runtime_days"></span> 天</div>`,
+    'footer runtime days only',
+  ],
+]);
+
+const compactRuntimeSource = `let lastElement = null;
+let lastDay = null;
+let visibilityBound = false;
+
+const updateRuntime = () => {
+  const startTime = theme.footerStart;
+  if (!startTime) return;
+  const startDate = new Date(startTime);
+  const days = Math.max(0, Math.floor((Date.now() - startDate.getTime()) / 86400000));
+  const element = document.getElementById('runtime_days');
+  if (!element || (element === lastElement && days === lastDay)) return;
+  element.textContent = String(days);
+  lastElement = element;
+  lastDay = days;
+};
+
+export default function initFooterRuntime() {
+  updateRuntime();
+  if (visibilityBound) return;
+  visibilityBound = true;
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) updateRuntime();
+  });
+}
+`;
+const compactRuntimeBuild = 'let e=null,t=null,n=!1;const r=()=>{const i=theme.footerStart;if(!i)return;const m=new Date(i),u=Math.max(0,Math.floor((Date.now()-m.getTime())/864e5)),a=document.getElementById("runtime_days");a&&(a===e&&u===t||(a.textContent=String(u),e=a,t=u))};export default function initFooterRuntime(){r();if(!n){n=!0;document.addEventListener("visibilitychange",()=>{if(!document.hidden)r()})}}';
+patchText('source/js/tools/runtime.js', [
+  [
+    `let runtimeActive = false;
+
+const footerRuntime = () => {
+  if (!runtimeActive) {
+    return;
+  }
+
+  const startTime = theme.footerStart;
+  if (!startTime) {
+    runtimeActive = false;
+    return;
+  }
+
+  window.setTimeout(footerRuntime, 1000);
+
+  const startDate = new Date(startTime);
+  const nowDate = new Date();
+  const diff = nowDate.getTime() - startDate.getTime();
+  const dayMs = 24 * 60 * 60 * 1000;
+  const daysFloat = diff / dayMs;
+  const days = Math.floor(daysFloat);
+  const hoursFloat = (daysFloat - days) * 24;
+  const hours = Math.floor(hoursFloat);
+  const minutesFloat = (hoursFloat - hours) * 60;
+  const minutes = Math.floor(minutesFloat);
+  const seconds = Math.floor((minutesFloat - minutes) * 60);
+
+  const runtimeDays = document.getElementById("runtime_days");
+  const runtimeHours = document.getElementById("runtime_hours");
+  const runtimeMinutes = document.getElementById("runtime_minutes");
+  const runtimeSeconds = document.getElementById("runtime_seconds");
+
+  if (runtimeDays) runtimeDays.innerHTML = days;
+  if (runtimeHours) runtimeHours.innerHTML = hours;
+  if (runtimeMinutes) runtimeMinutes.innerHTML = minutes;
+  if (runtimeSeconds) runtimeSeconds.innerHTML = seconds;
+};
+
+export default function initFooterRuntime() {
+  if (runtimeActive) {
+    return;
+  }
+
+  runtimeActive = true;
+  footerRuntime();
+}
+`,
+    compactRuntimeSource,
+    'footer runtime no per-second timer',
+  ],
+]);
+patchText('source/js/build/tools/runtime.js', [
+  [
+    'let e=!1;const footerRuntime=()=>{if(!e)return;const t=theme.footerStart;if(!t)return void(e=!1);window.setTimeout(footerRuntime,1e3);const n=new Date(t),o=((new Date).getTime()-n.getTime())/864e5,r=Math.floor(o),i=24*(o-r),m=Math.floor(i),u=60*(i-m),d=Math.floor(u),l=Math.floor(60*(u-d)),a=document.getElementById("runtime_days"),c=document.getElementById("runtime_hours"),f=document.getElementById("runtime_minutes"),s=document.getElementById("runtime_seconds");a&&(a.innerHTML=r),c&&(c.innerHTML=m),f&&(f.innerHTML=d),s&&(s.innerHTML=l)};export default function initFooterRuntime(){e||(e=!0,footerRuntime())}',
+    compactRuntimeBuild,
+    'footer runtime no per-second timer build',
+  ],
+  [
+    'let e=null,t=null,n=!1;const r=()=>{const i=theme.footerStart;if(!i)return;const m=new Date(i),u=Math.max(0,Math.floor((Date.now()-m.getTime())/864e5),a=document.getElementById("runtime_days");a&&(a===e&&u===t||(a.textContent=String(u),e=a,t=u))};export default function initFooterRuntime(){r(),n||(n=!0,document.addEventListener("visibilitychange",(()=>{document.hidden||r()})))}',
+    compactRuntimeBuild,
+    'footer runtime legacy syntax repair',
+  ],
+  [
+    'let e=null,t=null,n=!1;const r=()=>{const i=theme.footerStart;if(!i)return;const m=new Date(i),u=Math.max(0,Math.floor((Date.now()-m.getTime())/864e5),a=document.getElementById("runtime_days");a&&(a===e&&u===t||(a.textContent=String(u),e=a,t=u))};export default function initFooterRuntime(){r();if(!n){n=!0;document.addEventListener("visibilitychange",()=>{if(!document.hidden)r()})}}',
+    compactRuntimeBuild,
+    'footer runtime legacy paren repair',
+  ],
+]);
+
+// 页脚运行模块与补丁统一推进,避免缓存继续执行秒级计时器。
+patchText('source/js/build/main.js', [
+  ['?v=20261026g', '?v=20261027ab', 'main bump theme js version footer runtime'],
+]);
+patchText('source/js/build/utils.js', [
+  ['?v=20261026g', '?v=20261027ab', 'utils bump theme js version footer runtime'],
 ]);

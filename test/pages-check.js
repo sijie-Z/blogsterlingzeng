@@ -204,16 +204,77 @@ function check(name, cond, extra) {
   check('搜索框有静态 aria-label', /aria-label="站内搜索"/.test(homeRaw));
   check('首屏展示真实身份与求职方向', homeRaw.includes('home-hero-identity') && homeRaw.includes('GIS 大四') && homeRaw.includes('前端 / 全栈 / AI 应用工程') && !homeRaw.includes('>Lv3<'));
   check('页脚提供可见返回顶部入口', /class="footer-back-top" href="#main-content"/.test(homeRaw));
+  check('页脚同年不重复且保留全部入口', !homeRaw.includes('2026 - 2026') && !homeRaw.includes('customize-info') && !homeRaw.includes('runtime_hours') && ['/resume/', '/archives/', '/tags/', '/bookmarks/', '/shuoshuo/', '/photos/', '/atom.xml', 'https://github.com/sijie-Z', 'mailto:19150649985@163.com', 'https://beian.miit.gov.cn/'].every(href => homeRaw.includes(href)));
   const blankLinks = [...homeRaw.matchAll(/<a[^>]*target="_blank"[^>]*>/g)]
     .filter(m => !/rel="[^"]*noopener/.test(m[0]));
   check('新窗口外链都带 noopener', blankLinks.length === 0, String(blankLinks.length));
   check('项目页没有空锚点', !/<a id="[^"]*"><\/a>/.test(projectsRaw));
   check('归档跳转页有 h1', /<h1>/.test(redirectRaw));
+  const page2Raw = await fetch(`${BASE}/page/2/`).then(r => r.text());
+  const page3Raw = await fetch(`${BASE}/page/3/`).then(r => r.text());
+  check('分页首页不输出固定背景', !page2Raw.includes('home-banner-background') && !page3Raw.includes('home-banner-background') && page2Raw.includes('home-article-item') && page3Raw.includes('home-article-item'));
+  check('首页仍保留首屏背景', homeRaw.includes('home-banner-background'));
+
+  await page.goto(`${BASE}/`, { waitUntil: 'networkidle2', timeout: 30000 });
+  await page.evaluate(() => window.swup?.navigate('/page/2/'));
+  await page.waitForFunction(() => location.pathname === '/page/2/', { timeout: 8000 });
+  check('SPA 进入分页会移除背景', await page.evaluate(() => !document.querySelector('.home-banner-background') && !!document.querySelector('.home-article-item')));
+  await page.evaluate(() => window.swup?.navigate('/'));
+  await page.waitForFunction(() => location.pathname === '/', { timeout: 8000 });
+  await sleep(700);
+  check('SPA 返回首页会恢复背景', await page.evaluate(() => !!document.querySelector('.home-banner-background')));
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await page.bringToFront();
+  await page.evaluate(() => window.scrollBy(0, -100));
+  await sleep(100);
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await page.waitForFunction(() => document.querySelector('footer.footer')?.classList.contains('at-bottom'), { timeout: 8000 });
+  const desktopFooter = await page.evaluate(() => ({
+    height: document.querySelector('footer.footer').getBoundingClientRect().height,
+    primary: !!document.querySelector('.footer-primary'),
+    meta: !!document.querySelector('.footer-meta'),
+    social: getComputedStyle(document.querySelector('.footer-extra-icons')).display,
+    utility: document.querySelector('.footer-utility').getBoundingClientRect().toJSON(),
+  }));
+  check('桌面页脚不超过 100px 且保留主次两行', desktopFooter.height <= 100 && desktopFooter.primary && desktopFooter.meta && desktopFooter.social === 'flex' && desktopFooter.utility.height > 0, JSON.stringify(desktopFooter));
+
+  await page.setViewport({ width: 390, height: 844 });
+  await page.goto(`${BASE}/`, { waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(700);
+  await page.evaluate(() => window.scrollBy(0, -100));
+  await sleep(100);
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await page.waitForFunction(() => document.querySelector('footer.footer')?.classList.contains('at-bottom'), { timeout: 8000 });
+  const mobileFooter = await page.evaluate(() => ({
+    height: document.querySelector('footer.footer').getBoundingClientRect().height,
+    social: getComputedStyle(document.querySelector('.footer-extra-icons')).display,
+    utilityRight: document.querySelector('.footer-utility').getBoundingClientRect().right,
+    viewport: innerWidth,
+    overflow: document.documentElement.scrollWidth > innerWidth + 1,
+  }));
+  check('390px 页脚不超过 160px 且社交入口可见', mobileFooter.height <= 160 && mobileFooter.social === 'flex' && mobileFooter.utilityRight <= mobileFooter.viewport && !mobileFooter.overflow, JSON.stringify(mobileFooter));
+
+  await page.setViewport({ width: 320, height: 568 });
+  await sleep(300);
+  await page.evaluate(() => window.scrollBy(0, -100));
+  await sleep(100);
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await page.waitForFunction(() => document.querySelector('footer.footer')?.classList.contains('at-bottom'), { timeout: 8000 });
+  const narrowFooter = await page.evaluate(() => ({
+    height: document.querySelector('footer.footer').getBoundingClientRect().height,
+    social: getComputedStyle(document.querySelector('.footer-extra-icons')).display,
+    utilityRight: document.querySelector('.footer-utility').getBoundingClientRect().right,
+    viewport: innerWidth,
+    overflow: document.documentElement.scrollWidth > innerWidth + 1,
+  }));
+  check('320px 页脚不超过 170px 且链接不被裁切', narrowFooter.height <= 170 && narrowFooter.social === 'flex' && narrowFooter.utilityRight <= narrowFooter.viewport && !narrowFooter.overflow, JSON.stringify(narrowFooter));
+
   const thumbs = [...homeRaw.matchAll(/<div class="home-article-thumbnail[^"]*">\s*<a\b[^>]*>/g)].map(m => m[0]);
   check('首页缩略图不重复进入 Tab 顺序', thumbs.length > 0 && thumbs.every(tag => /tabindex="-1"/.test(tag) && /aria-hidden="true"/.test(tag)), JSON.stringify({ count: thumbs.length }));
   const readMore = [...homeRaw.matchAll(/<a\b[^>]*>\s*阅读全文[\s\S]*?<\/a>/g)].map(m => m[0]);
   check('首页阅读全文不重复进入 Tab 顺序', readMore.length > 0 && readMore.every(tag => /tabindex="-1"/.test(tag) && /aria-hidden="true"/.test(tag)), JSON.stringify({ count: readMore.length }));
 
+  await mobile.bringToFront();
   await mobile.evaluate(() => window.scrollTo(0, 0));
   await sleep(400);
   await mobile.evaluate(() => document.querySelector('.mn-ref > button')?.click());

@@ -135,6 +135,7 @@ curl -sI "https://sterlingzeng.cn/" | grep -i cache-control
 - **theme-patch.js**:postinstall 对主题做可审计的最小补丁(Swup、TOC、搜索防抖、APlayer、无障碍语义、页脚清理等);补丁在 `scripts/theme-patch.js` 中集中维护
 - **季节主题**:html[data-season](auto/spring/summer/autumn/winter),导航栏 🍀 切换,localStorage 记忆;auto 是“浅色太空站、深色雨夜”;固定 `space` 模式已移除，旧值自动回退 `auto`
 - **导航与音乐**:明暗按钮固定在导航中；≤600px 隐藏次要计时器。手机音乐在设置菜单内播放/暂停，桌面使用紧凑 APlayer；资源版本见 `_config.redefine.yml` 与 `docs/ENGINEERING.md`
+- **分页与页脚**:固定背景只在第一张首页输出，避免分页文字压图；页脚用 `scripts/footer-layout.js` 构建期分行，运行时间只更新天数，主题 runtime 模块版本 `20261027ab`
 - **公开联系方式**:`scripts/public-contact.js` 在 body 内写入 Cloudflare `email_off` 标记;博客展示的邮箱是站长主动公开的信息,不应被边缘混淆成 `[email protected]`。部署后需检查关于/简历的可见地址，以及首页/文章页邮件图标的 `mailto:` 和可访问名称
 - **banner 图**:`source/images/banner-*.webp`(1920×1080),本地自托管;960/1280 变体由 `scripts/responsive-images.js` 注入 srcset
 - **文章图**:cover-*.jpg(本地)
