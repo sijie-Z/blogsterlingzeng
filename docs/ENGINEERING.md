@@ -102,7 +102,7 @@ test/                    15 套 Puppeteer / Node 检查
 - **移除滚动面上的模糊**：主题会在首页滚过半屏后给横幅加 `filter: blur(15px)`，侧栏、回到顶部、页脚还用 `backdrop-filter`。软件渲染实测首页滚动 p50 25ms / p95 50ms；改为清晰横幅 + 实色面板后 p50 8ms / p95 25ms。搜索弹层也去掉模糊。
 - **主题滚动回调去抖动**：`navbar-shrink` 与工具条 `hide` 只在状态变化时改 class；工具条状态未变直接返回。首屏 init 不再同步读 `scrollHeight`，首页约 207ms 的整页布局从 DOMContentLoaded 任务里移走；SPA 换页后的高度读取、焦点和侧栏更新都延后到 idle。
 - **编辑式视觉改造**：桌面首屏约 68dvh、移动约 42dvh；主题会内联写入 `100dvh`，旧 CSS 还有 `html body ... 38vh !important`，新规则必须覆盖这两个层级。背景用 `position:absolute` 留在首屏，移动端同时清理独立 `scale` 属性；`test:assets` 会拦截移动横幅超过 45% 视口的回归。
-- **主题 JS 版本**：`main.js` 与被打补丁的 `navbarShrink.js` / `utils.js` / `sideTools.js` / `toc.js` 带 `?v=20261026g`，`custom.js` 带 `?v=20261026ag`，`custom.css` 带 `?v=20261026bi`；APlayer 初始化模块带 `?v=20261026g`，Live2D 入口/运行时分别带 `?v=20261026f` / `?v=20261026b`。Cloudflare 的 4 小时缓存不会继续提供旧交互逻辑。
+- **主题 JS 版本**：`main.js` 与被打补丁的 `navbarShrink.js` / `utils.js` / `sideTools.js` / `toc.js` 带 `?v=20261026g`，`custom.js` 与 `custom.css` 带 `?v=20261027aa`；APlayer 初始化模块带 `?v=20261026g`，Live2D `autoload.js` / `waifu-tips.js` 带 `?v=20261027aa`，Cubism 运行时保留 `?v=20261026b`。Cloudflare 的 4 小时缓存不会继续提供旧交互逻辑。
 - **明暗切换只有一条动画管线**：移除了对所有元素生效的 `theme-transitioning` 颜色动画。View Transition 采用 latest-request-wins：快速连点时跳过旧快照并同步应用最后选择，清理只归当前任务；动画期间暂停 Live2D，结束后仅在滚动、导航、隐藏标签页和 reduced-motion 等守卫允许时恢复一个渲染循环。
 - **补丁幂等与 fresh-install**：Typed 的 reduced-motion 守卫和 head 的 inject 区块改为先归一、再保留一份；sideTools 的后续补丁不再重新引用已移除的 APlayer 变量。`test:polish` 会用 `test/fixtures/redefine-2.9.0/` 的原始文件在 `.scratch/theme-patch-fresh/` 执行两遍补丁，验证语法、无悬挂引用和逐字节一致，而不只检查当前 `node_modules`。
 
@@ -118,7 +118,9 @@ test/                    15 套 Puppeteer / Node 检查
 | 公式复制 | `scripts/math.js` 包一层 `.katex-block`，按钮读取 MathML `annotation` 里的 TeX 源码 | 0 请求 |
 | 阅读设置 | 侧栏三档字号 + 专注模式；head 内联脚本在首屏前应用，字号不闪动 | 0 请求 |
 | Live2D | 默认不加载；显式“召唤宠物”后才拉模型，选择写入 localStorage；滚动时仅暂停渲染，角色与入口不再淡出 | 用户点击前 0 请求 |
-| 背景音乐 | 点击“音乐”后才加载 APlayer；默认紧凑、暂停、无预加载，真实播放才请求 MP3；可收起为音乐按钮，重新打开复用实例且不自动播放 | 首次点击前 0 请求 / 0 播放 |
+| 背景音乐 | 桌面点击后加载、可收起复用；手机在设置菜单内播放/暂停，正文无悬浮音乐控件；展开控件的 span 图标也可键盘操作 | 首次点击前 0 请求 / 0 播放 |
+| 导航主题控制 | 明暗按钮进入导航，所有主要断点可见；文案说明下一步动作，季节与计时器面板互斥，菜单背景不模糊 | 0 请求 |
+| 失败恢复 | 本会话最新设置优先于可读旧存储；删除失败有墓碑；Live2D 安全读写存储；预览请求失败后允许重试并绕过失败缓存 | 无刷新恢复 |
 | 公开联系方式 | 163 邮箱优先、QQ 邮箱备用；关于页/简历直接显示地址，首屏/作者卡/页脚使用紧凑邮件图标并保留 `mailto:`、`title` 与可访问名称；body 内 `email_off` 防止 Cloudflare 改成占位 | 0 请求 / 无 JS 也可读 |
 | 引用与分享 | head 输出 `citation_*`；侧栏菜单复制 Markdown / BibTeX / APA / GB/T 7714 / RIS / 链接；body JSON 随 Swup 换页更新 | 0 请求 |
 | 键盘快捷键 | `?` 打开原生 `<dialog>` 帮助；`t` 切换主题；`g h` / `g a` 站内跳转；输入框和弹层打开时不触发 | 0 请求 |
@@ -171,11 +173,11 @@ test/                    15 套 Puppeteer / Node 检查
 | `test:resume` | 7 | 阅读位置记忆与继续阅读 |
 | `test:archive` | 19 | 归档页头、单页列表、旧分页跳转、热力图与移动端 |
 | `test:pages` | 52 | 标签/分类排序、说说日期、站点视觉兜底、归档元数据、页脚、内联阅读/引用按钮、静态 HTML 卫生、打印样式 |
-| `test:polish` | 59 | 紧凑首屏与 320px 边界、侧栏裁切、邮件图标、音乐收起/重开与真实播放、宠物、固定模式移除与默认回退、快速明暗连点、Redefine 原始文件 fresh-install |
+| `test:polish` | 68 | 紧凑首屏、导航明暗、手机菜单内音乐、键盘播放、面板互斥、宠物、存储写入/删除失败、预览 500 后重试、Redefine 原始文件 fresh-install |
 | `test:content` | 23 篇 | front matter、站内链接、图片、OG 卡、文风硬规则、构建后 Markdown 残留检查 |
 | `test:links` | 99 HTML | 构建产物站内 href 断链检查 |
 
-合计 605 项浏览器检查、23 篇文章的内容检查和 99 个 HTML 的内链检查。所有套件在本机通过；CI 跑 `test:content`、构建和 `test:links`，浏览器套件留在本地或 self-hosted runner。
+合计 614 项浏览器检查、23 篇文章的内容检查和 99 个 HTML 的内链检查。所有套件在本机通过；CI 跑 `test:content`、构建和 `test:links`，浏览器套件留在本地或 self-hosted runner。
 
 ## 8. 已知边界
 

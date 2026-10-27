@@ -78,7 +78,7 @@ comments: false
 ## 写作与开源
 
 - 个人博客 [sterlingzeng.cn](https://sterlingzeng.cn)：23 篇技术文章，含[系列阅读](/series/)与构建期生成的 Atom / JSON Feed。
-- 站点工程化：Swup SPA、构建期系列系统、无障碍（axe WCAG A/AA 0 违规）、CLS 0.0001、605 项浏览器回归测试。
+- 站点工程化：Swup SPA、构建期系列系统、无障碍（axe WCAG A/AA 0 违规）、CLS 0.0001、614 项浏览器回归测试。
 - GitHub：[github.com/sijie-Z](https://github.com/sijie-Z)
 
 ## 联系

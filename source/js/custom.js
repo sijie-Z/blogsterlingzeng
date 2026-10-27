@@ -33,11 +33,15 @@
   const hasMemoryValue = key => Object.prototype.hasOwnProperty.call(memoryStorage, key);
 
   function storageGet(key, fallback = null) {
+    if (hasMemoryValue(key)) {
+      const value = memoryStorage[key];
+      return value === null ? fallback : value;
+    }
     try {
       const value = localStorage.getItem(key);
       if (value != null) return value;
     } catch (e) {}
-    return hasMemoryValue(key) ? memoryStorage[key] : fallback;
+    return fallback;
   }
 
   function storageSet(key, value) {
@@ -53,8 +57,12 @@
   }
 
   function storageRemove(key) {
-    delete memoryStorage[key];
-    try { localStorage.removeItem(key); } catch (e) {}
+    // null 是删除墓碑:removeItem 失败时也不能让旧值在下一次读取复活。
+    memoryStorage[key] = null;
+    try {
+      localStorage.removeItem(key);
+      delete memoryStorage[key];
+    } catch (e) {}
   }
 
   // 底部卡片/设置卡的焦点陷阱;打开时把 #swup 设为 inert
@@ -355,6 +363,7 @@
 
     let data = null;
     let requested = false;
+    let bypassCache = false;
     let card = null;
     let current = null;
     let timer = 0;
@@ -362,10 +371,22 @@
     const load = () => {
       if (requested) return Promise.resolve(data);
       requested = true;
-      return fetch('/link-preview.json', { cache: 'force-cache' })
-        .then(res => res.ok ? res.json() : null)
-        .then(json => { data = json || {}; return data; })
-        .catch(() => { data = {}; return data; });
+      return fetch('/link-preview.json', { cache: bypassCache ? 'no-cache' : 'force-cache' })
+        .then(res => {
+          if (!res.ok) throw new Error('Link preview request failed: ' + res.status);
+          return res.json();
+        })
+        .then(json => {
+          bypassCache = false;
+          data = json || {};
+          return data;
+        })
+        .catch(() => {
+          requested = false;
+          bypassCache = true;
+          data = {};
+          return data;
+        });
     };
 
     const ensureCard = () => {
@@ -597,16 +618,19 @@
   const memPrefs = (window.__cjPrefs = window.__cjPrefs || {});
 
   function readSizePref() {
+    const memoryValue = memPrefs[READ_SIZE_KEY];
+    if (memoryValue === 's' || memoryValue === 'm' || memoryValue === 'l') return memoryValue;
     let value = null;
     try { value = localStorage.getItem(READ_SIZE_KEY); } catch (e) {}
-    if (value !== 's' && value !== 'l') value = memPrefs[READ_SIZE_KEY] || null;
     return value === 's' || value === 'l' ? value : 'm';
   }
 
   function focusPref() {
+    if (Object.prototype.hasOwnProperty.call(memPrefs, READ_FOCUS_KEY)) {
+      return memPrefs[READ_FOCUS_KEY] === 'on';
+    }
     let value = null;
     try { value = localStorage.getItem(READ_FOCUS_KEY); } catch (e) {}
-    if (value == null) value = memPrefs[READ_FOCUS_KEY] || null;
     return value === 'on';
   }
 
@@ -1121,6 +1145,20 @@
       btn.dataset.cjA11y = '1';
       btn.setAttribute('aria-label', labels[cls]);
     });
+    document.querySelectorAll('.aplayer-icon:not(button)').forEach(control => {
+      if (control.dataset.cjA11y) return;
+      const cls = [...control.classList].find(name => labels[name]);
+      if (!cls) return;
+      control.dataset.cjA11y = '1';
+      control.setAttribute('role', 'button');
+      control.setAttribute('tabindex', '0');
+      control.setAttribute('aria-label', labels[cls]);
+      control.addEventListener('keydown', e => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        e.preventDefault();
+        control.click();
+      });
+    });
     const pic = root && root.querySelector('.aplayer-pic');
     const player = window.__cjAPlayer;
     if (pic && player) {
@@ -1138,6 +1176,7 @@
         const playing = !player.audio.paused;
         pic.setAttribute('aria-label', playing ? '暂停背景音乐' : '播放背景音乐');
         pic.setAttribute('aria-pressed', String(playing));
+        syncMobileMusic();
       };
       if (!pic.__cjAudioBound) {
         pic.__cjAudioBound = true;
@@ -1146,6 +1185,56 @@
       }
       syncPlayState();
     }
+  }
+
+  function compactMusic() {
+    return window.matchMedia && window.matchMedia('(max-width: 880px)').matches;
+  }
+
+  function syncMobileMusic() {
+    const action = document.querySelector('.nb-music-action');
+    if (!action || action.disabled) return;
+    const player = window.__cjAPlayer;
+    const playing = player ? !player.audio.paused : false;
+    const label = player ? (playing ? '暂停背景音乐' : '播放背景音乐') : '音乐';
+    action.setAttribute('aria-label', label);
+    action.setAttribute('aria-pressed', String(playing));
+    const icon = action.querySelector('.nb-music-icon');
+    const text = action.querySelector('.nb-music-label');
+    if (icon) icon.textContent = player ? (playing ? '⏸' : '▶') : '🎵';
+    if (text) text.textContent = label;
+  }
+
+  async function handleCompactMusic(action) {
+    if (!compactMusic() || !action || action.disabled) return;
+    const root = document.getElementById('aplayer');
+    const player = window.__cjAPlayer;
+    if (player) {
+      try {
+        if (player.audio.paused) await player.play();
+        else player.pause();
+      } catch (e) {
+        showToast('浏览器暂未允许播放，请再点一次');
+      }
+      syncMobileMusic();
+      return;
+    }
+    if (!root || typeof window.__cjLoadAPlayer !== 'function') {
+      showToast('音乐播放器暂未就绪，请刷新后重试');
+      return;
+    }
+    action.disabled = true;
+    action.querySelector('.nb-music-label').textContent = '加载中';
+    try {
+      await window.__cjLoadAPlayer();
+      root.classList.add('cj-music-collapsed');
+      root.dataset.cjCompactMobile = '1';
+      initAplayerA11y();
+    } catch (e) {
+      showToast('音乐加载失败，请检查网络后重试');
+    }
+    action.disabled = false;
+    initMusicToggle();
   }
 
   function ensureMusicCollapse(root) {
@@ -1168,9 +1257,31 @@
   }
 
   function initMusicToggle() {
+    if (!window.__cjMusicViewportBound) {
+      window.__cjMusicViewportBound = true;
+      let resizeTimer = 0;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(initMusicToggle, 120);
+      });
+    }
     const root = document.getElementById('aplayer');
     let btn = document.getElementById('music-toggle');
     const collapse = document.getElementById('music-collapse');
+    if (compactMusic()) {
+      if (btn) btn.remove();
+      if (collapse) collapse.remove();
+      if (root && root.classList.contains('aplayer') && !root.classList.contains('cj-music-collapsed')) {
+        root.classList.add('cj-music-collapsed');
+        root.dataset.cjCompactMobile = '1';
+      }
+      syncMobileMusic();
+      return;
+    }
+    if (root && root.dataset.cjCompactMobile === '1') {
+      root.classList.remove('cj-music-collapsed');
+      delete root.dataset.cjCompactMobile;
+    }
     const playerOpen = root && root.classList.contains('aplayer') && !root.classList.contains('cj-music-collapsed');
     if (playerOpen) {
       if (btn) btn.remove();
@@ -1614,7 +1725,7 @@
   // Live2D opt-in — 默认不加载 4MB 模型
   // ============================
   const PET_PREF = 'cj-pet';
-  const PET_SCRIPT = '/live2d/autoload.js?v=20261026f';
+  const PET_SCRIPT = '/live2d/autoload.js?v=20261027aa';
 
   function petPref() {
     return storageGet(PET_PREF);
@@ -3557,6 +3668,7 @@
     const controls = document.createElement('div');
     controls.className = 'nb-controls';
     controls.innerHTML = `
+      <button type="button" class="nb-dark-btn tool-dark-light-toggle" title="切换明暗模式" aria-label="切换明暗模式"><i class="fa-regular fa-moon" aria-hidden="true"></i></button>
       <button type="button" class="nb-theme-btn" title="选择配色与横幅" aria-label="选择配色与横幅" aria-haspopup="true" aria-expanded="false">${current === 'auto' ? '🍀' : SEASON_ICONS[current]}</button>
       <div class="nb-dropdown">
         <button type="button" class="nb-opt${current === 'auto' ? ' active' : ''}" data-season="auto" aria-pressed="${current === 'auto'}"><span>🍀</span><span class="nb-opt-copy"><span>默认（跟随明暗）</span><small>浅色太空站，深色雨夜</small></span></button>
@@ -3565,6 +3677,7 @@
         ).join('')}
         <div class="nb-div"></div>
         <button type="button" class="nb-opt flashlight-opt"><span>🔦</span><span>管中窥豹</span></button>
+        <button type="button" class="nb-opt nb-music-action" aria-pressed="false"><span class="nb-music-icon">🎵</span><span class="nb-music-label">音乐</span></button>
       </div>
       <button type="button" class="nb-timer-btn" title="计时器" aria-label="计时器" aria-haspopup="true" aria-expanded="false">⏱</button>
       <div class="nb-timer-panel">
@@ -3587,6 +3700,9 @@
     };
     themeBtn.addEventListener('click', e => {
       e.stopPropagation();
+      const timerPanel = controls.querySelector('.nb-timer-panel');
+      if (timerPanel) timerPanel.classList.remove('show');
+      controls.querySelector('.nb-timer-btn')?.setAttribute('aria-expanded', 'false');
       preloadSeasonBanners();
       setDropdown(!dropdown.classList.contains('show'));
     });
@@ -3594,6 +3710,12 @@
     controls.querySelectorAll('.nb-opt').forEach(opt => {
       opt.addEventListener('click', e => {
         e.stopPropagation();
+        if (opt.classList.contains('nb-music-action')) {
+          handleCompactMusic(opt);
+          setDropdown(false);
+          themeBtn.focus({ preventScroll: true });
+          return;
+        }
         if (opt.classList.contains('flashlight-opt')) {
           toggleFlashlight();
           setDropdown(false);
@@ -3623,6 +3745,7 @@
     }
     controls.querySelector('.nb-timer-btn').addEventListener('click', e => {
       e.stopPropagation();
+      setDropdown(false);
       const open = timerPanel.classList.toggle('show');
       e.currentTarget.setAttribute('aria-expanded', String(open));
     });
@@ -3644,6 +3767,8 @@
       timerTime.textContent = '00:00:00';
       startBtn.style.display = ''; pauseBtn.style.display = 'none';
     });
+    syncMobileMusic();
+    updateThemeControls(document.documentElement.classList.contains('dark'));
   }
 
   // ============================
@@ -4110,7 +4235,6 @@
     onceGlobal('citationMenu', initCitationMenu);
     applyReadingPrefs();
     initExternalLinks();
-    initMusicToggle();
     initAplayerA11y();
     initGiscusA11y();
     onceGlobal('readingProgress', initReadingProgress);
@@ -4123,6 +4247,7 @@
     initRelatedPosts();
     initSeason();
     initThemeSwitcher();
+    initMusicToggle();
     syncBannerTheme();
     // 表格、锚点、滚动入场都不赶在首屏/换页的同一个任务里完成:
     // 先让内容可见,再延后改 DOM 和读位置,避免强制布局把首屏拖长。
@@ -4279,6 +4404,18 @@
     }
   }
 
+  function updateThemeControls(dark) {
+    const label = dark ? '切换到浅色模式' : '切换到深色模式';
+    document.querySelectorAll('.tool-dark-light-toggle').forEach(control => {
+      const icon = control.querySelector('i');
+      if (icon) icon.className = dark ? 'fa-regular fa-brightness' : 'fa-regular fa-moon';
+      if (control.tagName === 'BUTTON') {
+        control.setAttribute('aria-label', label);
+        control.title = label;
+      }
+    });
+  }
+
   // 手动切明暗(与 Redefine 的 enableDarkMode/enableLightMode 等效)
   function toggleDarkManually(dark) {
     const html = document.documentElement;
@@ -4294,8 +4431,7 @@
       body.classList.remove('dark-mode');
       body.classList.add('light-mode');
     }
-    const icon = document.querySelector('.tool-dark-light-toggle i');
-    if (icon) icon.className = dark ? 'fa-regular fa-brightness' : 'fa-regular fa-moon';
+    updateThemeControls(dark);
     try {
       const key = 'REDEFINE-THEME-STATUS';
       const st = JSON.parse(localStorage.getItem(key) || '{}');

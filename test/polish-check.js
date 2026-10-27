@@ -137,7 +137,7 @@ function count(text, needle) {
       return {
         auto: auto.textContent,
         hasSpace: !!space,
-        optionCount: document.querySelectorAll('.nb-opt').length,
+        optionCount: [...document.querySelectorAll('.nb-opt')].filter(element => getComputedStyle(element).display !== 'none').length,
         inside: rect.left >= 0 && rect.right <= innerWidth && rect.top >= 0 && rect.bottom <= innerHeight,
       };
     });
@@ -145,6 +145,13 @@ function count(text, needle) {
     check('季节菜单完整位于视口内', season.inside);
     await page.keyboard.press('Escape');
     check('Escape 关闭菜单并归还焦点', await page.evaluate(() => !document.querySelector('.nb-dropdown').classList.contains('show') && document.activeElement === document.querySelector('.nb-theme-btn')));
+    await page.click('.nb-timer-btn');
+    await page.click('.nb-theme-btn');
+    const themeOverTimer = await page.evaluate(() => !document.querySelector('.nb-timer-panel').classList.contains('show') && document.querySelector('.nb-dropdown').classList.contains('show'));
+    await page.click('.nb-timer-btn');
+    const timerOverTheme = await page.evaluate(() => document.querySelector('.nb-timer-panel').classList.contains('show') && !document.querySelector('.nb-dropdown').classList.contains('show'));
+    check('季节与计时器面板互斥打开', themeOverTimer && timerOverTheme);
+    await page.keyboard.press('Escape');
 
     console.log('=== 3. 响应式几何边界 ===');
     for (const [width, height] of [[320, 568], [390, 844], [769, 700], [900, 700]]) {
@@ -237,6 +244,12 @@ function count(text, needle) {
     await page.click('.aplayer-pic');
     await page.waitForFunction(() => window.__cjAPlayer.audio.paused, { timeout: 5000 });
     check('再次真实点击暂停且更新无障碍状态', await page.$eval('.aplayer-pic', element => element.getAttribute('aria-label') === '播放背景音乐' && element.getAttribute('aria-pressed') === 'false'));
+    await page.click('.aplayer-miniswitcher button');
+    await page.focus('.aplayer-icon-play');
+    await page.keyboard.press('Enter');
+    await page.waitForFunction(() => !window.__cjAPlayer.audio.paused, { timeout: 5000 });
+    check('展开播放器的 span 控件支持键盘', await page.$eval('.aplayer-icon-play, .aplayer-icon-pause', element => element.getAttribute('role') === 'button' && element.tabIndex === 0 && !!element.getAttribute('aria-label')));
+    await page.evaluate(() => window.__cjAPlayer.pause());
     const mediaRequestCount = requests.filter(url => /APlayer\.min\.js|plugins\/aplayer\.js|123\.mp3/.test(url)).length;
     await page.evaluate(() => { window.__cjPlayerBeforeCollapse = window.__cjAPlayer; });
     await page.click('#music-collapse');
@@ -264,19 +277,41 @@ function count(text, needle) {
     }));
 
     await reset(390, 844);
-    await page.click('#music-toggle');
+    const mobileDarkBefore = await page.evaluate(() => document.documentElement.classList.contains('dark'));
+    await page.click('.nb-dark-btn');
+    await page.waitForFunction(before => document.documentElement.classList.contains('dark') !== before, { timeout: 8000 }, mobileDarkBefore);
+    check('手机可直接切换明暗且无横向溢出', await page.evaluate(expected => {
+      const button = document.querySelector('.nb-dark-btn');
+      const label = document.documentElement.classList.contains('dark') ? '切换到浅色模式' : '切换到深色模式';
+      return button.getAttribute('aria-label') === label && button.getBoundingClientRect().width > 0 && document.querySelector('.nb-timer-btn').getBoundingClientRect().width === 0 && document.documentElement.scrollWidth <= innerWidth + 1 && document.documentElement.classList.contains('dark') !== expected;
+    }, mobileDarkBefore));
+    await waitTheme();
+    await page.click('.nb-dark-btn');
+    await page.waitForFunction(before => document.documentElement.classList.contains('dark') === before, { timeout: 8000 }, mobileDarkBefore);
+    await waitTheme();
+    await page.click('.nb-theme-btn');
+    await page.waitForFunction(() => document.querySelector('.nb-dropdown').classList.contains('show'));
+    await sleep(300);
+    check('手机设置菜单提供音乐入口且无固定控件', await page.evaluate(() => {
+      const action = document.querySelector('.nb-music-action');
+      const visibleOptions = [...document.querySelectorAll('.nb-opt')].filter(element => getComputedStyle(element).display !== 'none').length;
+      return getComputedStyle(action).display === 'flex' && visibleOptions === 7 && !document.getElementById('music-toggle') && !document.getElementById('music-collapse');
+    }));
+    await page.click('.nb-music-action');
     await page.waitForFunction(() => !!window.__cjAPlayer, { timeout: 10000 });
-    check('手机播放器可见且未超出视口', await page.evaluate(() => {
-      const player = document.getElementById('aplayer');
-      const rect = player.template ? player.template.pic.getBoundingClientRect() : document.querySelector('.aplayer-pic').getBoundingClientRect();
-      return getComputedStyle(player).display !== 'none' && rect.left >= 0 && rect.right <= innerWidth && rect.top >= 0 && rect.bottom <= innerHeight;
-    }));
-    await page.click('#music-collapse');
-    check('手机也能收起为音乐按钮', await page.evaluate(() => {
-      const launcher = document.getElementById('music-toggle');
-      const rect = launcher.getBoundingClientRect();
-      return getComputedStyle(document.getElementById('aplayer')).display === 'none' && document.activeElement === launcher && rect.left >= 0 && rect.right <= innerWidth && rect.bottom <= innerHeight;
-    }));
+    check('手机初始化不显示悬浮播放器且不自动播放', await page.evaluate(() => getComputedStyle(document.getElementById('aplayer')).display === 'none' && window.__cjAPlayer.audio.paused && !document.getElementById('music-toggle') && !document.getElementById('music-collapse')));
+    await page.click('.nb-theme-btn');
+    await page.waitForFunction(() => document.querySelector('.nb-dropdown').classList.contains('show'));
+    await sleep(300);
+    await page.click('.nb-music-action');
+    await page.waitForFunction(() => !window.__cjAPlayer.audio.paused, { timeout: 5000 });
+    check('手机菜单内播放后显示暂停动作', await page.$eval('.nb-music-action', element => element.getAttribute('aria-label') === '暂停背景音乐' && element.getAttribute('aria-pressed') === 'true'));
+    await page.click('.nb-theme-btn');
+    await page.waitForFunction(() => document.querySelector('.nb-dropdown').classList.contains('show'));
+    await sleep(300);
+    await page.click('.nb-music-action');
+    await page.waitForFunction(() => window.__cjAPlayer.audio.paused, { timeout: 5000 });
+    check('手机再次点击暂停且不产生悬浮控件', await page.evaluate(() => window.__cjAPlayer.audio.paused && getComputedStyle(document.getElementById('aplayer')).display === 'none' && !document.getElementById('music-toggle') && !document.getElementById('music-collapse')));
 
     console.log('=== 6. 宠物滚动可见 ===');
     await reset();
@@ -334,8 +369,13 @@ function count(text, needle) {
     }));
     check('旧 space 设置回退默认并保持深色雨夜', legacyState.season === 'auto' && legacyState.images.some(url => url.includes('banner-dark')), JSON.stringify(legacyState));
 
-    await page.evaluate(() => window.scrollTo(0, 160));
-    await sleep(900);
+    await page.setViewport({ width: 1366, height: 900 });
+    check('1366px 笔记本也有可见明暗按钮', await page.$eval('.nb-dark-btn', element => {
+      const rect = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+      return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.pointerEvents !== 'none';
+    }));
+    await page.setViewport({ width: 1524, height: 900 });
     await page.evaluate(() => {
       const original = document.startViewTransition.bind(document);
       window.__cjOriginalVT = original;
@@ -343,11 +383,9 @@ function count(text, needle) {
         setTimeout(() => { callback(); resolve(); }, 60);
       }));
     });
-    await page.click('.toggle-tools-list button');
-    await page.waitForFunction(() => document.querySelector('.tool-dark-light-toggle').getBoundingClientRect().width > 0);
-    await sleep(450);
+    await page.waitForFunction(() => document.querySelector('.nb-dark-btn').getBoundingClientRect().width > 0);
     const darkBefore = await page.evaluate(() => document.documentElement.classList.contains('dark'));
-    const toggleRect = await page.$eval('.tool-dark-light-toggle', element => element.getBoundingClientRect().toJSON());
+    const toggleRect = await page.$eval('.nb-dark-btn', element => element.getBoundingClientRect().toJSON());
     for (let index = 0; index < 3; index++) {
       await page.mouse.click(toggleRect.left + toggleRect.width / 2, toggleRect.top + toggleRect.height / 2);
       await sleep(25);
@@ -402,6 +440,70 @@ function count(text, needle) {
     await waitTheme();
     await sleep(1400);
     check('切换结束后只恢复一个渲染循环', await page.evaluate(() => !window.__l2dThemePaused && typeof window.__l2dApp._drawFrameId === 'number'));
+
+    console.log('=== 8. 写入失败与网络恢复 ===');
+    const blocked = await browser.newPage();
+    blocked.on('pageerror', error => errors.push(error.message.slice(0, 180)));
+    await blocked.setViewport({ width: 1440, height: 900 });
+    await blocked.evaluateOnNewDocument(() => {
+      const originalSet = Storage.prototype.setItem;
+      originalSet.call(localStorage, 'blog-season', 'winter');
+      originalSet.call(localStorage, 'cj-read-size', 's');
+      Storage.prototype.setItem = function () { throw new Error('writes blocked'); };
+      Storage.prototype.removeItem = function () { throw new Error('removes blocked'); };
+    });
+    await blocked.goto(`${BASE}${ARTICLE}`, { waitUntil: 'networkidle2', timeout: 30000 });
+    await blocked.click('.read-size-btn[data-read-size="l"]');
+    await blocked.click('.nb-theme-btn');
+    await blocked.waitForFunction(() => document.querySelector('.nb-dropdown').classList.contains('show'));
+    await sleep(300);
+    await blocked.click('.nb-opt[data-season="summer"]');
+    await blocked.waitForFunction(() => document.documentElement.dataset.season === 'summer');
+    await blocked.evaluate(() => window.swup?.navigate('/about/'));
+    await blocked.waitForFunction(() => /^\/about\/?$/.test(location.pathname), { timeout: 8000 });
+    check('写入失败时新季节不被可读旧值覆盖', await blocked.evaluate(() => localStorage.getItem('blog-season') === 'winter' && window.__cjStorageFallback['blog-season'] === 'summer' && document.documentElement.dataset.season === 'summer'));
+    check('写入失败时新阅读字号不被旧值覆盖', await blocked.evaluate(() => localStorage.getItem('cj-read-size') === 's' && window.__cjPrefs['cj-read-size'] === 'l' && document.documentElement.dataset.readSize === 'l'));
+    await blocked.close();
+
+    const retry = await browser.newPage();
+    retry.on('pageerror', error => errors.push(error.message.slice(0, 180)));
+    await retry.setViewport({ width: 1440, height: 900 });
+    await retry.setRequestInterception(true);
+    let previewCalls = 0;
+    retry.on('request', request => {
+      if (request.url().endsWith('/link-preview.json')) {
+        previewCalls++;
+        if (previewCalls === 1) request.respond({ status: 500, contentType: 'application/json', body: '{}' });
+        else request.continue();
+      } else request.continue();
+    });
+    await retry.goto(`${BASE}/2026/10/23/static-assets-cleanup/`, { waitUntil: 'networkidle2', timeout: 30000 });
+    await retry.waitForFunction(() => window.__cj_once_linkPreviews === true, { timeout: 10000 });
+    const hoverPreview = async () => {
+      await retry.evaluate(() => {
+        const link = [...document.querySelectorAll('.article-content a[href^="/"]')].find(element => element.getAttribute('href').includes('font-subset'));
+        link.scrollIntoView({ block: 'center' });
+      });
+      await sleep(400);
+      await retry.evaluate(() => {
+        const link = [...document.querySelectorAll('.article-content a[href^="/"]')].find(element => element.getAttribute('href').includes('font-subset'));
+        link.dispatchEvent(new MouseEvent('mouseover', { bubbles: true, relatedTarget: document.body }));
+      });
+    };
+    const failedResponse = retry.waitForResponse(response => response.url().endsWith('/link-preview.json'), { timeout: 10000 });
+    await hoverPreview();
+    await failedResponse;
+    await sleep(100);
+    const failedVisible = await retry.$eval('.link-preview-card', element => element.classList.contains('show')).catch(() => false);
+    await retry.evaluate(() => {
+      const link = [...document.querySelectorAll('.article-content a[href^="/"]')].find(element => element.getAttribute('href').includes('font-subset'));
+      link.dispatchEvent(new MouseEvent('mouseout', { bubbles: true, relatedTarget: document.body }));
+    });
+    await hoverPreview();
+    await sleep(900);
+    const recovered = await retry.$eval('.link-preview-card', element => element.classList.contains('show') && element.querySelector('.lp-title').textContent.trim().length > 0).catch(() => false);
+    check('预览请求一次 500 后会在下次悬停重试', previewCalls >= 2 && !failedVisible && recovered, JSON.stringify({ previewCalls, failedVisible, recovered }));
+    await retry.close();
 
     check('全流程无页面 JavaScript 错误', errors.length === 0, errors.join(' | '));
   } finally {

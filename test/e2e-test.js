@@ -44,7 +44,8 @@ function check(name, cond, extra) {
     check('下拉打开', dropOpen);
     // 点夏季(第 3 个选项:auto/spring/summer)
     const opts = await page.$$('.nb-opt');
-    check('下拉选项数 = 6', opts.length === 6, '实际 ' + opts.length);
+    const visibleOptCount = await page.$$eval('.nb-opt', elements => elements.filter(element => getComputedStyle(element).display !== 'none').length);
+    check('下拉选项数 = 6', visibleOptCount === 6, '实际 ' + visibleOptCount);
     if (opts.length >= 3) {
       // 选项用 DOM click:View Transition 的快照层仍在时,真实坐标点击会被吞掉
       await page.evaluate(() => document.querySelector('.nb-opt[data-season="summer"]').click());
