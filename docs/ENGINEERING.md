@@ -97,14 +97,14 @@ test/                    15 套 Puppeteer / Node 检查
 
 - **移除 Swup 退出动画**：旧流程先播 320ms 旧页退出，再替换 DOM，首跳 click→replace 实测 426ms。现在只播新页入场，代价是页面切换少了一层“退场”叙事，收益是内容快一个数量级到达。
 - **滚动期间暂停 Live2D**：用 `scrollend` + 180ms 时间窗避免程序化滚动每帧触发 resume。
-- **缓存文档高度**：主题的滚动进度/侧栏工具需要 `scrollHeight`，每帧读取会强制布局；改为 load/resize/fonts/换页后更新缓存，仅在接近页脚时读一次真实值。
+- **缓存文档高度**：主题的滚动进度/侧栏工具需要 `scrollHeight`，每帧读取会强制布局；改为 load/resize/fonts/换页后更新缓存。视口变化的下一帧同时刷新缓存与页脚状态；接近真实页底时直接按实际 `scrollHeight` 判断，避免 resize 或导航回调把旧区间写回后误判“尚未到底”。
 - **APlayer 按需恢复**：首屏只有一个轻量“音乐”按钮；点击后才加载播放器核心，默认紧凑、暂停且 `preload:"none"`，再点封面播放才请求约 2.5MB 的 MP3。主题不再随滚动给播放器加 `hide`，手机端也可用；可收起为音乐按钮并暂停，重新打开复用实例且不自动播放；封面支持 Enter/Space 与播放状态名称。音轨没有标题/艺术家元数据，因此界面如实写“背景音乐 / 本地音频 · 02:41”。
 - **PNG 纹理仍部署**：WebP 已切换，但旧 `index.json` 可能被缓存 10 分钟；PNG 作为回退保留。设置 `CJ_SKIP_OLD_TEXTURES=1` 可移除。
 - **移除滚动面上的模糊**：主题会在首页滚过半屏后给横幅加 `filter: blur(15px)`，侧栏、回到顶部、页脚还用 `backdrop-filter`。软件渲染实测首页滚动 p50 25ms / p95 50ms；改为清晰横幅 + 实色面板后 p50 8ms / p95 25ms。搜索弹层也去掉模糊。
 - **主题滚动回调去抖动**：`navbar-shrink` 与工具条 `hide` 只在状态变化时改 class；工具条状态未变直接返回。首屏 init 不再同步读 `scrollHeight`，首页约 207ms 的整页布局从 DOMContentLoaded 任务里移走；SPA 换页后的高度读取、焦点和侧栏更新都延后到 idle。
 - **编辑式视觉改造**：桌面首屏约 68dvh、移动约 42dvh；主题会内联写入 `100dvh`，旧 CSS 还有 `html body ... 38vh !important`，新规则必须覆盖这两个层级。背景用 `position:absolute` 留在首屏，移动端同时清理独立 `scale` 属性；`test:assets` 会拦截移动横幅超过 45% 视口的回归。
 - **分页背景与紧凑页脚**：固定太空站/雨夜背景只在第一张首页输出，分页不再创建背景节点；页脚通过 `footer-layout.js` 构建期分为 primary/meta 与 utility 两行，同年不重复年份，移除装饰口号与心跳。运行时间只在初始化和回到前台时更新天数，不再维护每秒计时器。实测桌面约 92px、320px 约 156px，全部链接与社交入口保留。
-- **主题 JS 版本**：`main.js` 与被打补丁的 `navbarShrink.js` / `utils.js` / `sideTools.js` / `toc.js` 带 `?v=20261026g`，`custom.js` 带 `?v=20261027aa`，`custom.css` 带 `?v=20261027ac`；APlayer 初始化模块带 `?v=20261026g`，Live2D `autoload.js` / `waifu-tips.js` 带 `?v=20261027aa`，页脚 runtime 与主题模块带 `?v=20261027ab`。Cloudflare 的 4 小时缓存不会继续提供旧交互逻辑。
+- **主题 JS 版本**：`main.js` 与被打补丁的 `navbarShrink.js` / `utils.js` / `sideTools.js` / `toc.js` 带 `?v=20261026g`，`custom.js` 带 `?v=20261027ae`，`custom.css` 带 `?v=20261027ac`；APlayer 初始化模块带 `?v=20261026g`，Live2D `autoload.js` / `waifu-tips.js` 带 `?v=20261027aa`，页脚 runtime 与主题模块带 `?v=20261027ab`。Cloudflare 的 4 小时缓存不会继续提供旧交互逻辑。
 - **明暗切换只有一条动画管线**：移除了对所有元素生效的 `theme-transitioning` 颜色动画。View Transition 采用 latest-request-wins：快速连点时跳过旧快照并同步应用最后选择，清理只归当前任务；动画期间暂停 Live2D，结束后仅在滚动、导航、隐藏标签页和 reduced-motion 等守卫允许时恢复一个渲染循环。
 - **补丁幂等与 fresh-install**：Typed 的 reduced-motion 守卫和 head 的 inject 区块改为先归一、再保留一份；sideTools 的后续补丁不再重新引用已移除的 APlayer 变量。`test:polish` 会用 `test/fixtures/redefine-2.9.0/` 的原始文件在 `.scratch/theme-patch-fresh/` 执行两遍补丁，验证语法、无悬挂引用和逐字节一致，而不只检查当前 `node_modules`。
 

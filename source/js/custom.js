@@ -2555,13 +2555,14 @@
 
       // 文档高度用缓存:load / resize / 字体就绪 / 换页后都会刷新,
       // ResizeObserver 也会兜住图片撑高;不再每次滚动同步读 scrollHeight。
-      // 只在接近底部(<150px)时读一次真实值,保证页脚触底判定准确。
       let maxScroll = (window.__cjScrollHeight || document.documentElement.scrollHeight) - window.innerHeight;
-      if (maxScroll - scrollTop <= 150) {
-        const realMax = document.documentElement.scrollHeight - window.innerHeight;
-        if (realMax !== maxScroll) {
-          window.__cjScrollHeight = realMax + window.innerHeight;
-          maxScroll = realMax;
+      // 接近真实页底时以真实文档高度为准,不依赖可能过期的缓存区间。
+      // 只有这里读取 scrollHeight,避免滚动过程中每帧强制布局。
+      const actualMax = document.documentElement.scrollHeight - window.innerHeight;
+      if (actualMax - scrollTop <= 150) {
+        if (actualMax !== maxScroll) {
+          window.__cjScrollHeight = actualMax + window.innerHeight;
+          maxScroll = actualMax;
         }
       }
 
@@ -2632,6 +2633,17 @@
     document.addEventListener('scrollend', () => {
       if (performance.now() - lastScrollAt > 180) resumeLive2D();
     }, { passive: true });
+    // 视口变化会同时改变文档高度和可滚动区间;下一帧一并刷新缓存与页脚状态。
+    let footerResizeRaf = 0;
+    window.addEventListener('resize', () => {
+      if (footerResizeRaf) return;
+      footerResizeRaf = requestAnimationFrame(() => {
+        footerResizeRaf = 0;
+        window.__cjScrollHeight = document.documentElement.scrollHeight;
+        update();
+      });
+    }, { passive: true });
+
     // 首屏不要在 init 里同步读 scrollHeight:这会把整页布局(首页约 200ms)
     // 压在 DOMContentLoaded/首帧的任务里。等首屏渲染完再量。
     const firstMeasure = () => {
