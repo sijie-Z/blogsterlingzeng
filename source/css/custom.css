@@ -7484,11 +7484,13 @@ footer.footer.at-bottom .info-container {
   border: 0;
   border-top: 1px solid rgba(148, 163, 184, 0.22);
   border-radius: 0;
+  background: transparent !important;
   box-shadow: none;
 }
 
 html.dark footer.footer.at-bottom .info-container {
   border-top-color: rgba(148, 163, 184, 0.14);
+  background: transparent !important;
   box-shadow: none;
 }
 
