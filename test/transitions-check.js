@@ -355,16 +355,14 @@ async function waitIdle(page, timeout = 8000) {
     days: document.getElementById('runtime_days')?.textContent.trim() || '',
     hours: document.getElementById('runtime_hours')?.textContent.trim() || '',
     seconds: document.getElementById('runtime_seconds')?.textContent.trim() || '',
-    mobileSeconds: document.querySelector('.footer-runtime-mobile [data-runtime="seconds"]')?.textContent.trim() || '',
   }));
   await sleep(1300);
   const runtimeAfter = await page.evaluate(() => ({
     days: document.getElementById('runtime_days')?.textContent.trim() || '',
     hours: document.getElementById('runtime_hours')?.textContent.trim() || '',
     seconds: document.getElementById('runtime_seconds')?.textContent.trim() || '',
-    mobileSeconds: document.querySelector('.footer-runtime-mobile [data-runtime="seconds"]')?.textContent.trim() || '',
   }));
-  check('页脚运行时间精确到秒并持续更新', /^\d+$/.test(runtimeBefore.days) && /^\d{2}$/.test(runtimeBefore.hours) && /^\d{2}$/.test(runtimeBefore.seconds) && runtimeBefore.seconds !== runtimeAfter.seconds && runtimeAfter.mobileSeconds === runtimeAfter.seconds, JSON.stringify({ runtimeBefore, runtimeAfter }));
+  check('页脚运行时间精确到秒并持续更新', /^\d+$/.test(runtimeBefore.days) && /^\d{2}$/.test(runtimeBefore.hours) && /^\d{2}$/.test(runtimeBefore.seconds) && runtimeBefore.seconds !== runtimeAfter.seconds, JSON.stringify({ runtimeBefore, runtimeAfter }));
 
   console.log('=== 8.5 导航自动隐藏与键盘 ===');
   await page.evaluate(() => window.scrollTo(0, 1400));

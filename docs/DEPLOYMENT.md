@@ -112,7 +112,7 @@ Cloudflare **全自动**(Universal SSL),无需任何操作,自动续期。
 ### 3. 验证
 
 ```bash
-curl -sI "https://sterlingzeng.cn/css/custom.css?v=20261028c" | grep -i cache-control
+curl -sI "https://sterlingzeng.cn/css/custom.css?v=20261028d" | grep -i cache-control
 curl -sI "https://sterlingzeng.cn/" | grep -i cache-control
 ```
 

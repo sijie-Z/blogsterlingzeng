@@ -17,16 +17,6 @@ hexo.extend.filter.register('after_render:html', function (str) {
   out = out.replace(social[0], '');
   out = out.replace('<nav class="footer-utility"', '</div>' + social[0] + '</div><nav class="footer-utility"');
 
-  // 手机页脚把秒级运行时间单独放在次级入口右侧,避免挤进版权行。
-  if (!out.includes('footer-runtime-mobile')) {
-    const navAt = out.indexOf('<nav class="footer-utility"');
-    const navClose = navAt >= 0 ? out.indexOf('</nav>', navAt) : -1;
-    if (navClose > navAt) {
-      const mobileRuntime = '<span class="footer-runtime-mobile"><span class="sr-only">已运行 </span><span data-runtime="days"></span> 天 <span data-runtime="hours"></span>:<span data-runtime="minutes"></span>:<span data-runtime="seconds"></span></span>';
-      out = out.slice(0, navClose + 6) + mobileRuntime + out.slice(navClose + 6);
-    }
-  }
-
   // 统计关闭时主题仍输出一个空占位 div,会在 meta 行里留下多余间距
   const placeholderAt = out.indexOf('class="relative text-center lg:absolute lg:left-[20px]');
   if (placeholderAt >= 0) {

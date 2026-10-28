@@ -204,7 +204,7 @@ function check(name, cond, extra) {
   check('搜索框有静态 aria-label', /aria-label="站内搜索"/.test(homeRaw));
   check('首屏展示真实身份与求职方向', homeRaw.includes('home-hero-identity') && homeRaw.includes('GIS 大四') && homeRaw.includes('前端 / 全栈 / AI 应用工程') && !homeRaw.includes('>Lv3<'));
   check('页脚提供可见返回顶部入口', /class="footer-back-top" href="#main-content"/.test(homeRaw));
-  check('页脚保留精确运行时间与全部入口', !homeRaw.includes('2026 - 2026') && !homeRaw.includes('customize-info') && homeRaw.includes('runtime_hours') && homeRaw.includes('data-runtime="seconds"') && homeRaw.includes('footer-runtime-mobile') && ['/resume/', '/archives/', '/tags/', '/bookmarks/', '/shuoshuo/', '/photos/', '/atom.xml', 'https://github.com/sijie-Z', 'mailto:19150649985@163.com', 'https://beian.miit.gov.cn/'].every(href => homeRaw.includes(href)));
+  check('页脚保留精确运行时间与全部入口', !homeRaw.includes('2026 - 2026') && !homeRaw.includes('customize-info') && !homeRaw.includes('footer-runtime-mobile') && homeRaw.includes('runtime_hours') && homeRaw.includes('data-runtime="seconds"') && ['/resume/', '/archives/', '/tags/', '/bookmarks/', '/shuoshuo/', '/photos/', '/atom.xml', 'https://github.com/sijie-Z', 'mailto:19150649985@163.com', 'https://beian.miit.gov.cn/'].every(href => homeRaw.includes(href)));
   const blankLinks = [...homeRaw.matchAll(/<a[^>]*target="_blank"[^>]*>/g)]
     .filter(m => !/rel="[^"]*noopener/.test(m[0]));
   check('新窗口外链都带 noopener', blankLinks.length === 0, String(blankLinks.length));
@@ -253,7 +253,7 @@ function check(name, cond, extra) {
   });
   check('桌面页脚不超过 100px 且保留主次两行', desktopFooter.height <= 100 && desktopFooter.primary && desktopFooter.meta && desktopFooter.social === 'flex' && desktopFooter.utility.height > 0, JSON.stringify(desktopFooter));
   const expectedWidth = Math.min(1200, desktopFooter.footer.width * 0.8);
-  check('宽屏页脚保持两行两列并与正文同宽', desktopFooter.info.height > 60 && desktopFooter.info.height <= 110 && Math.abs(desktopFooter.info.width - expectedWidth) <= 2 && Math.abs((desktopFooter.info.left + desktopFooter.info.right) / 2 - (desktopFooter.footer.left + desktopFooter.footer.right) / 2) <= 4 && Math.abs(desktopFooter.icons.right - desktopFooter.info.right) <= 2 && desktopFooter.utility.top >= desktopFooter.metaRect.bottom && desktopFooter.utility.left >= desktopFooter.info.left - 1 && desktopFooter.utility.right <= desktopFooter.info.right + 1 && desktopFooter.utilityBorderTop === 0, JSON.stringify({ info: desktopFooter.info, footer: desktopFooter.footer, expectedWidth, meta: desktopFooter.metaRect, icons: desktopFooter.icons, utility: desktopFooter.utility }));
+  check('宽屏页脚上排入口下排信息', desktopFooter.info.height > 60 && desktopFooter.info.height <= 110 && Math.abs(desktopFooter.info.width - expectedWidth) <= 2 && Math.abs((desktopFooter.info.left + desktopFooter.info.right) / 2 - (desktopFooter.footer.left + desktopFooter.footer.right) / 2) <= 4 && Math.abs(desktopFooter.icons.right - desktopFooter.info.right) <= 2 && Math.abs(desktopFooter.utility.top - desktopFooter.icons.top) <= 4 && desktopFooter.metaRect.top >= Math.min(desktopFooter.utility.bottom, desktopFooter.icons.bottom) - 2 && desktopFooter.utility.left >= desktopFooter.info.left - 1 && desktopFooter.utility.right <= desktopFooter.info.right + 1 && desktopFooter.utilityBorderTop === 0, JSON.stringify({ info: desktopFooter.info, footer: desktopFooter.footer, expectedWidth, meta: desktopFooter.metaRect, icons: desktopFooter.icons, utility: desktopFooter.utility }));
 
   await page.setViewport({ width: 390, height: 844 });
   await page.goto(`${BASE}/`, { waitUntil: 'networkidle2', timeout: 30000 });
@@ -263,7 +263,7 @@ function check(name, cond, extra) {
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   await page.waitForFunction(() => document.querySelector('footer.footer')?.classList.contains('at-bottom'), { timeout: 8000 });
   const mobileFooter = await page.evaluate(() => {
-    const runtime = document.querySelector('.footer-runtime-mobile');
+    const runtime = document.querySelector('.footer-runtime');
     return {
       height: document.querySelector('footer.footer').getBoundingClientRect().height,
       social: getComputedStyle(document.querySelector('.footer-extra-icons')).display,
