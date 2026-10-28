@@ -204,7 +204,7 @@ function check(name, cond, extra) {
   check('搜索框有静态 aria-label', /aria-label="站内搜索"/.test(homeRaw));
   check('首屏展示真实身份与求职方向', homeRaw.includes('home-hero-identity') && homeRaw.includes('GIS 大四') && homeRaw.includes('前端 / 全栈 / AI 应用工程') && !homeRaw.includes('>Lv3<'));
   check('页脚提供可见返回顶部入口', /class="footer-back-top" href="#main-content"/.test(homeRaw));
-  check('页脚同年不重复且保留全部入口', !homeRaw.includes('2026 - 2026') && !homeRaw.includes('customize-info') && !homeRaw.includes('runtime_hours') && ['/resume/', '/archives/', '/tags/', '/bookmarks/', '/shuoshuo/', '/photos/', '/atom.xml', 'https://github.com/sijie-Z', 'mailto:19150649985@163.com', 'https://beian.miit.gov.cn/'].every(href => homeRaw.includes(href)));
+  check('页脚保留精确运行时间与全部入口', !homeRaw.includes('2026 - 2026') && !homeRaw.includes('customize-info') && homeRaw.includes('runtime_hours') && homeRaw.includes('data-runtime="seconds"') && homeRaw.includes('footer-runtime-mobile') && ['/resume/', '/archives/', '/tags/', '/bookmarks/', '/shuoshuo/', '/photos/', '/atom.xml', 'https://github.com/sijie-Z', 'mailto:19150649985@163.com', 'https://beian.miit.gov.cn/'].every(href => homeRaw.includes(href)));
   const blankLinks = [...homeRaw.matchAll(/<a[^>]*target="_blank"[^>]*>/g)]
     .filter(m => !/rel="[^"]*noopener/.test(m[0]));
   check('新窗口外链都带 noopener', blankLinks.length === 0, String(blankLinks.length));
@@ -262,17 +262,17 @@ function check(name, cond, extra) {
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   await page.waitForFunction(() => document.querySelector('footer.footer')?.classList.contains('at-bottom'), { timeout: 8000 });
   const mobileFooter = await page.evaluate(() => {
-    const runtime = document.querySelector('.footer-runtime');
+    const runtime = document.querySelector('.footer-runtime-mobile');
     return {
       height: document.querySelector('footer.footer').getBoundingClientRect().height,
       social: getComputedStyle(document.querySelector('.footer-extra-icons')).display,
-      runtime: getComputedStyle(runtime).display !== 'none' && /\d+/.test(runtime.textContent),
+      runtime: getComputedStyle(runtime).display !== 'none' && /\d+ 天/.test(runtime.textContent) && /\d{2}:\d{2}:\d{2}/.test(runtime.textContent),
       utilityRight: document.querySelector('.footer-utility').getBoundingClientRect().right,
       viewport: innerWidth,
       overflow: document.documentElement.scrollWidth > innerWidth + 1,
     };
   });
-  check('390px 页脚不超过 160px 且社交入口与运行天数可见', mobileFooter.height <= 160 && mobileFooter.social === 'flex' && mobileFooter.runtime && mobileFooter.utilityRight <= mobileFooter.viewport && !mobileFooter.overflow, JSON.stringify(mobileFooter));
+  check('390px 页脚不超过 160px 且社交入口与秒级运行时间可见', mobileFooter.height <= 160 && mobileFooter.social === 'flex' && mobileFooter.runtime && mobileFooter.utilityRight <= mobileFooter.viewport && !mobileFooter.overflow, JSON.stringify(mobileFooter));
 
   await page.setViewport({ width: 320, height: 568 });
   await sleep(300);

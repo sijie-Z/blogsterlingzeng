@@ -7548,6 +7548,44 @@ html.dark footer.footer.at-bottom .info-container {
   color: var(--primary-color);
 }
 
+/* 运行时间精确到秒,数字等宽避免每秒抖动 */
+footer.footer .info-container .footer-runtime {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.footer-runtime-label {
+  margin-right: 0.35em;
+}
+
+.footer-runtime-clock {
+  display: inline-flex;
+  align-items: baseline;
+  margin-left: 0.35em;
+  font-variant-numeric: tabular-nums;
+}
+
+.footer-runtime-clock span {
+  min-width: 2ch;
+  text-align: center;
+}
+
+.footer-runtime-mobile {
+  display: none;
+  align-items: center;
+  color: var(--text-tertiary);
+  font-size: 0.7rem;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.footer-runtime-mobile [data-runtime] {
+  min-width: 2ch;
+  text-align: center;
+}
+
 /* 视觉高度保持紧凑,热区用伪元素补到约 44px */
 .footer-meta a::before,
 .footer-utility a::before {
@@ -7657,9 +7695,9 @@ footer.footer.at-bottom .footer-utility {
     row-gap: 2px;
   }
 
-  .footer-primary,
-  .footer-meta {
-    display: contents;
+  .footer-primary {
+    flex: 1 0 100%;
+    column-gap: 6px;
   }
 
   .footer-meta {
@@ -7670,8 +7708,8 @@ footer.footer.at-bottom .footer-utility {
     margin-right: 8px;
   }
 
-  .footer-extra-icons {
-    margin-right: auto;
+  .footer-meta > .footer-runtime {
+    display: none !important;
   }
 
   .footer-extra-icons a {
@@ -7684,6 +7722,11 @@ footer.footer.at-bottom .footer-utility {
 
   .footer-extra-icons a::before {
     inset: -11px;
+  }
+
+  .footer-runtime-mobile {
+    display: inline-flex;
+    margin-left: auto;
   }
 
   .footer-utility {
@@ -7704,6 +7747,7 @@ footer.footer.at-bottom .footer-utility {
 
   .footer-primary {
     display: grid;
+    flex: none;
     grid-template-columns: 1fr;
     justify-items: center;
     gap: 2px;
@@ -7718,15 +7762,16 @@ footer.footer.at-bottom .footer-utility {
 
   .footer-extra-icons {
     justify-content: center;
-    margin-right: 0;
   }
 
   .footer-meta > .icp-info::before {
     display: none;
   }
 
-  .footer-meta > .footer-runtime::before {
-    display: none;
+  .footer-runtime-mobile {
+    display: flex;
+    justify-content: center;
+    margin: 2px auto 0;
   }
 
   footer.footer.at-bottom .footer-utility {

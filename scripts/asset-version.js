@@ -9,7 +9,7 @@
 
 'use strict';
 
-const THEME_JS_VERSION = '20261027ab';
+const THEME_JS_VERSION = '20261028b';
 
 hexo.extend.filter.register('after_render:html', function (str) {
   if (!str || !str.includes('/js/build/main.js')) return str;

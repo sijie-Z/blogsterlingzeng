@@ -1324,7 +1324,7 @@ patchText('source/js/build/layouts/navbarShrink.js', [
 
 // 主题 JS 没有版本号,Cloudflare / GitHub Pages 会缓存 4 小时。
 // 给入口 main.js 和两个被改过的模块加查询串,确保滚动补丁能立即生效。
-const CJ_THEME_JS_VERSION = '20261027ab';
+const CJ_THEME_JS_VERSION = '20261028b';
 patchText('source/js/build/main.js', [
   ['from"./layouts/navbarShrink.js"', `from"./layouts/navbarShrink.js?v=${CJ_THEME_JS_VERSION}"`, 'main navbarShrink version'],
   ['from"./utils.js"', `from"./utils.js?v=${CJ_THEME_JS_VERSION}"`, 'main utils version'],
@@ -1723,7 +1723,12 @@ patchText('source/js/build/utils.js', [
   ['?v=20261026f', '?v=20261026g', 'utils bump theme js version g'],
 ]);
 
-// 页脚精简:同年不重复年份,移除装饰口号/心跳,运行时间只显示天数。
+// 页脚精简:同年不重复年份,移除装饰口号/心跳,运行时间保留到秒。
+const preciseRuntimeTemplate = `            <div class="footer-runtime">
+                <span class="footer-runtime-label">已运行</span>
+                <span id="runtime_days" data-runtime="days"></span> 天
+                <span class="footer-runtime-clock"><span id="runtime_hours" data-runtime="hours"></span>:<span id="runtime_minutes" data-runtime="minutes"></span>:<span id="runtime_seconds" data-runtime="seconds"></span></span>
+            </div>`;
 patchText('layout/components/footer/footer.ejs', [
   [
     `    <% if (theme.footer.hasOwnProperty('customize') && theme.footer.customize) { %>
@@ -1753,8 +1758,13 @@ patchText('layout/components/footer/footer.ejs', [
     `            <div>
                 <%= __('runtime') %> <span class="odometer" id="runtime_days" ></span> <%= __('days') %> <span class="odometer" id="runtime_hours"></span> <%= __('hours') %> <span class="odometer" id="runtime_minutes"></span> <%= __('minutes') %> <span class="odometer" id="runtime_seconds"></span> <%= __('seconds') %>
             </div>`,
+    preciseRuntimeTemplate,
+    'footer runtime days hours minutes seconds',
+  ],
+  [
     `            <div class="footer-runtime">已运行 <span class="odometer" id="runtime_days"></span> 天</div>`,
-    'footer runtime days only',
+    preciseRuntimeTemplate,
+    'footer runtime restore seconds on existing install',
   ],
 ]);
 
@@ -1784,6 +1794,48 @@ export default function initFooterRuntime() {
 }
 `;
 const compactRuntimeBuild = 'let e=null,t=null,n=!1;const r=()=>{const i=theme.footerStart;if(!i)return;const m=new Date(i),u=Math.max(0,Math.floor((Date.now()-m.getTime())/864e5)),a=document.getElementById("runtime_days");a&&(a===e&&u===t||(a.textContent=String(u),e=a,t=u))};export default function initFooterRuntime(){r();if(!n){n=!0;document.addEventListener("visibilitychange",()=>{if(!document.hidden)r()})}}';
+const preciseRuntimeSource = `let runtimeTimer = null;
+let visibilityBound = false;
+
+const pad = (value) => String(value).padStart(2, '0');
+
+const setRuntimeText = (field, value) => {
+  document.querySelectorAll(\`[data-runtime="\${field}"]\`).forEach((element) => {
+    if (element.textContent !== value) element.textContent = value;
+  });
+};
+
+const updateRuntime = () => {
+  const startTime = theme.footerStart;
+  if (!startTime) return;
+  const elapsed = Math.max(0, Date.now() - new Date(startTime).getTime());
+  setRuntimeText('days', String(Math.floor(elapsed / 86400000)));
+  setRuntimeText('hours', pad(Math.floor(elapsed / 3600000) % 24));
+  setRuntimeText('minutes', pad(Math.floor(elapsed / 60000) % 60));
+  setRuntimeText('seconds', pad(Math.floor(elapsed / 1000) % 60));
+};
+
+const startRuntime = () => {
+  updateRuntime();
+  if (!runtimeTimer) runtimeTimer = window.setInterval(updateRuntime, 1000);
+};
+
+const stopRuntime = () => {
+  if (!runtimeTimer) return;
+  window.clearInterval(runtimeTimer);
+  runtimeTimer = null;
+};
+
+export default function initFooterRuntime() {
+  startRuntime();
+  if (visibilityBound) return;
+  visibilityBound = true;
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stopRuntime();
+    else startRuntime();
+  });
+}
+`;
 patchText('source/js/tools/runtime.js', [
   [
     `let runtimeActive = false;
@@ -1833,15 +1885,20 @@ export default function initFooterRuntime() {
   footerRuntime();
 }
 `,
+    preciseRuntimeSource,
+    'footer runtime restore seconds source',
+  ],
+  [
     compactRuntimeSource,
-    'footer runtime no per-second timer',
+    preciseRuntimeSource,
+    'footer runtime restore seconds existing source',
   ],
 ]);
 patchText('source/js/build/tools/runtime.js', [
   [
     'let e=!1;const footerRuntime=()=>{if(!e)return;const t=theme.footerStart;if(!t)return void(e=!1);window.setTimeout(footerRuntime,1e3);const n=new Date(t),o=((new Date).getTime()-n.getTime())/864e5,r=Math.floor(o),i=24*(o-r),m=Math.floor(i),u=60*(i-m),d=Math.floor(u),l=Math.floor(60*(u-d)),a=document.getElementById("runtime_days"),c=document.getElementById("runtime_hours"),f=document.getElementById("runtime_minutes"),s=document.getElementById("runtime_seconds");a&&(a.innerHTML=r),c&&(c.innerHTML=m),f&&(f.innerHTML=d),s&&(s.innerHTML=l)};export default function initFooterRuntime(){e||(e=!0,footerRuntime())}',
-    compactRuntimeBuild,
-    'footer runtime no per-second timer build',
+    preciseRuntimeSource,
+    'footer runtime restore seconds build',
   ],
   [
     'let e=null,t=null,n=!1;const r=()=>{const i=theme.footerStart;if(!i)return;const m=new Date(i),u=Math.max(0,Math.floor((Date.now()-m.getTime())/864e5),a=document.getElementById("runtime_days");a&&(a===e&&u===t||(a.textContent=String(u),e=a,t=u))};export default function initFooterRuntime(){r(),n||(n=!0,document.addEventListener("visibilitychange",(()=>{document.hidden||r()})))}',
@@ -1853,12 +1910,27 @@ patchText('source/js/build/tools/runtime.js', [
     compactRuntimeBuild,
     'footer runtime legacy paren repair',
   ],
+  [
+    compactRuntimeBuild,
+    preciseRuntimeSource,
+    'footer runtime restore seconds existing build',
+  ],
 ]);
 
-// 页脚运行模块与补丁统一推进,避免缓存继续执行秒级计时器。
+// 页脚运行模块与补丁统一推进,避免缓存继续执行旧版计时器。
 patchText('source/js/build/main.js', [
   ['?v=20261026g', '?v=20261027ab', 'main bump theme js version footer runtime'],
 ]);
 patchText('source/js/build/utils.js', [
   ['?v=20261026g', '?v=20261027ab', 'utils bump theme js version footer runtime'],
+]);
+patchText('source/js/build/main.js', [
+  ['?v=20261027ab', '?v=20261028b', 'main bump theme js version precise runtime'],
+  ['from"./tools/runtime.js"', 'from"./tools/runtime.js?v=20261028b"', 'main runtime version'],
+]);
+patchText('source/js/build/utils.js', [
+  ['?v=20261027ab', '?v=20261028b', 'utils bump theme js version precise runtime'],
+]);
+patchText('source/js/main.js', [
+  ['from "./tools/runtime.js"', 'from "./tools/runtime.js?v=20261028b"', 'source main runtime version'],
 ]);
