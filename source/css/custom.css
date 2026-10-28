@@ -7784,37 +7784,3 @@ footer.footer.at-bottom .footer-utility {
     margin-top: 2px;
   }
 }
-
-/* 宽屏收成单行:版权在左,次级入口与社交图标靠右 */
-@media screen and (min-width: 1280px) {
-  footer.footer.at-bottom .info-container {
-    flex-direction: row;
-    align-items: center;
-    gap: 24px;
-    padding: 12px 0 !important;
-  }
-
-  .footer-primary {
-    display: contents;
-  }
-
-  .footer-meta {
-    order: 0;
-    flex: 0 1 auto;
-  }
-
-  .footer-utility {
-    order: 1;
-    width: auto;
-    flex: 0 0 auto;
-    align-self: center;
-    margin: 0 0 0 auto;
-    justify-content: flex-end;
-    gap: 0 20px;
-  }
-
-  .footer-extra-icons {
-    order: 2;
-    flex: none;
-  }
-}
