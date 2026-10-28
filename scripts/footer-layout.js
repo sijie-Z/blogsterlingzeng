@@ -16,5 +16,15 @@ hexo.extend.filter.register('after_render:html', function (str) {
   let out = str.slice(0, copyrightAt) + '<div class="footer-primary"><div class="footer-meta">' + str.slice(copyrightAt);
   out = out.replace(social[0], '');
   out = out.replace('<nav class="footer-utility"', '</div>' + social[0] + '</div><nav class="footer-utility"');
+
+  // 统计关闭时主题仍输出一个空占位 div,会在 meta 行里留下多余间距
+  const placeholderAt = out.indexOf('class="relative text-center lg:absolute lg:left-[20px]');
+  if (placeholderAt >= 0) {
+    const open = out.lastIndexOf('<div', placeholderAt);
+    const close = out.indexOf('</div>', placeholderAt);
+    if (open >= 0 && close > open && !out.slice(out.indexOf('>', placeholderAt) + 1, close).trim()) {
+      out = out.slice(0, open) + out.slice(close + 6);
+    }
+  }
   return out;
 });

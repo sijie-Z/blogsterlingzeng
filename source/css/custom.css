@@ -7467,12 +7467,30 @@ footer.footer.at-bottom .footer-utility {
 }
 
 /* ========================================
-   COMPACT FOOTER — 主信息与次级入口各一行
+   COMPACT FOOTER — 宽屏单行,窄屏两行
    ======================================== */
+footer.footer.at-bottom {
+  margin-top: 2rem !important;
+}
+
 footer.footer.at-bottom .info-container {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  align-items: stretch;
+  width: 80%;
+  max-width: 1200px;
+  margin-inline: auto;
+  padding: 10px 0 8px !important;
+  gap: 0;
+  border: 0;
+  border-top: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+html.dark footer.footer.at-bottom .info-container {
+  border-top-color: rgba(148, 163, 184, 0.14);
+  box-shadow: none;
 }
 
 .footer-primary {
@@ -7487,98 +7505,241 @@ footer.footer.at-bottom .info-container {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 14px;
+  gap: 2px 12px;
   color: var(--text-tertiary);
   font-size: 0.75rem;
-  line-height: 1.45;
+  line-height: 1.5;
+}
+
+.footer-meta > div {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+}
+
+.footer-meta > .icp-info {
+  margin-block: 0;
+}
+
+/* 主题在统计关闭时仍留一个空占位,构建期已移除;这里兜底 */
+.footer-meta > div:empty {
+  display: none;
+}
+
+.footer-meta > .icp-info::before,
+.footer-meta > .footer-runtime::before {
+  content: "·";
+  margin-right: 12px;
+  color: var(--text-tertiary);
+  opacity: 0.65;
 }
 
 .footer-meta a {
-  position: relative;
   display: inline-flex;
   align-items: center;
-  min-height: 28px !important;
+  min-height: 26px !important;
   color: var(--text-secondary);
 }
 
-.footer-meta a::before {
+.footer-meta a,
+.footer-utility a {
+  position: relative;
+  text-decoration: none;
+  transition: color 0.18s ease;
+}
+
+.footer-meta a:hover,
+.footer-utility a:hover {
+  color: var(--primary-color);
+}
+
+/* 视觉高度保持紧凑,热区用伪元素补到约 44px */
+.footer-meta a::before,
+.footer-utility a::before {
   content: "";
   position: absolute;
-  inset: -8px;
+  inset: -10px -4px;
 }
 
 .footer-extra-icons {
   display: flex !important;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 6px;
   margin: 0;
 }
 
 .footer-extra-icons a {
   position: relative;
-  width: 30px;
-  height: 30px;
-  min-width: 30px;
-  min-height: 30px !important;
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  min-height: 26px !important;
   border-radius: 50%;
+  border: 1px solid var(--border-color);
+  color: var(--text-tertiary);
+  font-size: 0.78rem;
+  transition:
+    color 0.18s ease,
+    border-color 0.18s ease,
+    background-color 0.18s ease;
 }
 
 .footer-extra-icons a::before {
   content: "";
   position: absolute;
-  inset: -7px;
+  inset: -9px;
+}
+
+.footer-extra-icons a:hover {
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+  background: transparent;
 }
 
 .footer-utility {
-  gap: 0 18px;
-  padding-top: 5px !important;
-  font-size: 0.76rem;
+  display: none;
+  width: 100%;
+  align-self: stretch;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 0 20px;
+  margin: 2px 0 0;
+  padding: 0;
+  border-top: 0;
+  font-size: 0.74rem;
+}
+
+footer.footer.at-bottom .footer-utility {
+  display: flex;
+  flex-basis: auto;
+  order: initial;
+  padding-top: 0;
+  border-top: 0;
 }
 
 .footer-utility a {
-  position: relative;
-  min-height: 28px !important;
-  padding: 0 3px;
+  min-height: 26px !important;
+  padding: 0;
+  color: var(--text-tertiary);
 }
 
-.footer-utility a::before {
-  content: "";
-  position: absolute;
-  inset: -8px;
+.footer-back-top {
+  margin-left: auto;
 }
 
 @media screen and (max-width: 880px) {
   footer.footer.at-bottom .info-container {
-    padding: 8px 12px !important;
+    width: calc(100% - 24px);
+    padding: 10px 0 6px !important;
+  }
+
+  .footer-primary {
+    gap: 4px 12px;
+  }
+
+  .footer-extra-icons {
+    gap: 5px;
+  }
+
+  .footer-utility {
+    justify-content: center;
+    gap: 0 12px;
+    margin-top: 2px;
+  }
+
+  .footer-back-top {
+    margin-left: 0;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .footer-primary {
+    column-gap: 6px;
+  }
+
+  .footer-meta {
+    gap: 0 8px;
+    font-size: 0.7rem;
+  }
+
+  .footer-meta > .icp-info::before {
+    margin-right: 8px;
+  }
+
+  .footer-extra-icons a {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    min-height: 24px !important;
+    font-size: 0.72rem;
+  }
+
+  .footer-extra-icons a::before {
+    inset: -10px;
+  }
+
+  .footer-utility {
+    gap: 0 12px;
+    font-size: 0.72rem;
+  }
+}
+
+@media screen and (max-width: 360px) {
+  .footer-primary {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 2px;
   }
 
   .footer-meta {
     justify-content: center;
     text-align: center;
+    gap: 0 10px;
   }
 
-  .footer-utility {
-    gap: 0 12px;
-  }
-}
-
-@media screen and (max-width: 480px) {
-  .footer-primary {
-    grid-template-columns: 1fr;
-    gap: 5px;
+  .footer-meta > .icp-info::before {
+    display: none;
   }
 
-  .footer-extra-icons {
-    justify-content: center;
-  }
-}
-
-@media screen and (max-width: 360px) {
   footer.footer.at-bottom .footer-utility {
     display: grid;
     grid-template-columns: repeat(4, auto);
     justify-content: center;
     gap: 0 10px;
+  }
+}
+
+/* 宽屏收成单行:版权在左,次级入口与社交图标靠右 */
+@media screen and (min-width: 1280px) {
+  footer.footer.at-bottom .info-container {
+    flex-direction: row;
+    align-items: center;
+    gap: 24px;
+    padding: 12px 0 !important;
+  }
+
+  .footer-primary {
+    display: contents;
+  }
+
+  .footer-meta {
+    order: 0;
+    flex: 0 1 auto;
+  }
+
+  .footer-utility {
+    order: 1;
+    width: auto;
+    flex: 0 0 auto;
+    align-self: center;
+    margin: 0 0 0 auto;
+    justify-content: flex-end;
+    gap: 0 20px;
+  }
+
+  .footer-extra-icons {
+    order: 2;
+    flex: none;
   }
 }
