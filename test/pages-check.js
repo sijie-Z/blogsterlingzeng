@@ -261,14 +261,18 @@ function check(name, cond, extra) {
   await sleep(100);
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   await page.waitForFunction(() => document.querySelector('footer.footer')?.classList.contains('at-bottom'), { timeout: 8000 });
-  const mobileFooter = await page.evaluate(() => ({
-    height: document.querySelector('footer.footer').getBoundingClientRect().height,
-    social: getComputedStyle(document.querySelector('.footer-extra-icons')).display,
-    utilityRight: document.querySelector('.footer-utility').getBoundingClientRect().right,
-    viewport: innerWidth,
-    overflow: document.documentElement.scrollWidth > innerWidth + 1,
-  }));
-  check('390px 页脚不超过 160px 且社交入口可见', mobileFooter.height <= 160 && mobileFooter.social === 'flex' && mobileFooter.utilityRight <= mobileFooter.viewport && !mobileFooter.overflow, JSON.stringify(mobileFooter));
+  const mobileFooter = await page.evaluate(() => {
+    const runtime = document.querySelector('.footer-runtime');
+    return {
+      height: document.querySelector('footer.footer').getBoundingClientRect().height,
+      social: getComputedStyle(document.querySelector('.footer-extra-icons')).display,
+      runtime: getComputedStyle(runtime).display !== 'none' && /\d+/.test(runtime.textContent),
+      utilityRight: document.querySelector('.footer-utility').getBoundingClientRect().right,
+      viewport: innerWidth,
+      overflow: document.documentElement.scrollWidth > innerWidth + 1,
+    };
+  });
+  check('390px 页脚不超过 160px 且社交入口与运行天数可见', mobileFooter.height <= 160 && mobileFooter.social === 'flex' && mobileFooter.runtime && mobileFooter.utilityRight <= mobileFooter.viewport && !mobileFooter.overflow, JSON.stringify(mobileFooter));
 
   await page.setViewport({ width: 320, height: 568 });
   await sleep(300);
