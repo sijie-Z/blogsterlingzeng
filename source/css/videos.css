@@ -430,8 +430,11 @@
 
 /* 播放器 */
 .video-dialog {
-  width: min(920px, calc(100vw - 32px));
-  max-height: calc(100vh - 32px);
+  position: fixed;
+  inset: 0;
+  width: min(860px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: auto !important;
   padding: 0;
   overflow: hidden;
   border: 1px solid var(--border-color);
