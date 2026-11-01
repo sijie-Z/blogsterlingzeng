@@ -1,0 +1,133 @@
+# Pages CMS 配置（app.pagescms.org）
+# 浏览器里编辑 source/_posts 与 source/_data/essays.yml，保存后提交到 main，
+# 由现有 GitHub Actions 自动构建部署。
+
+media:
+  - name: images
+    label: 图片
+    input: source/images
+    output: /images
+    rename: safe
+    extensions: [jpg, jpeg, png, webp, gif, svg]
+
+settings:
+  content:
+    # 只改表单里的字段，保留原有的 series_order、sticky 等未出现在表单里的键。
+    merge: true
+  commit:
+    identity: user
+
+content:
+  - name: posts
+    label: 文章
+    type: collection
+    path: source/_posts
+    format: yaml-frontmatter
+    subfolders: false
+    filename:
+      template: "{fields.slug}.md"
+      field: create
+    view:
+      fields: [title, date, categories, series, sticky, published]
+      primary: title
+      sort: date
+      order: desc
+    fields:
+      - name: title
+        label: 标题
+        type: string
+        required: true
+      - name: slug
+        label: URL 文件名（英文）
+        type: string
+        required: false
+        description: "新建文章时填写，例如 hexo-series-reading-path；决定文章 URL，已有文章可留空。"
+      - name: date
+        label: 发布时间
+        type: date
+        required: true
+        options:
+          time: true
+          format: "yyyy-MM-dd HH:mm:ss"
+      - name: description
+        label: 描述 / SEO 摘要
+        type: text
+        required: true
+      - name: categories
+        label: 分类
+        type: select
+        options:
+          multiple: true
+          values:
+            - 前端开发
+            - 学习笔记
+            - 开发工具
+            - 技术思考
+            - 算法与数据结构
+            - 项目实战
+      - name: tags
+        label: 标签
+        type: string
+        list: true
+        description: "自由填写，回车添加；不要用逗号把多个标签挤在一行。"
+      - name: cover
+        label: 封面图
+        type: image
+        options:
+          media: images
+      - name: series
+        label: 所属系列
+        type: select
+        default: ""
+        options:
+          placeholder: 不属于系列
+          values:
+            - name: blog-engineering
+              label: 博客工程化
+            - name: agent-rag
+              label: Agent 与 RAG 实战
+            - name: frontend-basics
+              label: 前端基础三件套
+            - name: quant-research
+              label: 量化研究：从因子到执行
+      - name: series_order
+        label: 系列内顺序
+        type: number
+        description: "只在所属系列内填写，1 开始；不属于系列请留空。"
+      - name: sticky
+        label: 置顶
+        type: boolean
+        default: false
+      - name: published
+        label: 发布
+        type: boolean
+        default: true
+        description: "关闭后 Hexo 不生成这篇文章，可当草稿用。"
+      - name: body
+        label: 正文
+        type: rich-text
+        required: true
+        options:
+          format: markdown
+          switcher: true
+          media: images
+
+  - name: essays
+    label: 说说
+    type: file
+    path: source/_data/essays.yml
+    format: yaml
+    # 这个文件的根节点就是数组，必须开启 list。
+    list: true
+    fields:
+      - name: date
+        label: 日期
+        type: date
+        required: true
+        options:
+          format: "yyyy-MM-dd"
+      - name: content
+        label: 内容
+        type: text
+        required: true
+        description: "支持 Markdown；多条之间会自动按日期倒序展示。"
