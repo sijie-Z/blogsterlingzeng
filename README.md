@@ -75,7 +75,7 @@
 | 项目架构图 | MiQroGate / DocMind 内联 SVG，跟随主题配色，移动端可横向滚动 | `source/projects/index.md` |
 | 相关阅读 | 标签相似度推荐（前端渲染，无原生依赖） | `scripts/related-posts.js` |
 | 文章置顶 | `sticky: 1` 字段置顶 | `hexo-generator-index` |
-| 视频库 | `/videos/` 卡片、自动分类标签、搜索、收藏与导出/导入；数据在 `videos.yml` | `source/videos/` + `scripts/video-library.js` |
+| 视频库 | `/videos/` 卡片、最多 10 个话题标签、搜索、收藏与导出/导入；数据在 `videos.yml` / `video-topics.yml` | `source/videos/` + `scripts/video-library.js` |
 | Sitemap | `sitemap.xml` + `robots.txt` | `hexo-generator-sitemap` |
 | 复制链接 | 文章页工具条复制当前链接 | `source/js/custom.js` |
 | Live2D 宠物 | DeepSeek 大肥鱼（Cubism 4.2 模型 / Cubism 5 Core 运行时，8 动作 / 44 表情），默认按需加载 | `source/live2d/` |
@@ -501,7 +501,7 @@ $E = mc^2$ 行内公式；$$...$$ 块级公式（右上角可复制 LaTeX）
 
 ## 视频库
 
-`/videos/` 是自己收藏或授权视频的播放列表：卡片、自动分类标签、搜索、标签、收藏、导出/导入收藏 JSON。数据在 `source/_data/videos.yml`，视频文件放 `source/videos/media/`（小文件）或 Cloudflare R2（大文件），Pages CMS 的“视频”入口可直接维护；分类名由每条视频的 `category` 决定，页面会自动生成分类标签。
+`/videos/` 是自己收藏或授权视频的播放列表：卡片、最多 10 个话题标签、搜索、收藏、导出/导入收藏 JSON。数据在 `source/_data/videos.yml`，话题在 `source/_data/video-topics.yml`；视频文件放 `source/videos/media/`（小文件）或 Cloudflare R2（大文件）。Pages CMS 的“视频 / 视频话题”入口可直接维护，话题名由话题表决定。
 
 收藏存在浏览器本地，换设备/清缓存前导出 JSON 备份；只有自己的文件和备份才算长期保存，第三方链接随时可能失效。详细用法和升级方向见 [docs/VIDEOS.md](docs/VIDEOS.md)。
 

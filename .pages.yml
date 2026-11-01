@@ -142,6 +142,19 @@ content:
         required: true
         description: "支持 Markdown；多条之间会自动按日期倒序展示。"
 
+  - name: video-topics
+    label: 视频话题
+    type: file
+    path: source/_data/video-topics.yml
+    format: yaml
+    list: true
+    fields:
+      - name: name
+        label: 话题名
+        type: string
+        required: true
+        description: "最多 10 个；顺序就是页面上的顺序。"
+
   - name: videos
     label: 视频
     type: file
@@ -159,10 +172,10 @@ content:
         label: 标题
         type: string
         required: true
-      - name: category
-        label: 分类
+      - name: topic
+        label: 话题
         type: string
-        description: "页面顶部的分类标签，例如 技术、旅行、生活、动画；同类名称保持一致。"
+        description: "必须是“视频话题”里的名称，例如 技术、旅行、生活、动画。"
       - name: description
         label: 描述
         type: text

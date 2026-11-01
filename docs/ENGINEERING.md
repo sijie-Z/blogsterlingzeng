@@ -124,7 +124,7 @@ test/                    15 套 Puppeteer / Node 检查
 | 导航主题控制 | 明暗按钮进入导航，所有主要断点可见；文案说明下一步动作，季节与计时器面板互斥，菜单背景不模糊 | 0 请求 |
 | 失败恢复 | 本会话最新设置优先于可读旧存储；删除失败有墓碑；Live2D 安全读写存储；预览请求失败后允许重试并绕过失败缓存 | 无刷新恢复 |
 | 公开联系方式 | 163 邮箱优先、QQ 邮箱备用；关于页/简历直接显示地址，首屏/作者卡/页脚使用紧凑邮件图标并保留 `mailto:`、`title` 与可访问名称；body 内 `email_off` 防止 Cloudflare 改成占位 | 0 请求 / 无 JS 也可读 |
-| 视频库 | `/videos/` 读取构建期 `videos.json`；分类标签由每条视频的 `category` 自动生成，搜索、收藏、导出/导入都在浏览器完成；文件可放 `source/videos/media/` 或 R2 | 1 个 JSON + 页面 CSS/JS |
+| 视频库 | `/videos/` 读取构建期 `videos.json`；最多 10 个话题由 `video-topics.yml` 维护，搜索、收藏、导出/导入都在浏览器完成；文件可放 `source/videos/media/` 或 R2 | 1 个 JSON + 页面 CSS/JS |
 | 引用与分享 | head 输出 `citation_*`；侧栏菜单复制 Markdown / BibTeX / APA / GB/T 7714 / RIS / 链接；body JSON 随 Swup 换页更新 | 0 请求 |
 | 键盘快捷键 | `?` 打开原生 `<dialog>` 帮助；`t` 切换主题；`g h` / `g a` 站内跳转；输入框和弹层打开时不触发 | 0 请求 |
 | 反向链接 | 构建期扫描所有文章正文内链，目标文章底部列出来源与上下文 | 0 请求 |

@@ -126,6 +126,7 @@ try {
   const posts = collections.find((entry) => entry.name === 'posts');
   const essays = collections.find((entry) => entry.name === 'essays');
   const videos = collections.find((entry) => entry.name === 'videos');
+  const videoTopics = collections.find((entry) => entry.name === 'video-topics');
   const mediaSources = Array.isArray(cms.media) ? cms.media : [cms.media];
   const media = mediaSources.find((source) => source && source.name === 'images');
   const videoMedia = mediaSources.find((source) => source && source.name === 'videos');
@@ -157,9 +158,22 @@ try {
     errors.push('.pages.yml: 视频必须是 source/_data/videos.yml 的顶层数组');
   } else {
     const names = new Set((videos.fields || []).map((field) => field.name));
-    for (const field of ['id', 'title', 'category', 'video', 'src', 'cover', 'tags', 'duration']) {
+    for (const field of ['id', 'title', 'topic', 'video', 'src', 'cover', 'tags', 'duration']) {
       if (!names.has(field)) errors.push(`.pages.yml: 视频缺少 ${field} 字段`);
     }
+  }
+  if (!videoTopics || videoTopics.type !== 'file' || videoTopics.path !== 'source/_data/video-topics.yml' || videoTopics.list !== true) {
+    errors.push('.pages.yml: 视频话题必须是 source/_data/video-topics.yml 的顶层数组');
+  }
+  try {
+    const topicData = yaml.load(fs.readFileSync(path.join(ROOT, 'source/_data/video-topics.yml'), 'utf8'));
+    if (!Array.isArray(topicData)) {
+      errors.push('source/_data/video-topics.yml: 根节点必须是数组');
+    } else if (topicData.length > 10) {
+      errors.push('source/_data/video-topics.yml: 最多 10 个话题');
+    }
+  } catch (e) {
+    errors.push(`source/_data/video-topics.yml: 解析失败 ${e.message}`);
   }
   if (!media || media.input !== 'source/images' || media.output !== '/images') {
     errors.push('.pages.yml: 图片必须从 source/images 上传并输出到 /images');

@@ -53,6 +53,7 @@
     if (!grid || !empty || !status) return;
 
     var items = [];
+    var topics = [];
     var favorites = readFavorites();
     var filter = 'all';
     var category = 'all';
@@ -79,19 +80,11 @@
     }
 
     function categoryOf(item) {
-      return item.category || '未分类';
+      return item.topic || '未分类';
     }
 
     function categories() {
-      var seen = new Set();
-      var names = [];
-      items.forEach(function (item) {
-        var name = categoryOf(item);
-        if (seen.has(name)) return;
-        seen.add(name);
-        names.push(name);
-      });
-      return names;
+      return topics;
     }
 
     function matches(item) {
@@ -186,7 +179,7 @@
     function renderCategories() {
       if (!categoriesBox) return;
       var names = categories();
-      if (!names.length) {
+      if (!items.length || !names.length) {
         categoriesBox.hidden = true;
         categoriesBox.replaceChildren();
         return;
@@ -206,7 +199,7 @@
         return button;
       }
 
-      categoriesBox.appendChild(categoryButton('all', '全部分类'));
+      categoriesBox.appendChild(categoryButton('all', '全部话题'));
       names.forEach(function (name) {
         categoriesBox.appendChild(categoryButton(name, name));
       });
@@ -425,6 +418,7 @@
       })
       .then(function (payload) {
         items = Array.isArray(payload && payload.items) ? payload.items : [];
+        topics = Array.isArray(payload && payload.topics) ? payload.topics : [];
         render();
       })
       .catch(function () {

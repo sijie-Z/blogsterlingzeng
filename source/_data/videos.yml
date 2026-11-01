@@ -1,5 +1,5 @@
 # 视频库条目。Pages CMS 的“视频”会编辑这个文件的顶层数组。
 # 每条必填：id（稳定、唯一，收藏靠它）、title、video 或 src。
 # video 可以是上传后的 /videos/media/xxx.mp4；src 可填 R2 等外部地址。
-# category 决定页面顶部的分类标签；不填会归入“未分类”。
+# topic 必须是 source/_data/video-topics.yml 里的名称；不填会归入“其他”。
 []

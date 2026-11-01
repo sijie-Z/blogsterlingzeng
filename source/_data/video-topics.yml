@@ -1,0 +1,12 @@
+# 视频话题：最多 10 个，顺序就是页面上的顺序。
+# 在 Pages CMS 的“视频话题”里编辑；新增/改名后，视频的 topic 字段要跟着写。
+- name: 技术
+- name: 旅行
+- name: 生活
+- name: 动画
+- name: 音乐
+- name: 舞蹈
+- name: 游戏
+- name: 影视
+- name: 学习
+- name: 其他

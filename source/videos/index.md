@@ -10,10 +10,10 @@ date: 2026-11-01 12:00:00
   <div class="video-toolbar">
     <label class="video-search">
       <span class="sr-only">搜索视频</span>
-      <input id="video-search" type="search" placeholder="搜索标题、描述或标签" autocomplete="off" aria-label="搜索视频">
+      <input id="video-search" type="search" placeholder="搜索标题、描述、话题或标签" autocomplete="off" aria-label="搜索视频">
     </label>
     <div class="video-filters" role="group" aria-label="视频筛选">
-      <button type="button" class="video-filter is-active" data-filter="all" aria-pressed="true">全部 <span id="video-total">0</span></button>
+      <button type="button" class="video-filter is-active" data-filter="all" aria-pressed="true">全部视频 <span id="video-total">0</span></button>
       <button type="button" class="video-filter" data-filter="favorites" aria-pressed="false">只看收藏 <span id="video-fav-count">0</span></button>
     </div>
     <div class="video-backup">
@@ -24,7 +24,7 @@ date: 2026-11-01 12:00:00
     </div>
   </div>
 
-  <div class="video-categories" id="video-categories" role="group" aria-label="视频分类"></div>
+  <div class="video-categories" id="video-categories" role="group" aria-label="视频话题"></div>
   <p class="video-status" id="video-status" role="status" aria-live="polite"></p>
   <div class="video-grid" id="video-grid"></div>
   <div class="video-empty" id="video-empty" hidden>

@@ -51,7 +51,9 @@ Pages CMS 的 `rich-text` 编辑器在保存时会删掉 HTML 注释（包括 He
 
 ## 视频
 
-“视频”入口编辑 `source/_data/videos.yml`。每条需要稳定的视频 ID、标题，以及一个上传视频或外部/R2 地址；封面和标签可选。上传的小视频进 `source/videos/media/`，大文件建议放 R2。收藏和永久保存的边界见 [docs/VIDEOS.md](VIDEOS.md)。
+“视频”入口编辑 `source/_data/videos.yml`。每条需要稳定的视频 ID、标题、话题，以及一个上传视频或外部/R2 地址；封面和标签可选。上传的小视频进 `source/videos/media/`，大文件建议放 R2。
+
+“视频话题”入口编辑 `source/_data/video-topics.yml`，最多 10 个；顺序就是页面顺序。视频里的“话题”要写同名，页面会自动生成切换标签。收藏和永久保存的边界见 [docs/VIDEOS.md](VIDEOS.md)。
 
 ## 图片
 
