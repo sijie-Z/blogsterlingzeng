@@ -561,6 +561,17 @@ html.dark .navbar-container.scrolled .navbar-content {
   font-size: 0.92rem;
   line-height: 1.75;
   margin-top: 0.6rem;
+  text-wrap: pretty;
+}
+
+/* 摘要只负责扫读:摘录里的标题不应按正文的 40px 级别渲染 */
+.home-article-item .home-article-content h1,
+.home-article-item .home-article-content h2,
+.home-article-item .home-article-content h3,
+.home-article-item .home-article-content h4,
+.home-article-item .home-article-content h5,
+.home-article-item .home-article-content h6 {
+  display: none;
 }
 
 /* Article meta */
@@ -7041,6 +7052,13 @@ footer.footer.at-bottom .footer-utility {
 .article-content.markdown-body h2,
 .article-content.markdown-body h3 {
   text-wrap: balance;
+}
+
+/* 手机卡片顶部没有大图时,“置顶”小标签会压住标题;置顶顺序已经说明状态 */
+@media screen and (max-width: 768px) {
+  .home-article-item > div[class*="top-[12px]"] {
+    display: none;
+  }
 }
 
 @media screen and (max-width: 768px) {
