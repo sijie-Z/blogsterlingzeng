@@ -1,5 +1,27 @@
 # 视频库条目。Pages CMS 的“视频”会编辑这个文件的顶层数组。
-# 每条必填：id（稳定、唯一，收藏靠它）、title、video 或 src。
-# video 可以是上传后的 /videos/media/xxx.mp4；src 可填 R2 等外部地址。
-# topic 必须是 source/_data/video-topics.yml 里的名称；不填会归入“其他”。
-[]
+# 下面三条是公开授权示例，可随时在 Pages CMS 里删除或替换成自己的视频。
+- id: sample-flower
+  title: 示例：花开
+  topic: 生活
+  description: MDN 的 CC0 示例短片，用来验证播放器、收藏和话题切换。
+  src: https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+  cover: /images/cover-design.webp
+  tags: [示例, CC0]
+  date: 2026-11-01
+  duration: 00:30
+- id: sample-bunny
+  title: 示例：Big Buck Bunny 预告
+  topic: 动画
+  description: Blender Foundation · CC BY 3.0 · peach.blender.org / creativecommons.org/licenses/by/3.0/
+  src: https://media.w3.org/2010/05/bunny/trailer.mp4
+  cover: /images/cover-code.webp
+  tags: [示例, CC-BY]
+  date: 2026-10-30
+- id: sample-sintel
+  title: 示例：Sintel 预告
+  topic: 影视
+  description: Blender Foundation · CC BY 3.0 · durian.blender.org / creativecommons.org/licenses/by/3.0/
+  src: https://media.w3.org/2010/05/sintel/trailer.mp4
+  cover: /images/cover-tech.webp
+  tags: [示例, CC-BY]
+  date: 2026-10-28
