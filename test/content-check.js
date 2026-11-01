@@ -136,6 +136,16 @@ try {
     if (!posts.filename || !String(posts.filename.template || '').includes('{fields.slug}')) {
       errors.push('.pages.yml: 文章文件名模板必须使用 {fields.slug}');
     }
+    if (!Array.isArray(posts.view && posts.view.sort)) {
+      errors.push('.pages.yml: view.sort 必须是数组');
+    }
+    if (!posts.view || !posts.view.default || posts.view.default.order !== 'desc') {
+      errors.push('.pages.yml: view.default.order 必须是 desc');
+    }
+    const body = (posts.fields || []).find((field) => field.name === 'body');
+    if (!body || body.type !== 'code' || !body.options || body.options.format !== 'markdown') {
+      errors.push('.pages.yml: 正文必须用 code + markdown，rich-text 会删 <!-- more -->');
+    }
   }
   if (!essays || essays.type !== 'file' || essays.path !== 'source/_data/essays.yml' || essays.list !== true) {
     errors.push('.pages.yml: 说说必须是 source/_data/essays.yml 的顶层数组');

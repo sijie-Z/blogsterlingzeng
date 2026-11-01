@@ -30,8 +30,11 @@ content:
     view:
       fields: [title, date, categories, series, sticky, published]
       primary: title
-      sort: date
-      order: desc
+      sort: [date, title]
+      search: [title, description, tags, categories]
+      default:
+        sort: date
+        order: desc
     fields:
       - name: title
         label: 标题
@@ -104,13 +107,13 @@ content:
         default: true
         description: "关闭后 Hexo 不生成这篇文章，可当草稿用。"
       - name: body
-        label: 正文
-        type: rich-text
+        label: 正文（Markdown）
+        # 不用 rich-text: 它会在保存时删掉 <!-- more -->，也会改写 Hexo 标签。
+        type: code
         required: true
         options:
           format: markdown
-          switcher: true
-          media: images
+        description: "Markdown 源码编辑器；保留 <!-- more --> 与 {% ... %} 标签。"
 
   - name: essays
     label: 说说
