@@ -574,6 +574,11 @@ html.dark .navbar-container.scrolled .navbar-content {
   display: none;
 }
 
+/* 侧栏第二张卡不再重复作者名,公告直接作为入口卡的引子 */
+.home-sidebar-container .sidebar-content + .sidebar-links .site-name {
+  display: none;
+}
+
 /* Article meta */
 .home-article-meta-info {
   display: flex;
