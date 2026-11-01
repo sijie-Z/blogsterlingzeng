@@ -11,7 +11,7 @@ const files = fs.readdirSync(POSTS).filter(f => f.endsWith('.md'));
 const slugs = new Set(files.map(f => f.replace(/\.md$/, '')));
 const KNOWN_PAGES = new Set([
   '/about', '/archives', '/tags', '/categories', '/projects', '/friends',
-  '/bookmarks', '/shuoshuo', '/photos', '/resume', '/series',
+  '/bookmarks', '/shuoshuo', '/videos', '/photos', '/resume', '/series',
 ]);
 const OG_DIR = path.join(ROOT, 'source', 'images', 'og');
 const OG_MANIFEST = path.join(OG_DIR, 'og-manifest.json');
@@ -125,7 +125,10 @@ try {
   const collections = cms.content || [];
   const posts = collections.find((entry) => entry.name === 'posts');
   const essays = collections.find((entry) => entry.name === 'essays');
-  const media = Array.isArray(cms.media) ? cms.media[0] : cms.media;
+  const videos = collections.find((entry) => entry.name === 'videos');
+  const mediaSources = Array.isArray(cms.media) ? cms.media : [cms.media];
+  const media = mediaSources.find((source) => source && source.name === 'images');
+  const videoMedia = mediaSources.find((source) => source && source.name === 'videos');
   if (!posts || posts.type !== 'collection' || posts.path !== 'source/_posts') {
     errors.push('.pages.yml: 文章 collection 必须指向 source/_posts');
   } else {
@@ -150,8 +153,25 @@ try {
   if (!essays || essays.type !== 'file' || essays.path !== 'source/_data/essays.yml' || essays.list !== true) {
     errors.push('.pages.yml: 说说必须是 source/_data/essays.yml 的顶层数组');
   }
+  if (!videos || videos.type !== 'file' || videos.path !== 'source/_data/videos.yml' || videos.list !== true) {
+    errors.push('.pages.yml: 视频必须是 source/_data/videos.yml 的顶层数组');
+  } else {
+    const names = new Set((videos.fields || []).map((field) => field.name));
+    for (const field of ['id', 'title', 'category', 'video', 'src', 'cover', 'tags', 'duration']) {
+      if (!names.has(field)) errors.push(`.pages.yml: 视频缺少 ${field} 字段`);
+    }
+  }
   if (!media || media.input !== 'source/images' || media.output !== '/images') {
     errors.push('.pages.yml: 图片必须从 source/images 上传并输出到 /images');
+  }
+  if (!videoMedia || videoMedia.input !== 'source/videos/media' || videoMedia.output !== '/videos/media') {
+    errors.push('.pages.yml: 视频文件必须从 source/videos/media 上传并输出到 /videos/media');
+  }
+  try {
+    const videoData = yaml.load(fs.readFileSync(path.join(ROOT, 'source/_data/videos.yml'), 'utf8'));
+    if (!Array.isArray(videoData)) errors.push('source/_data/videos.yml: 根节点必须是数组');
+  } catch (e) {
+    errors.push(`source/_data/videos.yml: 解析失败 ${e.message}`);
   }
   if (!cms.settings || !cms.settings.content || cms.settings.content.merge !== true) {
     errors.push('.pages.yml: settings.content.merge 必须开启，避免保存时丢 front matter');

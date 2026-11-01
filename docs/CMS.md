@@ -49,6 +49,10 @@ Pages CMS 的 `rich-text` 编辑器在保存时会删掉 HTML 注释（包括 He
 - 内容支持 Markdown；多条按日期倒序显示。
 - 新增一条就追加到数组；页面 `/shuoshuo/` 会自动按日期排序。
 
+## 视频
+
+“视频”入口编辑 `source/_data/videos.yml`。每条需要稳定的视频 ID、标题，以及一个上传视频或外部/R2 地址；封面和标签可选。上传的小视频进 `source/videos/media/`，大文件建议放 R2。收藏和永久保存的边界见 [docs/VIDEOS.md](VIDEOS.md)。
+
 ## 图片
 
 - 封面图用“封面图”字段上传；上传都进 `source/images/`，写入内容时使用 `/images/...`。

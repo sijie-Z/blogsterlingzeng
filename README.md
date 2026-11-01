@@ -19,6 +19,7 @@
 - [文章列表](#文章列表)
 - [写作指南](#写作风格指南)
 - [浏览器写作（Pages CMS）](#浏览器写作pages-cms)
+- [视频库](#视频库)
 - [部署指南](#部署指南)
 - [自定义指南](#自定义指南)
 - [已知问题](#已知问题)
@@ -74,6 +75,7 @@
 | 项目架构图 | MiQroGate / DocMind 内联 SVG，跟随主题配色，移动端可横向滚动 | `source/projects/index.md` |
 | 相关阅读 | 标签相似度推荐（前端渲染，无原生依赖） | `scripts/related-posts.js` |
 | 文章置顶 | `sticky: 1` 字段置顶 | `hexo-generator-index` |
+| 视频库 | `/videos/` 卡片、自动分类标签、搜索、收藏与导出/导入；数据在 `videos.yml` | `source/videos/` + `scripts/video-library.js` |
 | Sitemap | `sitemap.xml` + `robots.txt` | `hexo-generator-sitemap` |
 | 复制链接 | 文章页工具条复制当前链接 | `source/js/custom.js` |
 | Live2D 宠物 | DeepSeek 大肥鱼（Cubism 4.2 模型 / Cubism 5 Core 运行时，8 动作 / 44 表情），默认按需加载 | `source/live2d/` |
@@ -200,7 +202,7 @@ npm run test:features       # 100 项边注 / 内链预览 / 公式复制 / 脚�
 npm run test:l2d            # Live2D 加载诊断(模型 / Core / 404)
 npm run test:smooth         # 28 项滚动与动效平滑度回归
 npm run test:content        # 文章 front matter / 站内链接 / 图片 / OG 卡 / 文风检查
-npm run test:links          # 构建产物内链检查（99 个 HTML）
+npm run test:links          # 构建产物内链检查（100 个 HTML）
 npm run test:transitions    # 59 项 SPA 跳转 / 连点 / 前后退 / 搜索焦点 / 路由播报 / 页脚收起 / 导航聚焦
 npm run test:sidebar        # 39 项文章侧栏 / 进度 / 锚点 / 表格 / 面包屑 / 代码全屏
 npm run test:series         # 55 项系列页 / 徽章 / 系列卡 / SPA / 移动端
@@ -243,6 +245,7 @@ blogsterlingzeng/
 │   ├── _data/                       # 页面数据文件
 │   │   ├── links.yml                # 友链数据
 │   │   ├── essays.yml               # 说说数据
+│   │   ├── videos.yml               # 视频库数据（Pages CMS 的“视频”）
 │   │   ├── bookmarks.yml            # 书签数据
 │   │   ├── masonry.yml              # 站点视觉数据
 │   │   └── series.yml               # 系列文章元数据
@@ -252,6 +255,7 @@ blogsterlingzeng/
 │   ├── friends/index.md             # 友链页面
 │   ├── bookmarks/index.md           # 书签页面
 │   ├── shuoshuo/index.md            # 说说页面
+│   ├── videos/index.md              # 视频库：分类、搜索、收藏
 │   ├── photos/index.md              # 站点视觉页面
 │   ├── resume/index.md              # 一页式简历（可打印）
 │   ├── categories/index.md          # 分类页面
@@ -261,7 +265,9 @@ blogsterlingzeng/
 │   │
 │   ├── css/custom.css               # 自定义样式 (~7300 行)
 │   ├── css/series.css               # 系列阅读样式
+│   ├── css/videos.css               # 视频库卡片与播放器样式
 │   ├── js/custom.js                 # 自定义脚本 (~4200 行)
+│   ├── js/videos.js                 # 视频库：分类、收藏、导入导出
 │   ├── live2d/                      # Live2D 组件 + DeepSeek 大肥鱼模型
 │   ├── fontawesome/webfonts/        # FontAwesome 子集字体
 │   └── images/                      # 图片资源
@@ -492,6 +498,12 @@ $E = mc^2$ 行内公式；$$...$$ 块级公式（右上角可复制 LaTeX）
 - 保存会提交到 `main`，触发 **Deploy Blog**；图片上传到 `source/images`。
 
 第一次使用需要安装 Pages CMS 的 GitHub App（只授权本仓库即可）。字段说明、Hexo 标签注意事项和权限撤销见 [docs/CMS.md](docs/CMS.md)。
+
+## 视频库
+
+`/videos/` 是自己收藏或授权视频的播放列表：卡片、自动分类标签、搜索、标签、收藏、导出/导入收藏 JSON。数据在 `source/_data/videos.yml`，视频文件放 `source/videos/media/`（小文件）或 Cloudflare R2（大文件），Pages CMS 的“视频”入口可直接维护；分类名由每条视频的 `category` 决定，页面会自动生成分类标签。
+
+收藏存在浏览器本地，换设备/清缓存前导出 JSON 备份；只有自己的文件和备份才算长期保存，第三方链接随时可能失效。详细用法和升级方向见 [docs/VIDEOS.md](docs/VIDEOS.md)。
 
 ## 写作风格指南
 

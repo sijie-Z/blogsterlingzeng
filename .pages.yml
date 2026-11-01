@@ -9,6 +9,13 @@ media:
     output: /images
     rename: safe
     extensions: [jpg, jpeg, png, webp, gif, svg]
+  - name: videos
+    label: 视频
+    input: source/videos/media
+    output: /videos/media
+    rename: safe
+    categories: [video]
+    extensions: [mp4, webm, mov, m4v]
 
 settings:
   content:
@@ -134,3 +141,56 @@ content:
         type: text
         required: true
         description: "支持 Markdown；多条之间会自动按日期倒序展示。"
+
+  - name: videos
+    label: 视频
+    type: file
+    path: source/_data/videos.yml
+    format: yaml
+    # 视频和说说一样，文件根节点就是数组。
+    list: true
+    fields:
+      - name: id
+        label: 视频 ID
+        type: string
+        required: true
+        description: "稳定英文 ID，例如 my-trip-2026；收藏靠它，发布后不要改。"
+      - name: title
+        label: 标题
+        type: string
+        required: true
+      - name: category
+        label: 分类
+        type: string
+        description: "页面顶部的分类标签，例如 技术、旅行、生活、动画；同类名称保持一致。"
+      - name: description
+        label: 描述
+        type: text
+      - name: video
+        label: 上传视频
+        type: file
+        options:
+          media: videos
+        description: "小文件可上传到仓库；大文件建议用下面的 R2 地址。"
+      - name: src
+        label: 外部 / R2 地址
+        type: string
+        description: "例如 https://media.example.com/videos/xxx.mp4；和上传视频二选一。"
+      - name: cover
+        label: 封面图
+        type: image
+        options:
+          media: images
+      - name: tags
+        label: 标签
+        type: string
+        list: true
+      - name: date
+        label: 日期
+        type: date
+        options:
+          format: "yyyy-MM-dd"
+      - name: duration
+        label: 时长
+        type: string
+        description: "可填 03:24 这样的文本。"

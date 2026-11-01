@@ -204,7 +204,7 @@ function check(name, cond, extra) {
   check('搜索框有静态 aria-label', /aria-label="站内搜索"/.test(homeRaw));
   check('首屏展示真实身份与求职方向', homeRaw.includes('home-hero-identity') && homeRaw.includes('GIS 大四') && homeRaw.includes('前端 / 全栈 / AI 应用工程') && !homeRaw.includes('>Lv3<'));
   check('页脚提供可见返回顶部入口', /class="footer-back-top" href="#main-content"/.test(homeRaw));
-  check('页脚保留精确运行时间与全部入口', !homeRaw.includes('2026 - 2026') && !homeRaw.includes('customize-info') && !homeRaw.includes('footer-runtime-mobile') && homeRaw.includes('runtime_hours') && homeRaw.includes('data-runtime="seconds"') && ['/resume/', '/archives/', '/tags/', '/bookmarks/', '/shuoshuo/', '/photos/', '/atom.xml', 'https://github.com/sijie-Z', 'mailto:19150649985@163.com', 'https://beian.miit.gov.cn/'].every(href => homeRaw.includes(href)));
+  check('页脚保留精确运行时间与全部入口', !homeRaw.includes('2026 - 2026') && !homeRaw.includes('customize-info') && !homeRaw.includes('footer-runtime-mobile') && homeRaw.includes('runtime_hours') && homeRaw.includes('data-runtime="seconds"') && ['/resume/', '/archives/', '/tags/', '/bookmarks/', '/videos/', '/shuoshuo/', '/photos/', '/atom.xml', 'https://github.com/sijie-Z', 'mailto:19150649985@163.com', 'https://beian.miit.gov.cn/'].every(href => homeRaw.includes(href)));
   const blankLinks = [...homeRaw.matchAll(/<a[^>]*target="_blank"[^>]*>/g)]
     .filter(m => !/rel="[^"]*noopener/.test(m[0]));
   check('新窗口外链都带 noopener', blankLinks.length === 0, String(blankLinks.length));
