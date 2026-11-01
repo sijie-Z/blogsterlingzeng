@@ -39,8 +39,12 @@
     var status = document.getElementById('video-status');
     var search = document.getElementById('video-search');
     var categoriesBox = document.getElementById('video-categories');
-    var total = document.getElementById('video-total');
-    var favCount = document.getElementById('video-fav-count');
+    var statTotal = document.getElementById('video-stat-total');
+    var statTopics = document.getElementById('video-stat-topics');
+    var statFavorites = document.getElementById('video-stat-favorites');
+    var sectionHead = root.querySelector('.video-section-head');
+    var sectionTitle = document.getElementById('video-section-title');
+    var sectionCount = document.getElementById('video-section-count');
     var exportButton = document.getElementById('video-export');
     var importInput = document.getElementById('video-import');
     var dialog = document.getElementById('video-dialog');
@@ -216,14 +220,22 @@
       var hasItems = items.length > 0;
       var hasVisible = visible.length > 0;
       empty.hidden = hasVisible;
+      if (sectionHead) sectionHead.hidden = !hasItems;
+      if (statTotal) statTotal.textContent = String(items.length);
+      if (statTopics) statTopics.textContent = String(topics.length);
+      if (statFavorites) statFavorites.textContent = String(favorites.size);
+      if (sectionTitle) {
+        sectionTitle.textContent = filter === 'favorites'
+          ? '我的收藏'
+          : (category === 'all' ? '全部视频' : category);
+      }
+      if (sectionCount) sectionCount.textContent = String(visible.length) + ' 个';
       if (emptyTitle) {
         emptyTitle.textContent = hasItems ? '没有匹配的视频。' : '还没有视频。';
       }
       if (emptyHint) {
         emptyHint.hidden = hasItems;
       }
-      if (total) total.textContent = String(items.length);
-      if (favCount) favCount.textContent = String(favorites.size);
     }
 
     function refreshFavoriteButton(id) {
@@ -251,7 +263,7 @@
       }
       writeFavorites(favorites);
       refreshFavoriteButton(id);
-      if (favCount) favCount.textContent = String(favorites.size);
+      if (statFavorites) statFavorites.textContent = String(favorites.size);
       if (filter === 'favorites') {
         render();
       }

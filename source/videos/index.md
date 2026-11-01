@@ -5,7 +5,14 @@ date: 2026-11-01 12:00:00
 ---
 
 <div class="video-library" id="video-library">
-  <p class="video-library-lede">这里放我自己收藏或获得授权的视频。收藏只保存在这台设备上，可以导出 JSON 备份；视频文件建议放在自己的存储里，不依赖第三方实时接口。</p>
+  <div class="video-library-hero">
+    <p class="video-library-lede">这里放我自己收藏或获得授权的视频。收藏只保存在这台设备上，可以导出 JSON 备份；视频文件建议放在自己的存储里，不依赖第三方实时接口。</p>
+    <div class="video-library-stats" aria-label="视频库统计">
+      <span><strong id="video-stat-total">0</strong> 个视频</span>
+      <span><strong id="video-stat-topics">0</strong> 个话题</span>
+      <span><strong id="video-stat-favorites">0</strong> 个收藏</span>
+    </div>
+  </div>
 
   <div class="video-toolbar">
     <label class="video-search">
@@ -13,8 +20,8 @@ date: 2026-11-01 12:00:00
       <input id="video-search" type="search" placeholder="搜索标题、描述、话题或标签" autocomplete="off" aria-label="搜索视频">
     </label>
     <div class="video-filters" role="group" aria-label="视频筛选">
-      <button type="button" class="video-filter is-active" data-filter="all" aria-pressed="true">全部视频 <span id="video-total">0</span></button>
-      <button type="button" class="video-filter" data-filter="favorites" aria-pressed="false">只看收藏 <span id="video-fav-count">0</span></button>
+      <button type="button" class="video-filter is-active" data-filter="all" aria-pressed="true">全部视频</button>
+      <button type="button" class="video-filter" data-filter="favorites" aria-pressed="false">只看收藏</button>
     </div>
     <div class="video-backup">
       <button type="button" id="video-export">导出收藏</button>
@@ -26,10 +33,17 @@ date: 2026-11-01 12:00:00
 
   <div class="video-categories" id="video-categories" role="group" aria-label="视频话题"></div>
   <p class="video-status" id="video-status" role="status" aria-live="polite"></p>
+
+  <div class="video-section-head">
+    <h2 id="video-section-title">全部视频</h2>
+    <span id="video-section-count" aria-live="polite">0 个</span>
+  </div>
+
   <div class="video-grid" id="video-grid"></div>
   <div class="video-empty" id="video-empty" hidden>
+    <span class="video-empty-mark" aria-hidden="true">▶</span>
     <p>还没有视频。</p>
-    <p>把视频文件放进 <code>source/videos/media/</code>，或在 Pages CMS 的“视频”里添加一条。</p>
+    <p class="video-empty-hint">在 Pages CMS 的“视频”里添加第一条；小视频上传到 <code>source/videos/media/</code>，大视频填 R2 地址。</p>
   </div>
 </div>
 

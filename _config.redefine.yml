@@ -321,7 +321,7 @@ inject:
   head:
     - <link rel="stylesheet" href="/css/custom.css?v=20261028f">
     - <link rel="stylesheet" href="/css/series.css?v=20261025g">
-    - <link rel="stylesheet" href="/css/videos.css?v=20261102a">
+    - <link rel="stylesheet" href="/css/videos.css?v=20261102b">
     - <script>try{var s=localStorage.getItem('cj-read-size');if(s==='s'||s==='l')document.documentElement.setAttribute('data-read-size',s);if(localStorage.getItem('cj-focus')==='on'&&document.documentElement.hasAttribute('data-cj-post'))document.documentElement.classList.add('cj-focus');}catch(e){}</script>
   footer:
     - <nav class="footer-utility" aria-label="更多入口"><a href="/resume/">简历</a><a href="/archives/">归档</a><a href="/tags/">标签</a><a href="/bookmarks/">工具箱</a><a href="/videos/">视频</a><a href="/shuoshuo/">说说</a><a href="/photos/">站点视觉</a><a class="footer-back-top" href="#main-content">回到顶部 ↑</a></nav>
@@ -332,7 +332,7 @@ inject:
         <a href="mailto:19150649985@163.com" title="19150649985@163.com" aria-label="发送邮件至 19150649985@163.com"><i class="fa-regular fa-envelope" aria-hidden="true"></i></a>
       </div>
     - <script src="/js/custom.js?v=20261027ae" data-swup-reload-script></script>
-    - <script src="/js/videos.js?v=20261102a" data-swup-reload-script></script>
+    - <script src="/js/videos.js?v=20261102b" data-swup-reload-script></script>
 # INJECT <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
 
 
